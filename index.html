@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Chi Tiêu & Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-top: 15px; padding-bottom: 30px; }
+    .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: none; }
+    .nav-grid-container { display: flex; flex-direction: column; gap: 6px; }
+    .nav-row-1, .nav-row-2 { display: flex; gap: 6px; width: 100%; }
+    .nav-row-1 .nav-item, .nav-row-2 .nav-item { flex: 1; }
+    .nav-pills .nav-link {
+      font-size: 0.82rem; font-weight: 600; padding: 8px 4px; border-radius: 8px;
+      color: #495057; background-color: #f8f9fa; border: 1px solid #dee2e6;
+      display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%;
+    }
+    .nav-pills .nav-link.active { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+    .kpi-card { border-radius: 10px; padding: 10px 6px; color: #fff; text-align: center; }
+    .kpi-blue { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
+    .kpi-orange { background: linear-gradient(135deg, #fd7e14, #e06804); }
+    .kpi-purple { background: linear-gradient(135deg, #6f42c1, #59319c); }
+    .kpi-title { font-size: 0.68rem; opacity: 0.95; text-transform: uppercase; font-weight: 600; white-space: nowrap; }
+    .kpi-value { font-size: calc(0.7rem + 0.6vw); font-weight: 700; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stmt-badge { font-size: 0.68rem; padding: 3px 6px; border-radius: 5px; white-space: nowrap; }
+    .btn-pay-now { cursor: pointer; transition: all 0.2s ease; border: none; }
+    .btn-pay-now:active { transform: scale(0.92); opacity: 0.8; }
+    .amount-text { font-weight: 700; color: #d63384; white-space: nowrap; margin-left: 8px; font-size: 0.88rem; }
+    .card-title-box { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
+    .card-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 0.85rem; }
+    .summary-row { background-color: #e9ecef; font-weight: bold; }
+    .highlight-row { background-color: #fff3cd; }
+    .recommend-card { border-left: 4px solid #198754; background-color: #f8f9fa; margin-bottom: 10px; padding: 10px; border-radius: 8px; }
+    .rate-badge { font-size: 0.9rem; font-weight: 700; color: #198754; background-color: #d1e7dd; padding: 3px 8px; border-radius: 6px; }
+    .tx-item { border-bottom: 1px solid #eee; padding: 8px 0; }
+    .tx-item:last-child { border-bottom: none; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container px-2 px-sm-3" style="max-width: 550px;">
+    <div class="card p-3 p-md-4">
+      <h4 class="text-center mb-3 text-primary fw-bold"><i class="bi bi-wallet2"></i> Quản Lý Chi Tiêu</h4>
+      
+      <!-- AUTH -->
+      <div id="auth-section" class="mb-3 p-2 border rounded bg-light">
+        <div id="google-btn-container" class="d-flex justify-content-center"></div>
+        <div id="user-info" class="d-flex justify-content-between align-items-center hidden">
+          <span class="small">Xin chào: <strong id="user-email" class="text-primary"></strong></span>
+          <button onclick="logout()" class="btn btn-sm btn-outline-danger py-0 px-2">Đăng xuất</button>
+        </div>
+      </div>
+
+      <!-- MAIN APP CONTAINER -->
+      <div id="app-container" class="hidden">
+        <div class="nav-grid-container nav-pills mb-3" id="mainTab">
+          <div class="nav-row-1">
+            <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
+            <div class="nav-item"><button class="nav-link text-success" id="tab-recommend" onclick="switchForm('recommend')"><i class="bi bi-lightbulb"></i> Gợi Ý</button></div>
+          </div>
+          <div class="nav-row-2">
+            <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-cart-plus"></i> Chi Tiêu</button></div>
+            <div class="nav-item"><button class="nav-link" id="tab-payment" onclick="switchForm('payment')"><i class="bi bi-cash-stack"></i> Thanh Toán</button></div>
+          </div>
+        </div>
+
+        <!-- TAB DASHBOARD -->
+        <div id="dashboardBlock">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold text-secondary small"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ</span>
+            <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+          </div>
+          <div id="loadingDash" class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
+          </div>
+          <div id="dashContent" style="display: none;">
+            <div class="row g-1 g-sm-2 mb-3">
+              <div class="col-4"><div class="kpi-card kpi-blue"><div class="kpi-title">CHƯA ĐẾN HẠN</div><div class="kpi-value" id="kpiNotDue">0 đ</div></div></div>
+              <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
+              <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
+            </div>
+
+            <div class="card bg-light p-2 mb-3 border">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold small text-dark"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
+                <select class="form-select form-select-sm py-0 px-2" id="stmtFilterStatus" onchange="filterStatementList()" style="width: auto; font-size: 0.75rem;">
+                  <option value="">Tất cả</option>
+                  <option value="Chưa TT">Chưa TT</option>
+                  <option value="Đã TT">Đã TT</option>
+                  <option value="Chưa sao kê">Chưa sao kê</option>
+                </select>
+              </div>
+              <div class="d-flex justify-content-between align-items-center pb-1 border-bottom text-muted px-1" style="font-size: 0.75rem;">
+                <span>Kỳ sao kê (Từ ngày - Đến ngày) | Hạn thanh toán</span>
+                <span class="fw-bold text-danger">Còn phải trả</span>
+              </div>
+              <div id="stmtList" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="card p-2 border">
+              <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
+              <div class="row g-2 mb-2">
+                <div class="col-12"><select class="form-select form-select-sm" id="dashFilterCard" onchange="applyCategoryFilter()"></select></div>
+                <div class="col-6"><select class="form-select form-select-sm" id="dashFilterCategory" onchange="applyCategoryFilter()"></select></div>
+                <div class="col-6">
+                  <select class="form-select form-select-sm" id="dashFilterStatus" onchange="applyCategoryFilter()">
+                    <option value="">-- Tất cả Trạng Thái --</option>
+                    <option value="Chưa TT">Chưa TT</option>
+                    <option value="Chưa sao kê">Chưa sao kê</option>
+                  </select>
+                </div>
+              </div>
+              <div id="loadingReport" class="text-center py-2 text-muted" style="display:none;">
+                <div class="spinner-border spinner-border-sm text-primary"></div> Đang lọc dữ liệu...
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 mt-1" style="font-size: 0.8rem;">
+                  <tbody id="categoryReportTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB GỢI Ý CHI TIÊU -->
+        <div id="recommendBlock" style="display: none;">
+          <div class="card p-3 border mb-3 bg-light text-center align-items-center">
+            <div class="d-flex justify-content-center w-100 mb-2">
+              <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
+                <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
+              </button>
+            </div>
+            <div class="fw-bold text-dark small w-100" id="voiceStatusTextRec">Bấm nút để tìm ưu đãi thẻ</div>
+            <div class="text-muted small mt-1 w-100" style="font-size: 0.75rem;">
+              <i class="bi bi-lightbulb text-warning"></i> VD: "Hôm nay mua sắm ở Agoda"
+            </div>
+            <div id="liveSpeechBoxRec" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-center w-100 hidden" style="min-height: 38px; word-break: break-word;">
+              <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
+              <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang lắng nghe...</span>
+            </div>
+            <div class="input-group input-group-sm mt-3 w-100">
+              <input type="text" class="form-control" id="recommendInput" list="categoriesTmpOptions" placeholder="Hoặc nhập tên nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
+              <button class="btn btn-outline-success" type="button" onclick="fetchRecommendation()"><i class="bi bi-search"></i> Tìm</button>
+            </div>
+            <datalist id="categoriesTmpOptions"></datalist>
+          </div>
+
+          <div id="alertMsgRec" class="alert alert-danger mb-3 py-2 px-3 small fw-bold shadow-sm text-center" style="display: none;" role="alert"></div>
+          <div id="loadingRec" class="text-center py-3 text-muted" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-success"></div> Đang tính toán ưu đãi thẻ...
+          </div>
+          <div id="recResultBlock" style="display: none;">
+            <div class="alert alert-info py-2 px-3 mb-3 small">
+              <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+              <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+            </div>
+            <div class="fw-bold small text-secondary mb-2"><i class="bi bi-trophy"></i> DANH SÁCH THẺ NÊN CHỌN:</div>
+            <div id="cardRecommendList"></div>
+          </div>
+        </div>
+
+        <!-- FORM CHI TIÊU / THANH TOÁN -->
+        <form id="dataForm" onsubmit="handleFormSubmit(this)">
+          <input type="hidden" id="entryType" name="entryType" value="spending">
+
+          <div id="inputFormFields" style="display: none;">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Ngày hạch toán / Giao dịch</label>
+              <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+
+            <!-- MICROPHONE KHỐI CHI TIÊU / THANH TOÁN -->
+            <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
+              <div class="card-body p-2 text-center">
+                <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm mb-2" id="btnVoice" onclick="startVoiceRecognition()" style="width: 55px; height: 55px;">
+                  <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
+                </button>
+                <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch</div>
+                <div class="text-muted small mt-1" id="voiceExampleText" style="font-size: 0.75rem;">
+                  <i class="bi bi-lightbulb text-warning"></i> VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"
+                </div>
+                <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
+                  <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
+                  <span id="liveSpeechText" class="fst-italic text-dark">Đang lắng nghe...</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="alertMsg" class="alert alert-danger mt-2 py-2 px-3 small fw-bold shadow-sm" style="display: none;" role="alert"></div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Chọn Thẻ</label>
+              <select class="form-select" id="card" name="card" required></select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Số Tiền (VNĐ)</label>
+              <input type="text" class="form-control" id="amount" name="amount" placeholder="Ví dụ: 1888000" required oninput="cleanAmountInput(this)">
+            </div>
+
+            <div id="spendingBlock" class="mb-3">
+              <label class="form-label fw-bold">Merchant / Danh Mục</label>
+              <input type="text" class="form-control" id="categoryInput" name="category" list="categoryOptions" placeholder="Nhập hoặc chọn danh mục/cửa hàng">
+              <datalist id="categoryOptions"></datalist>
+            </div>
+
+            <div id="paymentBlock" class="mb-3" style="display: none;">
+              <label class="form-label fw-bold">Trạng Thái Thanh Toán</label>
+              <select class="form-select" id="status" name="status">
+                <option value="TT Trực Tuyến">TT Trực Tuyến</option>
+                <option value="Trừ vào sao kê">Trừ vào sao kê</option>
+                <option value="Dùng điểm thanh toán">Dùng điểm thanh toán</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-4" id="btnSubmit">Lưu Dữ Liệu</button>
+
+            <div class="card p-2 bg-light border">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY</span>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+              </div>
+              <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
+                <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải...
+              </div>
+              <div id="txList"></div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxypWvIq8NF_QEZmrwpYbHFnlatBooadbV-SlIFbgUPD25T0woXn7ltXGbMrACxwLxS/exec";
+    const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
+
+    let googleToken = null;
+    let currentStatementsData = [];
+    let recognitionInstance = null;
+    let isProcessingVoice = false;
+
+    document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+
+    window.onload = () => {
+      const checkSdk = setInterval(() => {
+        if (window.google?.accounts) {
+          clearInterval(checkSdk);
+          initAuth();
+        }
+      }, 50);
+    };
+
+    function initAuth() {
+      google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse });
+      const savedToken = localStorage.getItem("google_id_token");
+      if (savedToken) {
+        try {
+          const payload = JSON.parse(atob(savedToken.split('.')[1]));
+          if (payload.exp * 1000 > Date.now()) {
+            googleToken = savedToken;
+            verifyAndProceed(payload.email);
+            return;
+          }
+        } catch (e) {}
+      }
+      showLoginPrompt();
+    }
+
+    function showLoginPrompt() {
+      updateUI("", false);
+      google.accounts.id.renderButton(document.getElementById("google-btn-container"), { theme: "outline", size: "large" });
+      google.accounts.id.prompt();
+    }
+
+    async function handleCredentialResponse(response) {
+      googleToken = response.credential;
+      const payload = JSON.parse(atob(googleToken.split('.')[1]));
+      localStorage.setItem("google_id_token", googleToken);
+      await verifyAndProceed(payload.email);
+    }
+
+    async function verifyAndProceed(email) {
+      updateUI(email, true);
+      clearAppCache();
+
+      document.getElementById('loadingDash').style.display = 'block';
+      document.getElementById('dashContent').style.display = 'none';
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "verifyAuth", token: googleToken })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(`Lỗi truy cập: ${data.message || 'Tài khoản không có quyền!'}`);
+          logout(); return;
+        }
+        await fetchInitialAppDataServer();
+      } catch (err) {
+        alert("Lỗi xác thực quyền với Server!");
+        logout();
+      }
+    }
+
+    function updateUI(email, isLoggedIn) {
+      document.getElementById("user-email").textContent = email;
+      document.getElementById("google-btn-container").classList.toggle("hidden", isLoggedIn);
+      document.getElementById("user-info").classList.toggle("hidden", !isLoggedIn);
+      document.getElementById("app-container").classList.toggle("hidden", !isLoggedIn);
+      if (isLoggedIn && window.google?.accounts?.id) google.accounts.id.cancel();
+    }
+
+    function logout() {
+      googleToken = null;
+      localStorage.removeItem("google_id_token");
+      clearAppCache();
+      showLoginPrompt();
+    }
+
+    function clearAppCache() {
+      ["app_init_data", "app_dash_data", "app_tx_spending", "app_tx_payment"].forEach(k => localStorage.removeItem(k));
+    }
+
+    async function sendRequest(action, payload = {}) {
+      if (!googleToken) { alert("Vui lòng đăng nhập Google!"); return null; }
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action, token: googleToken, ...payload })
+        });
+        const resData = await response.json();
+        if (!resData.success && (resData.message === 'EXPIRED_TOKEN' || resData.message.includes("không hợp lệ") || resData.message.includes("không có quyền"))) {
+          alert(resData.message); logout(); return null;
+        }
+        if (!resData.success) {
+          showAlert("Lỗi: " + (resData.message || resData.error), "danger"); return null;
+        }
+        return resData.data !== undefined ? resData.data : resData.message;
+      } catch (err) {
+        showAlert("Lỗi kết nối Server: " + err.toString(), "danger"); return null;
+      }
+    }
+
+    async function fetchInitialAppDataServer() {
+      const data = await sendRequest("getInitialData");
+      if (data) {
+        localStorage.setItem("app_init_data", JSON.stringify(data));
+        applyInitialData(data);
+      }
+      await loadDashboard(true);
+      sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
+      sendRequest("getRecentTransactions", { type: 'payment' }).then(list => list && localStorage.setItem("app_tx_payment", JSON.stringify(list)));
+    }
+
+    function applyInitialData(data) {
+      populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
+      populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
+      populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
+      
+      const catOpt = document.getElementById('categoryOptions');
+      const tmpOpt = document.getElementById('categoriesTmpOptions');
+      catOpt.innerHTML = tmpOpt.innerHTML = '';
+      (data.categoriesTmp || []).forEach(item => {
+        catOpt.innerHTML += `<option value="${item}">`;
+        tmpOpt.innerHTML += `<option value="${item}">`;
+      });
+    }
+
+    function populateDropdown(elemId, list, defaultText) {
+      const sel = document.getElementById(elemId);
+      sel.innerHTML = `<option value="">${defaultText}</option>`;
+      list.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    function switchForm(type) {
+      document.querySelectorAll('#mainTab .nav-link').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-${type}`).classList.add('active');
+
+      document.getElementById('dashboardBlock').style.display = (type === 'dashboard') ? 'block' : 'none';
+      document.getElementById('recommendBlock').style.display = (type === 'recommend') ? 'block' : 'none';
+      document.getElementById('inputFormFields').style.display = (type === 'spending' || type === 'payment') ? 'block' : 'none';
+
+      if (type === 'spending' || type === 'payment') {
+        const prevType = document.getElementById('entryType').value;
+        if (prevType !== type) {
+          document.getElementById('txList').innerHTML = '';
+          document.getElementById('dataForm').reset();
+          document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+        }
+        document.getElementById('entryType').value = type;
+        document.getElementById('spendingBlock').style.display = (type === 'spending') ? 'block' : 'none';
+        document.getElementById('paymentBlock').style.display = (type === 'payment') ? 'block' : 'none';
+        
+        document.getElementById('voiceExampleText').innerHTML = (type === 'spending') 
+          ? `<i class="bi bi-lightbulb text-warning"></i> VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"`
+          : `<i class="bi bi-lightbulb text-warning"></i> VD: "Thanh toán 1 triệu 200 cho thẻ ACB Visa Signature"`;
+
+        resetVoiceUI();
+        loadRecentTransactions(false);
+      }
+    }
+
+    function loadRecentTransactions(forceFetch = false) {
+      const type = document.getElementById('entryType').value;
+      const cacheKey = "app_tx_" + type;
+      const txList = document.getElementById('txList');
+      const cached = localStorage.getItem(cacheKey);
+
+      if (cached && !forceFetch) {
+        try { 
+          const parsed = JSON.parse(cached);
+          if (parsed.length === 0 || parsed[0].type === type) renderTxList(parsed, type);
+          else txList.innerHTML = '';
+        } catch(e) { txList.innerHTML = ''; }
+      } else if (!cached) txList.innerHTML = '';
+
+      if (forceFetch || !cached) {
+        document.getElementById('loadingTx').style.display = 'block';
+        sendRequest("getRecentTransactions", { type }).then(list => {
+          document.getElementById('loadingTx').style.display = 'none';
+          if (list && document.getElementById('entryType').value === type) {
+            localStorage.setItem(cacheKey, JSON.stringify(list));
+            renderTxList(list, type);
+          }
+        });
+      }
+    }
+
+    function renderTxList(list, currentType) {
+      if (currentType && currentType !== document.getElementById('entryType').value) return;
+      const txList = document.getElementById('txList');
+      if (!list || list.length === 0) {
+        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch gần đây.</p>';
+        return;
+      }
+      
+      let html = '<div class="list-group list-group-flush">';
+      list.forEach(item => {
+        const amountFormatted = Number(item.amount).toLocaleString('vi-VN');
+        html += `
+          <div class="tx-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-bold small">${item.date} - ${item.card}</div>
+              <div class="text-muted small">${item.detail} | <span class="amount-text">${amountFormatted} đ</span></div>
+            </div>
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDelete('${item.type}', ${item.rowIndex}, '${item.date}', '${item.card}', '${amountFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
+          </div>`;
+      });
+      txList.innerHTML = html + '</div>';
+    }
+
+    async function confirmDelete(type, rowIndex, date, card, amount) {
+      if (confirm(`Bạn có chắc chắn muốn XÓA giao dịch này?\n\n- Ngày: ${date}\n- Thẻ: ${card}\n- Số tiền: ${amount} đ`)) {
+        document.getElementById('loadingTx').style.display = 'block';
+        const msg = await sendRequest("deleteTransaction", { type, rowIndex });
+        if (msg) { showAlert(msg, 'success'); loadRecentTransactions(true); loadDashboard(true); } 
+        else document.getElementById('loadingTx').style.display = 'none';
+      }
+    }
+
+    async function fetchRecommendation() {
+      const kw = document.getElementById('recommendInput').value.trim();
+      if (!kw) return;
+      document.getElementById('loadingRec').style.display = 'block';
+      document.getElementById('recResultBlock').style.display = 'none';
+
+      const data = await sendRequest("getCardRecommendation", { keyword: kw });
+      document.getElementById('loadingRec').style.display = 'none';
+      if (data) {
+        document.getElementById('recResultBlock').style.display = 'block';
+        document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
+        document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
+
+        const listContainer = document.getElementById('cardRecommendList');
+        listContainer.innerHTML = '';
+        if (!data.cards || data.cards.length === 0) {
+          listContainer.innerHTML = '<p class="text-center text-muted py-2">Không tìm thấy thẻ phù hợp.</p>';
+          return;
+        }
+
+        data.cards.forEach(item => {
+          listContainer.innerHTML += `
+            <div class="recommend-card">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-dark">${item.cardName}</span>
+                <span class="rate-badge">${item.rate}</span>
+              </div>
+              <div class="text-muted small">
+                <div>• <strong>Kiểu áp dụng:</strong> ${item.applyType}</div>
+                <div>• <strong>Hoàn max/danh mục:</strong> ${item.maxCat} | <strong>Max/kỳ:</strong> ${item.maxCycle}</div>
+                ${item.minSpend ? `<div>• <strong>Chi tối thiểu:</strong> ${item.minSpend}</div>` : ''}
+              </div>
+            </div>`;
+        });
+      }
+    }
+
+    function quickPay(cardName, rawAmount) {
+      switchForm('payment');
+      document.getElementById('card').value = cardName;
+      document.getElementById('amount').value = String(rawAmount).replace(/[^0-9]/g, '');
+      document.getElementById('status').value = 'TT Trực Tuyến';
+      document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+    }
+
+    async function loadDashboard(fetchServer = false) {
+      if (fetchServer) {
+        const data = await sendRequest("getDashboardData");
+        if (data) {
+          localStorage.setItem("app_dash_data", JSON.stringify(data));
+          renderDashboard(data);
+          document.getElementById('loadingDash').style.display = 'none';
+          document.getElementById('dashContent').style.display = 'block';
+          applyCategoryFilter();
+        }
+      } else {
+        const cached = localStorage.getItem("app_dash_data");
+        if (cached) {
+          try { 
+            renderDashboard(JSON.parse(cached));
+            document.getElementById('loadingDash').style.display = 'none';
+            document.getElementById('dashContent').style.display = 'block';
+          } catch(e){}
+        }
+      }
+    }
+
+    function renderDashboard(data) {
+      document.getElementById('kpiNotDue').innerText = formatVND(data.kpi.notDue);
+      document.getElementById('kpiComingDue').innerText = formatVND(data.kpi.comingDue);
+      document.getElementById('kpiUnstatement').innerText = formatVND(data.kpi.unstatement);
+
+      if (data.statements) {
+        currentStatementsData = data.statements;
+        filterStatementList();
+      }
+      if (data.filters) {
+        document.getElementById('dashFilterCard').value = data.filters.card;
+        document.getElementById('dashFilterCategory').value = data.filters.category;
+        document.getElementById('dashFilterStatus').value = data.filters.status;
+      }
+    }
+
+    function filterStatementList() {
+      const selectedStatus = document.getElementById('stmtFilterStatus').value;
+      const stmtList = document.getElementById('stmtList');
+      stmtList.innerHTML = '';
+
+      if (!currentStatementsData || currentStatementsData.length === 0) {
+        stmtList.innerHTML = '<p class="text-center text-muted m-0 py-2">Không có dữ liệu sao kê.</p>'; return;
+      }
+
+      const filtered = currentStatementsData.filter(st => {
+        if (!st.card || st.card === "Thẻ" || st.card === "THẺ") return false;
+        return !selectedStatus || st.status === selectedStatus;
+      });
+
+      if (filtered.length === 0) {
+        stmtList.innerHTML = '<p class="text-center text-muted m-0 py-2">Không có thẻ nào thuộc trạng thái này.</p>'; return;
+      }
+
+      filtered.forEach(st => {
+        let statusBadge = '';
+        if (st.status === 'UPDATING') statusBadge = `<span class="badge bg-warning text-dark stmt-badge"><div class="spinner-border spinner-border-sm me-1" style="width:0.6rem;height:0.6rem;"></div> Đang cập nhật...</span>`;
+        else if (st.status === 'Chưa TT') statusBadge = `<span class="badge bg-danger stmt-badge btn-pay-now" onclick="quickPay('${st.card}', ${st.remainingAmount})" title="Bấm để trả ngay"><i class="bi bi-credit-card"></i> Chưa TT</span>`;
+        else if (st.status === 'Đã TT') statusBadge = `<span class="badge bg-success stmt-badge">Đã TT</span>`;
+        else statusBadge = `<span class="badge bg-secondary stmt-badge">${st.status}</span>`;
+
+        stmtList.innerHTML += `
+          <div class="list-group-item px-1 py-2 ${st.status === 'Chưa TT' ? 'highlight-row' : ''}">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="card-title-box"><span class="card-name-text" title="${st.card}">${st.card}</span>${statusBadge}</div>
+              <span class="amount-text">${formatVND(st.remainingAmount)}</span>
+            </div>
+            <div class="text-muted text-truncate" style="font-size: 0.75rem;">
+              Kỳ ${st.cycle} (${st.fromDate} - ${st.toDate}) | Hạn: <span class="fw-bold text-dark">${st.dueDate}</span>
+            </div>
+          </div>`;
+      });
+    }
+
+    async function applyCategoryFilter() {
+      const filterObj = {
+        card: document.getElementById('dashFilterCard').value,
+        category: document.getElementById('dashFilterCategory').value,
+        status: document.getElementById('dashFilterStatus').value
+      };
+
+      document.getElementById('loadingReport').style.display = 'block';
+      const reportData = await sendRequest("updateDashboardFilters", { filterObj });
+      document.getElementById('loadingReport').style.display = 'none';
+
+      if (reportData) {
+        const tableBody = document.getElementById('categoryReportTable');
+        tableBody.innerHTML = '';
+        if (reportData.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Không có dữ liệu.</td></tr>'; return;
+        }
+
+        reportData.forEach((row, idx) => {
+          const isHeader = idx === 0;
+          const isTotal = ['TỔNG', 'CÒN LẠI', 'ĐÃ THANH TOÁN', 'TRỪ VÀO SAO KÊ'].some(k => row.label.toString().toUpperCase().includes(k));
+          const rowClass = isHeader ? 'table-primary fw-bold' : (isTotal ? 'summary-row' : '');
+
+          tableBody.innerHTML += `
+            <tr class="${rowClass}">
+              <td>${row.label}</td>
+              <td class="text-end">${typeof row.amount === 'number' ? formatVND(row.amount) : row.amount}</td>
+            </tr>`;
+        });
+      }
+    }
+
+    const cleanAmountInput = (input) => input.value = input.value.replace(/[^0-9]/g, '');
+    const formatVND = (val) => typeof val === 'number' ? val.toLocaleString('vi-VN') + ' đ' : val;
+
+    async function handleFormSubmit(form) {
+      event.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.innerText = 'Đang lưu...';
+
+      const formObject = Object.fromEntries(new FormData(form).entries());
+
+      if (formObject.entryType === 'payment' && formObject.card) {
+        const dashCache = localStorage.getItem("app_dash_data");
+        if (dashCache) {
+          try {
+            const parsedDash = JSON.parse(dashCache);
+            parsedDash.statements = parsedDash.statements.map(st => {
+              if (st.card === formObject.card) st.status = 'UPDATING';
+              return st;
+            });
+            renderDashboard(parsedDash);
+          } catch(e){}
+        }
+      }
+
+      const msg = await sendRequest("submitData", { formObject });
+      btn.disabled = false; btn.innerText = 'Lưu Dữ Liệu';
+
+      if (msg) {
+        showAlert(msg, 'success');
+        form.reset();
+        document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+        loadRecentTransactions(true);
+        loadDashboard(true);
+      }
+    }
+
+    function showAlert(msg, type) {
+      const isRecTab = (document.getElementById('recommendBlock').style.display !== 'none');
+      const alert = isRecTab ? document.getElementById('alertMsgRec') : document.getElementById('alertMsg');
+      if (!alert) return;
+
+      alert.className = `alert alert-${type} mb-3 py-2 px-3 small fw-bold shadow-sm border`;
+      alert.innerHTML = (type === 'danger' || type === 'warning') 
+        ? `<i class="bi bi-exclamation-triangle-fill me-1"></i> ${msg}`
+        : `<i class="bi bi-check-circle-fill me-1"></i> ${msg}`;
+      alert.style.display = 'block';
+
+      if (window.alertTimer) clearTimeout(window.alertTimer);
+      window.alertTimer = setTimeout(() => { alert.style.display = 'none'; }, 3000);
+    }
+
+    function startVoiceRecognition(forcedMode = null) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
+
+      if (isProcessingVoice) return;
+
+      if (recognitionInstance) {
+        try { 
+          recognitionInstance.onresult = null;
+          recognitionInstance.onerror = null;
+          recognitionInstance.onend = null;
+          recognitionInstance.abort(); 
+        } catch(e){}
+        recognitionInstance = null;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognitionInstance = recognition;
+      recognition.lang = 'vi-VN';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      const currentMode = forcedMode || document.getElementById('entryType').value || 'spending';
+      const isRec = (currentMode === 'recommend');
+      const btnVoice = isRec ? document.getElementById('btnVoiceRec') : document.getElementById('btnVoice');
+      const micIcon = isRec ? document.getElementById('micIconRec') : document.getElementById('micIcon');
+      const statusText = isRec ? document.getElementById('voiceStatusTextRec') : document.getElementById('voiceStatusText');
+      const liveBox = isRec ? document.getElementById('liveSpeechBoxRec') : document.getElementById('liveSpeechBox');
+      const liveText = isRec ? document.getElementById('liveSpeechTextRec') : document.getElementById('liveSpeechText');
+
+      if (isRec) {
+        btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
+        statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe... Hãy nói tên thương hiệu/nơi mua</span>`;
+      } else {
+        btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white";
+        micIcon.className = "bi bi-record-circle-fill fs-4 spinner-grow spinner-grow-sm";
+        statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe... Hãy nói câu giao dịch</span>`;
+      }
+
+      liveBox.classList.remove('hidden');
+      liveText.innerText = "Đang lắng nghe...";
+
+      let finalTranscript = '';
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          else interimTranscript += event.results[i][0].transcript;
+        }
+
+        const displayText = finalTranscript || interimTranscript;
+        liveText.innerText = displayText;
+
+        if (event.results[0].isFinal && !isProcessingVoice) {
+          isProcessingVoice = true;
+          try { recognition.stop(); } catch(e){}
+          processParsedVoiceText(finalTranscript || displayText, currentMode);
+        }
+      };
+
+      recognition.onspeechend = () => {
+        if (!isProcessingVoice) {
+          const textToProcess = liveText.innerText;
+          if (textToProcess && textToProcess !== "Đang lắng nghe...") {
+            isProcessingVoice = true;
+            processParsedVoiceText(textToProcess, currentMode);
+          } else resetVoiceUI();
+        }
+      };
+
+      recognition.onerror = (event) => {
+        resetVoiceUI();
+        if (event.error !== 'no-speech') showAlert("Lỗi nhận diện giọng nói, vui lòng thử lại!", "danger");
+      };
+
+      try { recognition.start(); } catch(err) { resetVoiceUI(); }
+    }
+
+    async function processParsedVoiceText(transcript, mode) {
+      if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
+
+      const isRec = (mode === 'recommend');
+      const btnVoice = isRec ? document.getElementById('btnVoiceRec') : document.getElementById('btnVoice');
+      const micIcon = isRec ? document.getElementById('micIconRec') : document.getElementById('micIcon');
+      const statusText = isRec ? document.getElementById('voiceStatusTextRec') : document.getElementById('voiceStatusText');
+      const liveBox = isRec ? document.getElementById('liveSpeechBoxRec') : document.getElementById('liveSpeechBox');
+      const liveText = isRec ? document.getElementById('liveSpeechTextRec') : document.getElementById('liveSpeechText');
+
+      btnVoice.className = isRec ? "btn btn-warning rounded-circle p-3 shadow mb-2 text-dark d-flex align-items-center justify-content-center" : "btn btn-warning rounded-circle p-3 shadow mb-2 text-dark";
+      micIcon.className = "bi bi-stars fs-3 spinner-border spinner-border-sm";
+      statusText.innerHTML = `<span class="text-primary fw-bold"><i class="bi bi-stars text-warning"></i> AI đang phân tích...</span>`;
+      
+      liveBox.classList.remove('hidden');
+      liveText.innerHTML = `<div><strong>"</strong>${transcript}<strong>"</strong></div><div class="mt-1 text-primary fw-bold" style="font-size: 0.75rem;"><div class="spinner-border spinner-border-sm me-1" style="width:0.7rem;height:0.7rem;"></div> Đang phân tích...</div>`;
+
+      try {
+        const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
+
+        if (isRec) {
+          if (res && res.success && res.keyword) {
+            document.getElementById('recommendInput').value = res.keyword;
+            showAlert(`Đã tìm ưu đãi cho: "${res.keyword}"`, "success");
+            fetchRecommendation();
+          } else {
+            showAlert((res && res.message) || "Không tìm thấy nơi mua sắm phù hợp!", "warning");
+          }
+          return;
+        }
+
+        if (!res || res.success === false) {
+          showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
+          return;
+        }
+
+        document.getElementById('card').value = res.card;
+        document.getElementById('amount').value = res.amount;
+        if (mode === 'spending' && res.category) document.getElementById('categoryInput').value = res.category;
+
+        showAlert(`AI đã tự động điền thẻ "${res.card}" thành công!`, "success");
+
+      } catch (err) {
+        showAlert("Lỗi xử lý kết nối giọng nói!", "danger");
+      } finally {
+        resetVoiceUI();
+      }
+    }
+
+    function resetVoiceUI() {
+      isProcessingVoice = false;
+      if (recognitionInstance) {
+        try { 
+          recognitionInstance.onresult = null;
+          recognitionInstance.onerror = null;
+          recognitionInstance.onend = null;
+          recognitionInstance.abort(); 
+        } catch(e){}
+        recognitionInstance = null;
+      }
+
+      const btnVoice = document.getElementById('btnVoice');
+      const micIcon = document.getElementById('micIcon');
+      const statusText = document.getElementById('voiceStatusText');
+      const liveBox = document.getElementById('liveSpeechBox');
+
+      if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow-sm mb-2";
+      if (micIcon) micIcon.className = "bi bi-mic-fill fs-4";
+      if (statusText) statusText.innerText = "Bấm nút để nói thông tin giao dịch";
+      if (liveBox) liveBox.classList.add('hidden');
+
+      const btnVoiceRec = document.getElementById('btnVoiceRec');
+      const micIconRec = document.getElementById('micIconRec');
+      const statusTextRec = document.getElementById('voiceStatusTextRec');
+      const liveBoxRec = document.getElementById('liveSpeechBoxRec');
+
+      if (btnVoiceRec) btnVoiceRec.className = "btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
+      if (micIconRec) micIconRec.className = "bi bi-mic-fill fs-3";
+      if (statusTextRec) statusTextRec.innerText = "Bấm nút để tìm ưu đãi thẻ";
+      if (liveBoxRec) liveBoxRec.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
