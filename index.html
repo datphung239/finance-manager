@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-top: 15px; padding-bottom: 30px; }
     .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: none; }
@@ -298,11 +299,107 @@
           </div>
 
           <!-- DASHBOARD CASH -->
+          <!-- DASHBOARD CASH VIRTUALIZATION -->
           <div id="cashDashboardBlock">
-            <div class="card p-3 text-center text-muted border shadow-sm">
-              <i class="bi bi-graph-up-arrow fs-2 text-success mb-2"></i>
-              <div class="fw-bold text-dark">Dashboard Dòng Tiền Đang Hoàn Thiện</div>
-              <div class="small mt-1">Các chỉ số Burn Rate, % Thu/Chi sẽ hiển thị tại đây.</div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="fw-bold text-success"><i class="bi bi-graph-up-arrow"></i> DASHBOARD TÀI CHÍNH DÒNG TIỀN</span>
+              <button class="btn btn-sm btn-outline-success py-0 px-2" onclick="loadCashDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+          
+            <div id="loadingCashDash" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm text-success"></div> Đang trực quan hóa dữ liệu Cash...
+            </div>
+          
+            <div id="cashDashContent" style="display: none;">
+              <!-- 1. TỔNG CHI TIÊU & DOANH THU KÈM TỶ LỆ KINH DOANH -->
+              <div class="card p-3 mb-3 border bg-white shadow-sm">
+                <div class="row g-2 mb-2 align-items-center">
+                  <div class="col-6"><label class="small text-muted fw-bold">Từ ngày:</label><input type="date" id="cashFilterStart" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
+                  <div class="col-6"><label class="small text-muted fw-bold">Đến ngày:</label><input type="date" id="cashFilterEnd" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
+                </div>
+                <div class="row g-2 text-center">
+                  <div class="col-6">
+                    <div class="p-2 rounded bg-success-subtle border border-success">
+                      <div class="small text-success fw-bold">TỔNG DOANH THU</div>
+                      <div class="fw-bold fs-6 text-success" id="cashTotalRev">0 đ</div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="p-2 rounded bg-danger-subtle border border-danger">
+                      <div class="small text-danger fw-bold">TỔNG CHI TIÊU</div>
+                      <div class="fw-bold fs-6 text-danger" id="cashTotalExp">0 đ</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          
+              <!-- 2. TẦN SUẤT & CHỈ SỐ SINH HOẠT / DOANH THU (KPI CARDS) -->
+              <div class="row g-2 mb-3">
+                <div class="col-4">
+                  <div class="card p-2 text-center bg-light border">
+                    <div class="text-muted" style="font-size:0.7rem;">SỐ LẦN CHI</div>
+                    <div class="fw-bold text-dark" id="cashTxCount">0</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="card p-2 text-center bg-light border">
+                    <div class="text-muted" style="font-size:0.7rem;">CHI TB / LẦN</div>
+                    <div class="fw-bold text-primary" id="cashAvgAmt">0 đ</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="card p-2 text-center bg-light border">
+                    <div class="text-muted" style="font-size:0.7rem;">% CHI / DOANH THU</div>
+                    <div class="fw-bold text-warning" id="cashRatioExp">0%</div>
+                  </div>
+                </div>
+              </div>
+          
+              <!-- 3. BIỂU ĐỒ BIẾN ĐỘNG CHI TIÊU 4 THÁNG GẦN ĐÂY -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold small text-dark mb-2"><i class="bi bi-bar-chart-line-fill text-primary"></i> Biến Động Chi Tiêu 4 Tháng Gần Đây</div>
+                <canvas id="chartMonthTrends" height="160"></canvas>
+              </div>
+          
+              <!-- 4. HÌNH THỨC THANH TOÁN & ĐỐI TƯỢNG CHI TIÊU (DONUT & BAR CHART) -->
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <div class="card p-2 border shadow-sm h-100">
+                    <div class="fw-bold text-dark" style="font-size:0.75rem;"><i class="bi bi-pie-chart-fill text-info"></i> Hình Thức Thanh Toán</div>
+                    <canvas id="chartPaymentMethods" height="150"></canvas>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card p-2 border shadow-sm h-100">
+                    <div class="fw-bold text-dark" style="font-size:0.75rem;"><i class="bi bi-people-fill text-purple"></i> Theo Đối Tượng</div>
+                    <canvas id="chartTargetData" height="150"></canvas>
+                  </div>
+                </div>
+              </div>
+          
+              <!-- 5. BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC (BẢNG TRUY CẤU TIẾN TRÌNH) -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold small text-dark mb-2"><i class="bi bi-list-stars text-success"></i> Biến Động Chi Tiêu Theo Danh Mục (Tháng Này vs Tháng Trước)</div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.78rem;">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Danh Mục</th>
+                        <th class="text-end">Tháng Này</th>
+                        <th class="text-end">Tháng Trước</th>
+                        <th class="text-end">Tăng/Giảm</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableCatChanges"></tbody>
+                  </table>
+                </div>
+              </div>
+          
+              <!-- 6. TỔNG CHI TIÊU THEO NGÀY -->
+              <div class="card p-3 border shadow-sm">
+                <div class="fw-bold small text-dark mb-2"><i class="bi bi-calendar3 text-danger"></i> Chi Tiêu Hằng Ngày</div>
+                <canvas id="chartDailyList" height="140"></canvas>
+              </div>
             </div>
           </div>
 
@@ -1196,6 +1293,131 @@
       if (statusTextRec) statusTextRec.innerText = "Bấm nút để tìm ưu đãi thẻ";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
+    
+    // <!-- DASHBOARD CASH VIRTUALIZATION -->
+    let chartTrendsInstance = null;
+    let chartPaymentInstance = null;
+    let chartTargetInstance = null;
+    let chartDailyInstance = null;
+    
+    async function loadCashDashboard(fetchServer = true) {
+      document.getElementById('loadingCashDash').style.display = 'block';
+      document.getElementById('cashDashContent').style.display = 'none';
+    
+      const data = await sendRequest("getCashDashboardData");
+      document.getElementById('loadingCashDash').style.display = 'none';
+    
+      if (data) {
+        document.getElementById('cashDashContent').style.display = 'block';
+        renderCashDashboard(data);
+      }
+    }
+    
+    function renderCashDashboard(d) {
+      // 1. KPI Period
+      document.getElementById('cashTotalRev').innerText = formatVND(d.period.totalRevenue);
+      document.getElementById('cashTotalExp').innerText = formatVND(d.period.totalExpense);
+      
+      // 2. Frequency & Ratio
+      document.getElementById('cashTxCount').innerText = d.frequencyData.txCount + " lần";
+      document.getElementById('cashAvgAmt').innerText = formatVND(d.frequencyData.avgAmt);
+      document.getElementById('cashRatioExp').innerText = d.kpiRatio.ratio || '0%';
+    
+      // 3. Render Chart 4 Tháng (Bar Chart)
+      if (chartTrendsInstance) chartTrendsInstance.destroy();
+      const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
+      chartTrendsInstance = new Chart(ctxTrends, {
+        type: 'bar',
+        data: {
+          labels: d.monthTrends.map(m => m.month),
+          datasets: [{
+            label: 'Số Tiền Chi (VNĐ)',
+            data: d.monthTrends.map(m => m.amount),
+            backgroundColor: '#0d6efd',
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    
+      // 4. Render Chart Hình Thức Thanh Toán (Doughnut Chart)
+      if (chartPaymentInstance) chartPaymentInstance.destroy();
+      const ctxPayment = document.getElementById('chartPaymentMethods').getContext('2d');
+      chartPaymentInstance = new Chart(ctxPayment, {
+        type: 'doughnut',
+        data: {
+          labels: d.paymentMethods.map(p => p.method),
+          datasets: [{
+            data: d.paymentMethods.map(p => p.m1Amt),
+            backgroundColor: ['#0d6efd', '#6c757d', '#6f42c1']
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+    
+      // 5. Render Chart Theo Đối Tượng (Horizontal Bar)
+      if (chartTargetInstance) chartTargetInstance.destroy();
+      const ctxTarget = document.getElementById('chartTargetData').getContext('2d');
+      chartTargetInstance = new Chart(ctxTarget, {
+        type: 'bar',
+        data: {
+          labels: d.targetData.list.map(t => t.target),
+          datasets: [{
+            label: 'Tháng Này',
+            data: d.targetData.list.map(t => t.m1Amt),
+            backgroundColor: '#198754'
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+      });
+    
+      // 6. Bảng Biến Động Danh Mục
+      const catTbody = document.getElementById('tableCatChanges');
+      catTbody.innerHTML = '';
+      d.catChanges.forEach(c => {
+        const isInc = c.diff > 0;
+        const colorClass = isInc ? 'text-danger' : 'text-success';
+        const sign = isInc ? '+' : '';
+        catTbody.innerHTML += `
+          <tr>
+            <td class="fw-bold">${c.category}</td>
+            <td class="text-end">${formatVND(c.thisMonth)}</td>
+            <td class="text-end text-muted">${formatVND(c.lastMonth)}</td>
+            <td class="text-end fw-bold ${colorClass}">${sign}${formatVND(c.diff)}</td>
+          </tr>`;
+      });
+    
+      // 7. Render Chart Chi Tiêu Hằng Ngày (Line Chart)
+      if (chartDailyInstance) chartDailyInstance.destroy();
+      const ctxDaily = document.getElementById('chartDailyList').getContext('2d');
+      chartDailyInstance = new Chart(ctxDaily, {
+        type: 'line',
+        data: {
+          labels: d.dailyData.list.map(i => i.date),
+          datasets: [{
+            label: 'Tổng Chi',
+            data: d.dailyData.list.map(i => i.amount),
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+    
+    async function applyCashFilters() {
+      const filterObj = {
+        startDate: document.getElementById('cashFilterStart').value,
+        endDate: document.getElementById('cashFilterEnd').value
+      };
+      document.getElementById('loadingCashDash').style.display = 'block';
+      const data = await sendRequest("updateCashDashboardFilters", { filterObj });
+      document.getElementById('loadingCashDash').style.display = 'none';
+      if (data) renderCashDashboard(data);
+    }
+    
   </script>
 </body>
 </html>
