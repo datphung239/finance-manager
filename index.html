@@ -974,8 +974,15 @@
 
       // 4. CHART 4 THÁNG DUAL AXES (SỬA LỖI MẤT SỐ % BẰNG PADDING)
       // ✅ MỚI: TỐI ƯU HIỂN THỊ % VÀ THÊM SỐ TIỀN THÁNG CUỐI CÙNG
+      // ============================================================================
+      // BẢN TỐI ƯU CỘT VÀ TỰ NÂNG TRẦN TRỤC Y THÊM 3-4 TRIỆU ĐỂ KHÔNG BỊ MẤT CHỮ
+      // ============================================================================
       if (chartTrendsInstance) chartTrendsInstance.destroy();
       const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
+      
+      // Tìm số tiền chi lớn nhất trong 4 tháng và nâng trần trục Y lên thêm 4 triệu
+      const maxAmount = Math.max(...d.monthTrends.map(m => m.amount), 0);
+      const customYMax = maxAmount + 4000000; 
       
       chartTrendsInstance = new Chart(ctxTrends, {
         plugins: [ChartDataLabels],
@@ -999,7 +1006,7 @@
                 align: 'top',
                 anchor: 'center',
                 color: '#dc3545',
-                offset: 2,
+                offset: 4,
                 font: { weight: 'bold', size: 9 },
                 formatter: (val, ctx) => {
                   const rawStr = d.monthTrends[ctx.dataIndex]?.changeStr;
@@ -1016,7 +1023,7 @@
               yAxisID: 'y',
               order: 2,
               datalabels: {
-                // BẬT SỐ TIỀN HIỂN THỊ Ở ĐỈNH CỘT CHO THÁNG CUỐI CÙNG
+                // Bật hiển thị số tiền ở đỉnh cột cho tháng cuối cùng
                 display: (ctx) => ctx.dataIndex === d.monthTrends.length - 1,
                 align: 'top',
                 anchor: 'end',
@@ -1030,13 +1037,14 @@
         options: {
           responsive: true,
           layout: { 
-            padding: { top: 30, right: 15, left: 5 } // MỞ RỘNG PADDING ĐỂ KHÔNG MẤT CHỮ THÁNG CUỐI
+            padding: { top: 20, right: 10, left: 5 } 
           },
           scales: {
             y: {
               type: 'linear',
               display: true,
               position: 'left',
+              max: customYMax, // TỰ ĐỘNG NÂNG TRẦN LÊN THÊM 4 TRIỆU
               title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 9 } },
               ticks: { font: { size: 9 } }
             },
@@ -1046,15 +1054,11 @@
               position: 'right',
               grid: { drawOnChartArea: false },
               title: { display: true, text: '% Tăng giảm', font: { size: 9 } },
-              ticks: { font: { size: 9 }, callback: value => value + '%' },
-              // MỞ RỘNG BIÊN ĐỘ ĐỂ CHỮ % KHÔNG BỊ TRÀN BỎ MẤT NÚT
-              suggestedMax: Math.max(...d.monthTrends.map(m => m.changePct)) + 15,
-              suggestedMin: Math.min(...d.monthTrends.map(m => m.changePct)) - 10
+              ticks: { font: { size: 9 }, callback: value => value + '%' }
             }
           }
         }
       });
-
       // 5. TỶ LỆ HÌNH THỨC THANH TOÁN (DONUT CHART - GREEN THEME)
       if (chartPaymentInstance) chartPaymentInstance.destroy();
       const ctxPayment = document.getElementById('chartPaymentMethods').getContext('2d');
