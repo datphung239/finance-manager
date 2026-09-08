@@ -416,8 +416,21 @@
     let recognitionInstance = null;
     let isProcessingVoice = false;
 
-    document.getElementById('date').value = new Date().toISOString().substring(0, 10);
-    document.getElementById('cashDate').value = new Date().toISOString().substring(0, 10);
+    // ✅ MỚI: Thêm hàm gán ngày an toàn (An toàn tuyệt đối chống lỗi null)
+    function setTodayDefaultDates() {
+      const today = new Date().toISOString().substring(0, 10);
+      
+      const cardDateInput = document.getElementById('date');
+      if (cardDateInput) cardDateInput.value = today;
+    
+      const cashDateInput = document.getElementById('cashDate');
+      if (cashDateInput) cashDateInput.value = today;
+    }
+    
+    // Bọc vào DOMContentLoaded để đảm bảo HTML đã tải xong 100% trước khi gán
+    document.addEventListener('DOMContentLoaded', () => {
+      setTodayDefaultDates();
+    });
 
     window.onload = () => {
       const checkSdk = setInterval(() => {
