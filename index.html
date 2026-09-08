@@ -279,16 +279,17 @@
           </div>
 
           <!-- DASHBOARD CASH VIRTUALIZATION -->
+          <!-- DASHBOARD CASH VIRTUALIZATION TỐI ƯU GIAO DIỆN -->
           <div id="cashDashboardBlock">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <span class="fw-bold text-success"><i class="bi bi-graph-up-arrow"></i> DASHBOARD TÀI CHÍNH DÒNG TIỀN</span>
               <button class="btn btn-sm btn-outline-success py-0 px-2" onclick="loadCashDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
             </div>
-
+          
             <div id="loadingCashDash" class="text-center py-4 text-muted">
               <div class="spinner-border spinner-border-sm text-success"></div> Đang trực quan hóa dữ liệu Cash...
             </div>
-
+          
             <div id="cashDashContent" style="display: none;">
               <!-- 1. TỔNG CHI TIÊU & DOANH THU KÈM FILTER NGÀY -->
               <div class="card p-3 mb-3 border bg-white shadow-sm">
@@ -311,7 +312,7 @@
                   </div>
                 </div>
               </div>
-
+          
               <!-- 2. CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
               <div class="row g-2 mb-3">
                 <div class="col-4">
@@ -333,30 +334,30 @@
                   </div>
                 </div>
               </div>
-
-              <!-- 3. BIẾN ĐỘNG CHI TIÊU 4 THÁNG GẦN ĐÂY -->
+          
+              <!-- 3. BIẾN ĐỘNG CHI TIÊU 4 THÁNG (DUAL AXES: THANH TIỀN & ĐƯỜNG % BÊN PHẢI) -->
               <div class="card p-3 mb-3 border shadow-sm">
-                <div class="fw-bold small text-dark mb-2"><i class="bi bi-bar-chart-line-fill text-primary"></i> Biến Động Chi Tiêu 4 Tháng Gần Đây</div>
-                <canvas id="chartMonthTrends" height="160"></canvas>
+                <div class="fw-bold small text-dark mb-2"><i class="bi bi-bar-chart-line-fill text-primary"></i> Biến Động Chi Tiêu 4 Tháng (Cột Số Tiền & Đường % Tăng/Giảm)</div>
+                <canvas id="chartMonthTrends" height="180"></canvas>
               </div>
-
-              <!-- 4. HÌNH THỨC THANH TOÁN & CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG -->
-              <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <div class="card p-2 border shadow-sm h-100">
-                    <div class="fw-bold text-dark mb-1" style="font-size:0.75rem;"><i class="bi bi-pie-chart-fill text-info"></i> Tỷ Lệ Hình Thức TT</div>
-                    <canvas id="chartPaymentMethods" height="160"></canvas>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="card p-2 border shadow-sm h-100">
-                    <div class="fw-bold text-dark mb-1" style="font-size:0.75rem;"><i class="bi bi-people-fill text-purple"></i> Theo Đối Tượng (3 Tháng)</div>
-                    <canvas id="chartTargetData" height="160"></canvas>
+          
+              <!-- 4. TỶ LỆ HÌNH THỨC THANH TOÁN (DONUT CHART CÓ TÍNH % CHUẨN) -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold text-dark mb-2 small"><i class="bi bi-pie-chart-fill text-info"></i> Tỷ Lệ Hình Thức Thanh Toán</div>
+                <div class="d-flex justify-content-center">
+                  <div style="width: 230px; height: 230px;">
+                    <canvas id="chartPaymentMethods"></canvas>
                   </div>
                 </div>
               </div>
-
-              <!-- 5. BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC -->
+          
+              <!-- 5. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG (HIỂN THỊ NGUYÊN 1 DÒNG DỄ NHÌN) -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold text-dark mb-2 small"><i class="bi bi-people-fill text-purple"></i> Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng</div>
+                <canvas id="chartTargetData" height="200"></canvas>
+              </div>
+          
+              <!-- 6. BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC (BẢNG SCROLL) -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2"><i class="bi bi-list-stars text-success"></i> Biến Động Chi Tiêu Theo Danh Mục (Tháng Này vs Tháng Trước)</div>
                 <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
@@ -374,8 +375,8 @@
                   </table>
                 </div>
               </div>
-
-              <!-- 6. TỔNG CHI TIÊU HẰNG NGÀY -->
+          
+              <!-- 7. TỔNG CHI TIÊU HẰNG NGÀY -->
               <div class="card p-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2"><i class="bi bi-calendar3 text-danger"></i> Chi Tiêu Hằng Ngày</div>
                 <canvas id="chartDailyList" height="140"></canvas>
@@ -857,6 +858,7 @@
     }
 
     function renderCashDashboard(d) {
+      // KPI & Dates
       document.getElementById('cashTotalRev').innerText = formatVND(d.period.totalRevenue);
       document.getElementById('cashTotalExp').innerText = formatVND(d.period.totalExpense);
       
@@ -864,35 +866,73 @@
       const filterEnd = document.getElementById('cashFilterEnd');
       if (filterStart && d.period.startDate) filterStart.value = convertDisplayToInputDate(d.period.startDate);
       if (filterEnd && d.period.endDate) filterEnd.value = convertDisplayToInputDate(d.period.endDate);
-
+    
       document.getElementById('cashTxCount').innerText = d.frequencyData.txCount + " lần";
       document.getElementById('cashAvgAmt').innerText = formatVND(d.frequencyData.avgAmt);
       document.getElementById('cashRatioExp').innerText = d.kpiRatio.ratio || '0%';
-
-      // 1. Biến Động Chi Tiêu 4 Tháng
+    
+      // 1. CHART 4 THÁNG DUAL AXES (Trục Y trái: Số tiền | Trục Y phải: % Tăng giảm)
       if (chartTrendsInstance) chartTrendsInstance.destroy();
       const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
       chartTrendsInstance = new Chart(ctxTrends, {
-        type: 'bar',
         data: {
-          labels: d.monthTrends.map(m => `${m.month} (${m.change})`),
-          datasets: [{
-            label: 'Số Tiền Chi (VNĐ)',
-            data: d.monthTrends.map(m => m.amount),
-            backgroundColor: '#0d6efd',
-            borderRadius: 6
-          }]
+          labels: d.monthTrends.map(m => m.month),
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Số Tiền Chi (VNĐ)',
+              data: d.monthTrends.map(m => m.amount),
+              backgroundColor: '#0d6efd',
+              borderRadius: 6,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: '% Tăng/Giảm',
+              data: d.monthTrends.map(m => m.changePct),
+              borderColor: '#dc3545',
+              backgroundColor: '#dc3545',
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              tension: 0.2,
+              yAxisID: 'y1'
+            }
+          ]
         },
-        options: { responsive: true, plugins: { legend: { display: false } } }
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 10 } }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: '% Tăng giảm', font: { size: 10 } },
+              ticks: { callback: value => value + '%' }
+            }
+          }
+        }
       });
-
-      // 2. Tỷ Lệ Hình Thức Thanh Toán (J5:J7)
+    
+      // 2. TỶ LỆ HÌNH THỨC THANH TOÁN (DOUGHNUT CHART TÍNH % CHUẨN)
       if (chartPaymentInstance) chartPaymentInstance.destroy();
       const ctxPayment = document.getElementById('chartPaymentMethods').getContext('2d');
+      
+      const totalPaymentAmt = d.paymentMethods.reduce((sum, item) => sum + item.amount, 0);
+      
       chartPaymentInstance = new Chart(ctxPayment, {
         type: 'doughnut',
         data: {
-          labels: d.paymentMethods.map(p => `${p.method} (${p.rateText})`),
+          labels: d.paymentMethods.map(p => {
+            const pct = totalPaymentAmt > 0 ? ((p.amount / totalPaymentAmt) * 100).toFixed(1) : 0;
+            return `${p.method} (${pct}%)`;
+          }),
           datasets: [{
             data: d.paymentMethods.map(p => p.amount),
             backgroundColor: ['#0d6efd', '#6c757d', '#6f42c1']
@@ -900,11 +940,14 @@
         },
         options: { 
           responsive: true, 
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } } 
+          maintainAspectRatio: false,
+          plugins: { 
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } 
+          } 
         }
       });
-
-      // 3. Theo Đối Tượng 3 Tháng (M3:P7)
+    
+      // 3. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG (DÒNG RIÊNG BIỆT 100% RỘNG, ĐẸP MẮT)
       if (chartTargetInstance) chartTargetInstance.destroy();
       const ctxTarget = document.getElementById('chartTargetData').getContext('2d');
       chartTargetInstance = new Chart(ctxTarget, {
@@ -912,18 +955,20 @@
         data: {
           labels: d.targetData.list.map(t => t.target),
           datasets: [
-            { label: d.targetData.months[0] || 'Tháng này', data: d.targetData.list.map(t => t.m1Amt), backgroundColor: '#198754' },
-            { label: d.targetData.months[1] || 'Tháng trước', data: d.targetData.list.map(t => t.m2Amt), backgroundColor: '#ffc107' },
-            { label: d.targetData.months[2] || 'Tháng cũ', data: d.targetData.list.map(t => t.m3Amt), backgroundColor: '#0dcaf0' }
+            { label: d.targetData.months[0] || 'Tháng này', data: d.targetData.list.map(t => t.m1Amt), backgroundColor: '#198754', borderRadius: 4 },
+            { label: d.targetData.months[1] || 'Tháng trước', data: d.targetData.list.map(t => t.m2Amt), backgroundColor: '#ffc107', borderRadius: 4 },
+            { label: d.targetData.months[2] || 'Tháng cũ', data: d.targetData.list.map(t => t.m3Amt), backgroundColor: '#0dcaf0', borderRadius: 4 }
           ]
         },
         options: { 
           responsive: true, 
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } } } 
+          plugins: { 
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } 
+          } 
         }
       });
-
-      // 4. Biến Động Chi Tiêu Theo Danh Mục
+    
+      // 4. BẢNG BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC
       const catTbody = document.getElementById('tableCatChanges');
       catTbody.innerHTML = '';
       if (d.catChanges && d.catChanges.length > 0) {
@@ -943,8 +988,8 @@
       } else {
         catTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-2">Không có dữ liệu danh mục.</td></tr>';
       }
-
-      // 5. Chi Tiêu Hằng Ngày
+    
+      // 5. CHI TIÊU HẰNG NGÀY
       if (chartDailyInstance) chartDailyInstance.destroy();
       const ctxDaily = document.getElementById('chartDailyList').getContext('2d');
       chartDailyInstance = new Chart(ctxDaily, {
