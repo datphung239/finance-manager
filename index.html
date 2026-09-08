@@ -382,7 +382,6 @@
               </div>
 
               <!-- 3. CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
-              <!-- MỚI (ĐÃ SỬA KHÔNG BỊ CẮT CHỮ): -->
               <div class="row g-1 g-sm-2 mb-3">
                 <div class="col-4">
                   <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
@@ -404,7 +403,7 @@
                 </div>
               </div>
 
-              <!-- 4. BIẾN ĐỘNG CHI TIÊU 4 THÁNG (CÓ HẠN CHẾ BỊ CHE KHẤT % BẰNG PADDING) -->
+              <!-- 4. BIẾN ĐỘNG CHI TIÊU 4 THÁNG -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-bar-chart-line-fill text-success"></i> Biến Động Chi Tiêu 4 Tháng (% Tăng/Giảm)</div>
                 <canvas id="chartMonthTrends" height="190"></canvas>
@@ -412,7 +411,6 @@
 
               <!-- 5. TỶ LỆ HÌNH THỨC THANH TOÁN -->
               <div class="card p-3 mb-3 border shadow-sm">
-                <!-- MỚI (ĐÃ TỐI ƯU KHÔNG BỊ TRÀN): -->
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                   <span class="fw-bold text-dark fit-title"><i class="bi bi-pie-chart-fill text-success"></i> Tỷ Lệ Hình Thức TT</span>
                   <div class="d-flex align-items-center bg-white border rounded px-2 py-1 shadow-sm ms-auto" style="max-width: 130px;">
@@ -427,7 +425,7 @@
                 </div>
               </div>
 
-              <!-- 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG (PHỐI MÀU MỚI ĐỒNG BỘ NỀN) -->
+              <!-- 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="fw-bold text-dark mb-2 small nowrap-text"><i class="bi bi-people-fill text-success"></i> Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng</div>
                 <canvas id="chartTargetData" height="200"></canvas>
@@ -452,7 +450,7 @@
                 </div>
               </div>
 
-              <!-- 8. TỔNG CHI TIÊU HẰNG NGÀY ( BỎ NĂM - CHỈ LẤY DD/MM ) -->
+              <!-- 8. TỔNG CHI TIÊU HẰNG NGÀY -->
               <div class="card p-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-calendar3 text-success"></i> Chi Tiêu Hằng Ngày</div>
                 <canvas id="chartDailyList" height="150"></canvas>
@@ -466,7 +464,6 @@
               <input type="hidden" name="entryType" value="cash_spending">
 
               <div class="card p-3 border shadow-sm mb-3">
-                <!-- MỚI (ĐÃ TỐI ƯU KHÔNG BỊ TRÀN): -->
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                   <h6 class="fw-bold text-success m-0 fit-title"><i class="bi bi-pencil-square"></i> Nhập Liệu Thu / Chi Cash</h6>
                   <div class="d-flex align-items-center bg-white border border-success-subtle rounded px-2 py-1 shadow-sm ms-auto" style="max-width: 130px;">
@@ -544,7 +541,7 @@
             <div class="card p-2 bg-light border">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH CASH GẦN ĐÂY</span>
-                <button class="btn btn-sm btn-link p-0 text-decoration-none text-success" type="button" onclick="loadRecentCashTransactions()"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none text-success" type="button" onclick="loadRecentCashTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
               </div>
               <div id="loadingTxCash" class="text-center py-2 text-muted" style="display:none;">
                 <div class="spinner-border spinner-border-sm text-success"></div> Đang tải...
@@ -663,8 +660,9 @@
       showLoginPrompt();
     }
 
+    // 1. XÓA CACHE TOÀN BỘ KHI F5 HOẶC ĐĂNG XUẤT (GIỐNG HỆT PHÍA THẺ)
     function clearAppCache() {
-      ["app_init_data", "app_dash_data", "app_tx_spending", "app_tx_payment", "app_tx_cash"].forEach(k => localStorage.removeItem(k));
+      ["app_init_data", "app_dash_data", "app_cash_dash_data", "app_tx_spending", "app_tx_payment", "app_tx_cash"].forEach(k => localStorage.removeItem(k));
     }
 
     async function sendRequest(action, payload = {}) {
@@ -687,6 +685,7 @@
       }
     }
 
+    // 2. KHI F5 / ĐĂNG NHẬP TRANG: BẮT BUỘC TẢI MỚI CẢ 2 DASHBOARD TỪ SERVER (GIỐNG HỆT PHÍA THẺ)
     async function fetchInitialAppDataServer() {
       const data = await sendRequest("getInitialData");
       if (data) {
@@ -694,10 +693,10 @@
         applyInitialData(data);
       }
       
-      // Tải đồng thời dữ liệu Card & Cash để nạp sẵn Cache ngay từ đầu
-      loadDashboard(true);
-      loadCashDashboard(true);
-    
+      // F5 -> Gọi Server tải mới đồng thời cả Thẻ và Cash
+      await loadDashboard(true);
+      await loadCashDashboard(true);
+
       sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
       sendRequest("getRecentTransactions", { type: 'payment' }).then(list => list && localStorage.setItem("app_tx_payment", JSON.stringify(list)));
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => list && localStorage.setItem("app_tx_cash", JSON.stringify(list)));
@@ -738,17 +737,16 @@
       const isCard = (mode === 'card');
       document.getElementById('btnModeCard').className = isCard ? 'btn btn-primary fw-bold btn-main-mode active' : 'btn btn-outline-primary fw-bold btn-main-mode';
       document.getElementById('btnModeCash').className = !isCard ? 'btn btn-success fw-bold btn-main-mode active' : 'btn btn-outline-success fw-bold btn-main-mode';
-    
+
       document.getElementById('cardAppContainer').classList.toggle('hidden', !isCard);
       document.getElementById('cashAppContainer').classList.toggle('hidden', isCard);
-    
+
       if (!isCard) {
-        // Chỉ hiển thị tab cash hiện tại mà không ép load lại từ Server
         const isDashActive = document.getElementById('tab-cash-dash').classList.contains('active');
         if (isDashActive) {
-          loadCashDashboard(false);
+          loadCashDashboard(false); // Dùng Cache
         } else {
-          loadRecentCashTransactions(false);
+          loadRecentCashTransactions(false); // Dùng Cache
         }
       }
     }
@@ -757,17 +755,15 @@
       const isDash = (type === 'dash');
       document.getElementById('tab-cash-dash').classList.toggle('active', isDash);
       document.getElementById('tab-cash-input').classList.toggle('active', !isDash);
-    
+
       document.getElementById('cashDashboardBlock').style.display = isDash ? 'block' : 'none';
       document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
-    
+
       if (isDash) {
-        // Đọc từ Cache (FALSE = Không bắt buộc fetch Server)
-        loadCashDashboard(false);
+        loadCashDashboard(false); // Chuyển tab -> Đọc từ Cache
       } else {
         setTodayDefaultDates();
-        // Đọc log giao dịch từ Cache (FALSE = Không bắt buộc fetch Server)
-        loadRecentCashTransactions(false);
+        loadRecentCashTransactions(false); // Chuyển tab -> Đọc từ Cache
       }
     }
 
@@ -859,7 +855,6 @@
       const msg = await sendRequest("submitData", { formObject });
       btn.disabled = false; btn.innerText = 'Lưu Giao Dịch Cash';
 
-      // Thêm 2 dòng lệnh xóa Cache và tải mới dữ liệu sau khi submit Cash thành công:
       if (msg) {
         showAlertCash(msg, 'success');
         form.reset();
@@ -867,9 +862,9 @@
         document.getElementById('mCash').checked = true;
         document.getElementById('cashTarget').disabled = false;
         
-        // Tải mới và cập nhật lại cache cho cả giao dịch lẫn Dashboard Cash
+        // Đã thêm giao dịch -> Tải mới Server và ghi đè Cache (GIỐNG THẺ)
         loadRecentCashTransactions(true);
-        loadCashDashboard(true);
+        await loadCashDashboard(true);
       }
     }
     
@@ -878,7 +873,6 @@
       const txList = document.getElementById('txListCash');
       const cached = localStorage.getItem(cacheKey);
     
-      // Render ngay nếu Cache khả dụng
       if (cached && !forceFetch) {
         try {
           const list = JSON.parse(cached);
@@ -887,7 +881,6 @@
         } catch (e) {}
       }
     
-      // Tải mới từ Server khi thêm giao dịch mới hoặc bấm Refresh
       document.getElementById('loadingTxCash').style.display = 'block';
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
         document.getElementById('loadingTxCash').style.display = 'none';
@@ -898,9 +891,10 @@
       });
     }
     
-    // Hàm phụ trợ render danh sách UI Cash
     function renderRecentCashListUI(list) {
       const txList = document.getElementById('txListCash');
+      if (!txList) return;
+
       if (!list || list.length === 0) {
         txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
         return;
@@ -944,7 +938,8 @@
         const msg = await sendRequest("deleteTransaction", { type: 'cash_spending', rowIndex });
         if (msg) {
           showAlertCash(msg, 'success');
-          loadRecentCashTransactions();
+          loadRecentCashTransactions(true);
+          await loadCashDashboard(true);
         } else {
           document.getElementById('loadingTxCash').style.display = 'none';
         }
@@ -960,12 +955,12 @@
       setTimeout(() => { alert.style.display = 'none'; }, 3000);
     }
 
-    // CASH DASHBOARD VIRTUALIZATION
+    // 3. TẢI DASHBOARD CASH (ĐỌC CACHE KHI CHUYỂN TAB, FETCH KHI F5 HOẶC BẤM REFRESH THỦ CÔNG)
     async function loadCashDashboard(fetchServer = false) {
       const cacheKey = "app_cash_dash_data";
       const cached = localStorage.getItem(cacheKey);
     
-      // Nếu đã có Cache và không bấm nút Refresh thủ công -> Render tức thì từ Cache!
+      // Nếu đã có Cache và không bấm Refresh / F5 -> Render tức thì từ Cache!
       if (cached && !fetchServer) {
         try {
           const parsedData = JSON.parse(cached);
@@ -976,7 +971,7 @@
         } catch (e) {}
       }
     
-      // Nếu chưa có Cache hoặc người dùng bấm nút Refresh / F5
+      // Nếu F5 hoặc bấm Refresh -> Tải từ Server
       document.getElementById('loadingCashDash').style.display = 'block';
       document.getElementById('cashDashContent').style.display = 'none';
     
@@ -1028,15 +1023,10 @@
       document.getElementById('cashAvgAmt').innerText = formatVND(d.frequencyData.avgAmt);
       document.getElementById('cashMaxAmt').innerText = formatVND(d.frequencyData.maxAmt);
 
-      // 4. CHART 4 THÁNG DUAL AXES (SỬA LỖI MẤT SỐ % BẰNG PADDING)
-      // ✅ MỚI: TỐI ƯU HIỂN THỊ % VÀ THÊM SỐ TIỀN THÁNG CUỐI CÙNG
-      // ============================================================================
-      // BẢN TỐI ƯU CỘT VÀ TỰ NÂNG TRẦN TRỤC Y THÊM 3-4 TRIỆU ĐỂ KHÔNG BỊ MẤT CHỮ
-      // ============================================================================
+      // 4. CHART 4 THÁNG
       if (chartTrendsInstance) chartTrendsInstance.destroy();
       const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
       
-      // Tìm số tiền chi lớn nhất trong 4 tháng và nâng trần trục Y lên thêm 4 triệu
       const maxAmount = Math.max(...d.monthTrends.map(m => m.amount), 0);
       const customYMax = maxAmount + 4000000; 
       
@@ -1079,7 +1069,6 @@
               yAxisID: 'y',
               order: 2,
               datalabels: {
-                // Bật hiển thị số tiền ở đỉnh cột cho tháng cuối cùng
                 display: (ctx) => ctx.dataIndex === d.monthTrends.length - 1,
                 align: 'top',
                 anchor: 'end',
@@ -1100,7 +1089,7 @@
               type: 'linear',
               display: true,
               position: 'left',
-              max: customYMax, // TỰ ĐỘNG NÂNG TRẦN LÊN THÊM 4 TRIỆU
+              max: customYMax,
               title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 9 } },
               ticks: { font: { size: 9 } }
             },
@@ -1115,7 +1104,8 @@
           }
         }
       });
-      // 5. TỶ LỆ HÌNH THỨC THANH TOÁN (DONUT CHART - GREEN THEME)
+
+      // 5. TỶ LỆ HÌNH THỨC THANH TOÁN
       if (chartPaymentInstance) chartPaymentInstance.destroy();
       const ctxPayment = document.getElementById('chartPaymentMethods').getContext('2d');
       
@@ -1142,7 +1132,7 @@
         }
       });
 
-      // 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG (GREEN GRADIENT THEME)
+      // 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG
       if (chartTargetInstance) chartTargetInstance.destroy();
       const ctxTarget = document.getElementById('chartTargetData').getContext('2d');
       chartTargetInstance = new Chart(ctxTarget, {
@@ -1184,7 +1174,7 @@
         catTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-2">Không có dữ liệu danh mục.</td></tr>';
       }
 
-      // 8. TỔNG CHI TIÊU HẰNG NGÀY ( BỎ NĂM - CHỈ LẤY DD/MM )
+      // 8. TỔNG CHI TIÊU HẰNG NGÀY
       if (chartDailyInstance) chartDailyInstance.destroy();
       const ctxDaily = document.getElementById('chartDailyList').getContext('2d');
 
@@ -1196,7 +1186,6 @@
 
       const avgFormatted = avgDailyAmt.toLocaleString('vi-VN') + ' đ';
 
-      // RÚT GỌN CHỈ LẤY DD/MM (BỎ NĂM YYYY)
       const shortDateLabels = dailyList.map(i => {
         if (!i.date) return '';
         const parts = i.date.split('/');
@@ -1254,7 +1243,7 @@
       const data = await sendRequest("updateCashDashboardFilters", { filterObj });
       document.getElementById('loadingCashDash').style.display = 'none';
       if (data) {
-        localStorage.setItem("app_cash_dash_data", JSON.stringify(data)); // Cập nhật lại Cache sau khi lọc
+        localStorage.setItem("app_cash_dash_data", JSON.stringify(data));
         renderCashDashboard(data);
       }
     }
