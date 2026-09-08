@@ -693,9 +693,14 @@
         localStorage.setItem("app_init_data", JSON.stringify(data));
         applyInitialData(data);
       }
-      await loadDashboard(true);
+      
+      // Tải đồng thời dữ liệu Card & Cash để nạp sẵn Cache ngay từ đầu
+      loadDashboard(true);
+      loadCashDashboard(true);
+    
       sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
       sendRequest("getRecentTransactions", { type: 'payment' }).then(list => list && localStorage.setItem("app_tx_payment", JSON.stringify(list)));
+      sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => list && localStorage.setItem("app_tx_cash", JSON.stringify(list)));
     }
 
     function applyInitialData(data) {
@@ -733,12 +738,18 @@
       const isCard = (mode === 'card');
       document.getElementById('btnModeCard').className = isCard ? 'btn btn-primary fw-bold btn-main-mode active' : 'btn btn-outline-primary fw-bold btn-main-mode';
       document.getElementById('btnModeCash').className = !isCard ? 'btn btn-success fw-bold btn-main-mode active' : 'btn btn-outline-success fw-bold btn-main-mode';
-
+    
       document.getElementById('cardAppContainer').classList.toggle('hidden', !isCard);
       document.getElementById('cashAppContainer').classList.toggle('hidden', isCard);
-
+    
       if (!isCard) {
-        switchCashTab('dash');
+        // Chỉ hiển thị tab cash hiện tại mà không ép load lại từ Server
+        const isDashActive = document.getElementById('tab-cash-dash').classList.contains('active');
+        if (isDashActive) {
+          loadCashDashboard(false);
+        } else {
+          loadRecentCashTransactions(false);
+        }
       }
     }
 
@@ -751,11 +762,11 @@
       document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
     
       if (isDash) {
-        // Chỉ đọc dữ liệu khả dụng, không buộc gọi lại Server (chỉ fetch khi bấm Refresh hoặc F5)
+        // Đọc từ Cache (FALSE = Không bắt buộc fetch Server)
         loadCashDashboard(false);
       } else {
         setTodayDefaultDates();
-        // Đọc giao dịch gần đây từ bộ nhớ cache trước
+        // Đọc log giao dịch từ Cache (FALSE = Không bắt buộc fetch Server)
         loadRecentCashTransactions(false);
       }
     }
@@ -861,13 +872,13 @@
         loadCashDashboard(true);
       }
     }
-
+    
     function loadRecentCashTransactions(forceFetch = false) {
       const cacheKey = "app_tx_cash";
       const txList = document.getElementById('txListCash');
       const cached = localStorage.getItem(cacheKey);
     
-      // Hiển thị ngay từ Cache nếu có
+      // Render ngay nếu Cache khả dụng
       if (cached && !forceFetch) {
         try {
           const list = JSON.parse(cached);
@@ -876,7 +887,7 @@
         } catch (e) {}
       }
     
-      // Nếu không có Cache hoặc bấm Làm mới thủ công
+      // Tải mới từ Server khi thêm giao dịch mới hoặc bấm Refresh
       document.getElementById('loadingTxCash').style.display = 'block';
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
         document.getElementById('loadingTxCash').style.display = 'none';
@@ -954,7 +965,7 @@
       const cacheKey = "app_cash_dash_data";
       const cached = localStorage.getItem(cacheKey);
     
-      // 1. Nếu có dữ liệu trong Cache và không bấm Refresh thủ công -> Dùng ngay dữ liệu Cache
+      // Nếu đã có Cache và không bấm nút Refresh thủ công -> Render tức thì từ Cache!
       if (cached && !fetchServer) {
         try {
           const parsedData = JSON.parse(cached);
@@ -965,7 +976,7 @@
         } catch (e) {}
       }
     
-      // 2. Nếu chưa có Cache hoặc người dùng bấm nút "Refresh" -> Tải từ Server
+      // Nếu chưa có Cache hoặc người dùng bấm nút Refresh / F5
       document.getElementById('loadingCashDash').style.display = 'block';
       document.getElementById('cashDashContent').style.display = 'none';
     
@@ -973,7 +984,7 @@
       document.getElementById('loadingCashDash').style.display = 'none';
     
       if (data) {
-        localStorage.setItem(cacheKey, JSON.stringify(data)); // Lưu lại vào Cache
+        localStorage.setItem(cacheKey, JSON.stringify(data)); // Lưu lại Cache
         document.getElementById('cashDashContent').style.display = 'block';
         renderCashDashboard(data);
       }
@@ -1242,7 +1253,10 @@
       document.getElementById('loadingCashDash').style.display = 'block';
       const data = await sendRequest("updateCashDashboardFilters", { filterObj });
       document.getElementById('loadingCashDash').style.display = 'none';
-      if (data) renderCashDashboard(data);
+      if (data) {
+        localStorage.setItem("app_cash_dash_data", JSON.stringify(data)); // Cập nhật lại Cache sau khi lọc
+        renderCashDashboard(data);
+      }
     }
 
     function convertDisplayToInputDate(dStr) {
