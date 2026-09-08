@@ -627,7 +627,7 @@
     }
 
     // LẤY LOG GIAO DỊCH CASH
-// FIX LOG CASH TRÁNH ĐÈ DATA THẺ TÍN DỤNG
+// HÀM RENDER LOG DỮ LIỆU CASH TỪ FILE SHEET 1hcge8XX...
 function loadRecentCashTransactions(forceFetch = true) {
   const txList = document.getElementById('txListCash');
   document.getElementById('loadingTxCash').style.display = 'block';
@@ -649,7 +649,7 @@ function loadRecentCashTransactions(forceFetch = true) {
 
       const categoryText = item.category || 'Chưa phân loại';
       const methodText = item.method || 'Tiền Mặt';
-      const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined') ? ` (${item.target})` : '';
+      const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') ? ` (${item.target})` : '';
 
       html += `
         <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
@@ -939,8 +939,7 @@ function loadRecentCashTransactions(forceFetch = true) {
       if (window.alertTimer) clearTimeout(window.alertTimer);
       window.alertTimer = setTimeout(() => { alert.style.display = 'none'; }, 3000);
     }
-
-// FIX TRIỆT ĐỂ LỖI VOICE BỊ CHUYỂN SANG MODE THẺ TÍN DỤNG
+// FIX TRIỆT ĐỂ LỖI VOICE BỊ TRUYỀN SAI MODE VỀ 'spending' CỦA CARD
 function startVoiceRecognition(forcedMode = null) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
@@ -963,7 +962,7 @@ function startVoiceRecognition(forcedMode = null) {
   recognition.interimResults = true;
   recognition.continuous = false;
 
-  // BẮT BỘC LẤY CHÍNH XÁC "cash_spending" KHI BẤM MIC Ở CASH
+  // Ép kiểu mode: Bắt buộc lấy 'cash_spending' khi gọi ở ô Cash
   const currentMode = forcedMode ? forcedMode : 'cash_spending';
   const isCashMode = (currentMode === 'cash_spending');
   const isRec = (currentMode === 'recommend');
