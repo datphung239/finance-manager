@@ -627,8 +627,8 @@
     }
 
     // LẤY LOG GIAO DỊCH CASH
-// CẬP NHẬT HÀM RENDER LOG CASH TRÁNH LỖI UNDEFINED
-function loadRecentCashTransactions(forceFetch = false) {
+// FIX LOG CASH TRÁNH ĐÈ DATA THẺ TÍN DỤNG
+function loadRecentCashTransactions(forceFetch = true) {
   const txList = document.getElementById('txListCash');
   document.getElementById('loadingTxCash').style.display = 'block';
 
@@ -646,7 +646,7 @@ function loadRecentCashTransactions(forceFetch = false) {
       const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
       const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
       const sign = isIncome ? '+' : '-';
-      
+
       const categoryText = item.category || 'Chưa phân loại';
       const methodText = item.method || 'Tiền Mặt';
       const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined') ? ` (${item.target})` : '';
@@ -940,6 +940,7 @@ function loadRecentCashTransactions(forceFetch = false) {
       window.alertTimer = setTimeout(() => { alert.style.display = 'none'; }, 3000);
     }
 
+// FIX TRIỆT ĐỂ LỖI VOICE BỊ CHUYỂN SANG MODE THẺ TÍN DỤNG
 function startVoiceRecognition(forcedMode = null) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
@@ -962,8 +963,8 @@ function startVoiceRecognition(forcedMode = null) {
   recognition.interimResults = true;
   recognition.continuous = false;
 
-  // FIX CHÍNH TẠI ĐÂY: Ưu tiên forcedMode truyền vào
-  const currentMode = forcedMode ? forcedMode : (document.getElementById('entryType').value || 'spending');
+  // BẮT BỘC LẤY CHÍNH XÁC "cash_spending" KHI BẤM MIC Ở CASH
+  const currentMode = forcedMode ? forcedMode : 'cash_spending';
   const isCashMode = (currentMode === 'cash_spending');
   const isRec = (currentMode === 'recommend');
 
@@ -1032,6 +1033,7 @@ function startVoiceRecognition(forcedMode = null) {
 
   try { recognition.start(); } catch(err) { resetVoiceUI(); }
 }
+    
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
 
