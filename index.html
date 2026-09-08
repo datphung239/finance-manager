@@ -11,6 +11,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
     body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-top: 15px; padding-bottom: 30px; }
+    /* Chống tràn viền thẻ card trên mobile */
+    .card { overflow: hidden; }
+    input[type="date"]::-webkit-inner-spin-button,
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      margin-left: 2px;
+    }
     .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: none; }
     .nav-grid-container { display: flex; flex-direction: column; gap: 6px; }
     .nav-row-1, .nav-row-2 { display: flex; gap: 6px; width: 100%; }
@@ -404,11 +411,12 @@
 
               <!-- 5. TỶ LỆ HÌNH THỨC THANH TOÁN -->
               <div class="card p-3 mb-3 border shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold text-dark small nowrap-text"><i class="bi bi-pie-chart-fill text-success"></i> Tỷ Lệ Hình Thức Thanh Toán</span>
-                  <div class="d-flex align-items-center gap-1">
-                    <span class="small text-muted nowrap-text" style="font-size:0.72rem;">Tháng:</span>
-                    <input type="date" id="cashPaymentMonth" class="form-control form-control-sm p-0 px-1" onchange="applyCashFilters()" style="width: 105px; font-size: 0.72rem;">
+                <!-- MỚI (ĐÃ TỐI ƯU KHÔNG BỊ TRÀN): -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                  <span class="fw-bold text-dark fit-title"><i class="bi bi-pie-chart-fill text-success"></i> Tỷ Lệ Hình Thức TT</span>
+                  <div class="d-flex align-items-center bg-white border rounded px-2 py-1 shadow-sm ms-auto" style="max-width: 130px;">
+                    <span class="small text-muted me-1 nowrap-text" style="font-size:0.7rem;">Tháng:</span>
+                    <input type="date" id="cashPaymentMonth" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" onchange="applyCashFilters()" style="width: 90px; font-size: 0.72rem; background: transparent;">
                   </div>
                 </div>
                 <div class="d-flex justify-content-center">
@@ -457,11 +465,12 @@
               <input type="hidden" name="entryType" value="cash_spending">
 
               <div class="card p-3 border shadow-sm mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h6 class="fw-bold text-success m-0 nowrap-text"><i class="bi bi-pencil-square"></i> Nhập Liệu Thu / Chi Cash</h6>
-                  <div class="d-flex align-items-center bg-white border border-success-subtle rounded px-2 py-1 shadow-sm">
-                    <i class="bi bi-calendar-check text-success me-1" style="font-size: 0.85rem;"></i>
-                    <input type="date" class="form-control form-control-sm p-0 border-0 fw-bold text-dark" id="cashDate" name="date" required style="width: 105px; font-size: 0.78rem; background: transparent;">
+                <!-- MỚI (ĐÃ TỐI ƯU KHÔNG BỊ TRÀN): -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                  <h6 class="fw-bold text-success m-0 fit-title"><i class="bi bi-pencil-square"></i> Nhập Liệu Thu / Chi Cash</h6>
+                  <div class="d-flex align-items-center bg-white border border-success-subtle rounded px-2 py-1 shadow-sm ms-auto" style="max-width: 130px;">
+                    <i class="bi bi-calendar-check text-success me-1" style="font-size: 0.8rem;"></i>
+                    <input type="date" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" id="cashDate" name="date" required style="width: 95px; font-size: 0.75rem; background: transparent;">
                   </div>
                 </div>
 
