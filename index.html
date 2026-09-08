@@ -189,7 +189,7 @@
 
               <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
                 <div class="card-body p-2 text-center">
-                  <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm mb-2" id="btnVoice" onclick="startVoiceRecognition()" style="width: 55px; height: 55px;">
+                  <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm mb-2" id="btnVoice" onclick="startVoiceRecognition('spending')" style="width: 55px; height: 55px;">
                     <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
                   </button>
                   <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch</div>
@@ -377,7 +377,7 @@
             <div class="card p-2 bg-light border">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH CASH GẦN ĐÂY</span>
-                <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentCashTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentCashTransactions()"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
               </div>
               <div id="loadingTxCash" class="text-center py-2 text-muted" style="display:none;">
                 <div class="spinner-border spinner-border-sm text-success"></div> Đang tải...
@@ -536,7 +536,7 @@
       list.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
     }
 
-    // CHUYỂN LUỒNG QUẢN LÝ CHÍNH (Thẻ Tín Dụng vs Dòng Tiền Mặt)
+    // CHUYỂN LUỒNG QUẢN LÝ CHÍNH
     function switchMainMode(mode) {
       const isCard = (mode === 'card');
       document.getElementById('btnModeCard').className = isCard ? 'btn btn-primary fw-bold active' : 'btn btn-outline-primary fw-bold';
@@ -555,7 +555,7 @@
       document.getElementById('cashDashboardBlock').style.display = isDash ? 'block' : 'none';
       document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
 
-      if (!isDash) loadRecentCashTransactions(false);
+      if (!isDash) loadRecentCashTransactions();
     }
 
     function switchForm(type) {
@@ -622,48 +622,47 @@
         form.reset();
         document.getElementById('cashDate').value = new Date().toISOString().substring(0, 10);
         document.getElementById('mCash').checked = true;
-        loadRecentCashTransactions(true);
+        loadRecentCashTransactions();
       }
     }
 
-    // LẤY LOG GIAO DỊCH CASH
-// HÀM RENDER LOG DỮ LIỆU CASH TỪ FILE SHEET 1hcge8XX...
-function loadRecentCashTransactions(forceFetch = true) {
-  const txList = document.getElementById('txListCash');
-  document.getElementById('loadingTxCash').style.display = 'block';
+    // LẤY LOG GIAO DỊCH CASH TRỰC TIẾP TỪ SERVER
+    function loadRecentCashTransactions() {
+      const txList = document.getElementById('txListCash');
+      document.getElementById('loadingTxCash').style.display = 'block';
 
-  sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
-    document.getElementById('loadingTxCash').style.display = 'none';
-    if (!list || list.length === 0) {
-      txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
-      return;
+      sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
+        document.getElementById('loadingTxCash').style.display = 'none';
+        if (!list || list.length === 0) {
+          txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
+          return;
+        }
+
+        let html = '<div class="list-group list-group-flush">';
+        list.forEach(item => {
+          const amt = Number(item.amount || 0);
+          const isIncome = amt < 0;
+          const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
+          const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
+          const sign = isIncome ? '+' : '-';
+
+          const categoryText = item.category || 'Chưa phân loại';
+          const methodText = item.method || 'Tiền Mặt';
+          const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') ? ` (${item.target})` : '';
+
+          html += `
+            <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
+              <div>
+                <div class="fw-bold small">${item.date} - <span class="badge bg-secondary">${methodText}</span></div>
+                <div class="text-dark small">${categoryText}${targetText}</div>
+                <div class="${badgeColor} small">${sign} ${amtFormatted} đ</div>
+              </div>
+              <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${categoryText}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
+            </div>`;
+        });
+        txList.innerHTML = html + '</div>';
+      });
     }
-
-    let html = '<div class="list-group list-group-flush">';
-    list.forEach(item => {
-      const amt = Number(item.amount || 0);
-      const isIncome = amt < 0;
-      const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
-      const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
-      const sign = isIncome ? '+' : '-';
-
-      const categoryText = item.category || 'Chưa phân loại';
-      const methodText = item.method || 'Tiền Mặt';
-      const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') ? ` (${item.target})` : '';
-
-      html += `
-        <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
-          <div>
-            <div class="fw-bold small">${item.date} - <span class="badge bg-secondary">${methodText}</span></div>
-            <div class="text-dark small">${categoryText}${targetText}</div>
-            <div class="${badgeColor} small">${sign} ${amtFormatted} đ</div>
-          </div>
-          <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${categoryText}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
-        </div>`;
-    });
-    txList.innerHTML = html + '</div>';
-  });
-}
 
     async function confirmDeleteCash(rowIndex, date, category, amount) {
       if (confirm(`Bạn có chắc muốn XÓA giao dịch này?\n\n- Ngày: ${date}\n- Danh mục: ${category}\n- Số tiền: ${amount} đ`)) {
@@ -671,7 +670,7 @@ function loadRecentCashTransactions(forceFetch = true) {
         const msg = await sendRequest("deleteTransaction", { type: 'cash_spending', rowIndex });
         if (msg) {
           showAlertCash(msg, 'success');
-          loadRecentCashTransactions(true);
+          loadRecentCashTransactions();
         } else {
           document.getElementById('loadingTxCash').style.display = 'none';
         }
@@ -939,100 +938,100 @@ function loadRecentCashTransactions(forceFetch = true) {
       if (window.alertTimer) clearTimeout(window.alertTimer);
       window.alertTimer = setTimeout(() => { alert.style.display = 'none'; }, 3000);
     }
-// FIX TRIỆT ĐỂ LỖI VOICE BỊ TRUYỀN SAI MODE VỀ 'spending' CỦA CARD
-function startVoiceRecognition(forcedMode = null) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
 
-  if (isProcessingVoice) return;
+    function startVoiceRecognition(forcedMode = null) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
 
-  if (recognitionInstance) {
-    try { 
-      recognitionInstance.onresult = null;
-      recognitionInstance.onerror = null;
-      recognitionInstance.onend = null;
-      recognitionInstance.abort(); 
-    } catch(e){}
-    recognitionInstance = null;
-  }
+      if (isProcessingVoice) return;
 
-  const recognition = new SpeechRecognition();
-  recognitionInstance = recognition;
-  recognition.lang = 'vi-VN';
-  recognition.interimResults = true;
-  recognition.continuous = false;
+      if (recognitionInstance) {
+        try { 
+          recognitionInstance.onresult = null;
+          recognitionInstance.onerror = null;
+          recognitionInstance.onend = null;
+          recognitionInstance.abort(); 
+        } catch(e){}
+        recognitionInstance = null;
+      }
 
-  // Ép kiểu mode: Bắt buộc lấy 'cash_spending' khi gọi ở ô Cash
-  const currentMode = forcedMode ? forcedMode : 'cash_spending';
-  const isCashMode = (currentMode === 'cash_spending');
-  const isRec = (currentMode === 'recommend');
+      const recognition = new SpeechRecognition();
+      recognitionInstance = recognition;
+      recognition.lang = 'vi-VN';
+      recognition.interimResults = true;
+      recognition.continuous = false;
 
-  let btnVoice, micIcon, statusText, liveBox, liveText;
+      // ÉP CỐ ĐỊNH MODE THEO NÚT ĐÃ BẤM
+      const currentMode = forcedMode ? forcedMode : 'cash_spending';
+      const isCashMode = (currentMode === 'cash_spending');
+      const isRec = (currentMode === 'recommend');
 
-  if (isCashMode) {
-    btnVoice = document.getElementById('btnVoiceCash');
-    micIcon = document.getElementById('micIconCash');
-    statusText = document.getElementById('voiceStatusTextCash');
-    liveBox = document.getElementById('liveSpeechBoxCash');
-    liveText = document.getElementById('liveSpeechTextCash');
-  } else if (isRec) {
-    btnVoice = document.getElementById('btnVoiceRec');
-    micIcon = document.getElementById('micIconRec');
-    statusText = document.getElementById('voiceStatusTextRec');
-    liveBox = document.getElementById('liveSpeechBoxRec');
-    liveText = document.getElementById('liveSpeechTextRec');
-  } else {
-    btnVoice = document.getElementById('btnVoice');
-    micIcon = document.getElementById('micIcon');
-    statusText = document.getElementById('voiceStatusText');
-    liveBox = document.getElementById('liveSpeechBox');
-    liveText = document.getElementById('liveSpeechText');
-  }
+      let btnVoice, micIcon, statusText, liveBox, liveText;
 
-  btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-  micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
-  statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
+      if (isCashMode) {
+        btnVoice = document.getElementById('btnVoiceCash');
+        micIcon = document.getElementById('micIconCash');
+        statusText = document.getElementById('voiceStatusTextCash');
+        liveBox = document.getElementById('liveSpeechBoxCash');
+        liveText = document.getElementById('liveSpeechTextCash');
+      } else if (isRec) {
+        btnVoice = document.getElementById('btnVoiceRec');
+        micIcon = document.getElementById('micIconRec');
+        statusText = document.getElementById('voiceStatusTextRec');
+        liveBox = document.getElementById('liveSpeechBoxRec');
+        liveText = document.getElementById('liveSpeechTextRec');
+      } else {
+        btnVoice = document.getElementById('btnVoice');
+        micIcon = document.getElementById('micIcon');
+        statusText = document.getElementById('voiceStatusText');
+        liveBox = document.getElementById('liveSpeechBox');
+        liveText = document.getElementById('liveSpeechText');
+      }
 
-  liveBox.classList.remove('hidden');
-  liveText.innerText = "Đang lắng nghe...";
+      btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+      micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
+      statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
 
-  let finalTranscript = '';
+      liveBox.classList.remove('hidden');
+      liveText.innerText = "Đang lắng hệ...";
 
-  recognition.onresult = (event) => {
-    let interimTranscript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-      else interimTranscript += event.results[i][0].transcript;
+      let finalTranscript = '';
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          else interimTranscript += event.results[i][0].transcript;
+        }
+
+        const displayText = finalTranscript || interimTranscript;
+        liveText.innerText = displayText;
+
+        if (event.results[0].isFinal && !isProcessingVoice) {
+          isProcessingVoice = true;
+          try { recognition.stop(); } catch(e){}
+          processParsedVoiceText(finalTranscript || displayText, currentMode);
+        }
+      };
+
+      recognition.onspeechend = () => {
+        if (!isProcessingVoice) {
+          const textToProcess = liveText.innerText;
+          if (textToProcess && textToProcess !== "Đang lắng nghe...") {
+            isProcessingVoice = true;
+            processParsedVoiceText(textToProcess, currentMode);
+          } else resetVoiceUI();
+        }
+      };
+
+      recognition.onerror = (event) => {
+        resetVoiceUI();
+        if (event.error !== 'no-speech') alert("Lỗi nhận diện giọng nói, vui lòng thử lại!");
+      };
+
+      try { recognition.start(); } catch(err) { resetVoiceUI(); }
     }
 
-    const displayText = finalTranscript || interimTranscript;
-    liveText.innerText = displayText;
-
-    if (event.results[0].isFinal && !isProcessingVoice) {
-      isProcessingVoice = true;
-      try { recognition.stop(); } catch(e){}
-      processParsedVoiceText(finalTranscript || displayText, currentMode);
-    }
-  };
-
-  recognition.onspeechend = () => {
-    if (!isProcessingVoice) {
-      const textToProcess = liveText.innerText;
-      if (textToProcess && textToProcess !== "Đang lắng nghe...") {
-        isProcessingVoice = true;
-        processParsedVoiceText(textToProcess, currentMode);
-      } else resetVoiceUI();
-    }
-  };
-
-  recognition.onerror = (event) => {
-    resetVoiceUI();
-    if (event.error !== 'no-speech') alert("Lỗi nhận diện giọng nói, vui lòng thử lại!");
-  };
-
-  try { recognition.start(); } catch(err) { resetVoiceUI(); }
-}
-    
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
 
