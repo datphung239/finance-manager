@@ -746,15 +746,17 @@
       const isDash = (type === 'dash');
       document.getElementById('tab-cash-dash').classList.toggle('active', isDash);
       document.getElementById('tab-cash-input').classList.toggle('active', !isDash);
-
+    
       document.getElementById('cashDashboardBlock').style.display = isDash ? 'block' : 'none';
       document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
-
+    
       if (isDash) {
-        loadCashDashboard(true);
+        // Chỉ đọc dữ liệu khả dụng, không buộc gọi lại Server (chỉ fetch khi bấm Refresh hoặc F5)
+        loadCashDashboard(false);
       } else {
         setTodayDefaultDates();
-        loadRecentCashTransactions();
+        // Đọc giao dịch gần đây từ bộ nhớ cache trước
+        loadRecentCashTransactions(false);
       }
     }
 
@@ -846,56 +848,83 @@
       const msg = await sendRequest("submitData", { formObject });
       btn.disabled = false; btn.innerText = 'Lưu Giao Dịch Cash';
 
+      // Thêm 2 dòng lệnh xóa Cache và tải mới dữ liệu sau khi submit Cash thành công:
       if (msg) {
         showAlertCash(msg, 'success');
         form.reset();
         setTodayDefaultDates();
         document.getElementById('mCash').checked = true;
         document.getElementById('cashTarget').disabled = false;
-        loadRecentCashTransactions();
+        
+        // Tải mới và cập nhật lại cache cho cả giao dịch lẫn Dashboard Cash
+        loadRecentCashTransactions(true);
+        loadCashDashboard(true);
       }
     }
 
-    function loadRecentCashTransactions() {
+    function loadRecentCashTransactions(forceFetch = false) {
+      const cacheKey = "app_tx_cash";
       const txList = document.getElementById('txListCash');
+      const cached = localStorage.getItem(cacheKey);
+    
+      // Hiển thị ngay từ Cache nếu có
+      if (cached && !forceFetch) {
+        try {
+          const list = JSON.parse(cached);
+          renderRecentCashListUI(list);
+          return;
+        } catch (e) {}
+      }
+    
+      // Nếu không có Cache hoặc bấm Làm mới thủ công
       document.getElementById('loadingTxCash').style.display = 'block';
-
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
         document.getElementById('loadingTxCash').style.display = 'none';
-        if (!list || list.length === 0) {
-          txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
-          return;
+        if (list) {
+          localStorage.setItem(cacheKey, JSON.stringify(list));
+          renderRecentCashListUI(list);
         }
-
-        let html = '<div class="list-group list-group-flush">';
-        list.forEach(item => {
-          const amt = Number(item.amount || 0);
-          const isIncome = amt < 0;
-          const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
-          const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
-          const sign = isIncome ? '+' : '-';
-
-          const categoryText = item.category || 'Chưa phân loại';
-          const methodText = item.method || 'Tiền Mặt';
-          
-          let methodBadgeClass = 'bg-secondary';
-          if (methodText === 'Chuyển Khoản') methodBadgeClass = 'bg-success';
-          else if (methodText === 'Ví Điện Tử') methodBadgeClass = 'bg-purple';
-
-          const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` : '';
-
-          html += `
-            <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
-              <div>
-                <div class="fw-bold small">${item.date} - <span class="badge ${methodBadgeClass}">${methodText}</span></div>
-                <div class="text-dark small">${categoryText} ${targetText}</div>
-                <div class="${badgeColor} small">${sign} ${amtFormatted} đ</div>
-              </div>
-              <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${categoryText}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
-            </div>`;
-        });
-        txList.innerHTML = html + '</div>';
       });
+    }
+    
+    // Hàm phụ trợ render danh sách UI Cash
+    function renderRecentCashListUI(list) {
+      const txList = document.getElementById('txListCash');
+      if (!list || list.length === 0) {
+        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
+        return;
+      }
+    
+      let html = '<div class="list-group list-group-flush">';
+      list.forEach(item => {
+        const amt = Number(item.amount || 0);
+        const isIncome = amt < 0;
+        const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
+        const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
+        const sign = isIncome ? '+' : '-';
+    
+        const categoryText = item.category || 'Chưa phân loại';
+        const methodText = item.method || 'Tiền Mặt';
+        
+        let methodBadgeClass = 'bg-secondary';
+        if (methodText === 'Chuyển Khoản') methodBadgeClass = 'bg-success';
+        else if (methodText === 'Ví Điện Tử') methodBadgeClass = 'bg-purple';
+    
+        const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') 
+          ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` 
+          : '';
+    
+        html += `
+          <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div>
+              <div class="fw-bold small">${item.date} - <span class="badge ${methodBadgeClass}">${methodText}</span></div>
+              <div class="text-dark small">${categoryText} ${targetText}</div>
+              <div class="${badgeColor} small">${sign} ${amtFormatted} đ</div>
+            </div>
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${categoryText}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
+          </div>`;
+      });
+      txList.innerHTML = html + '</div>';
     }
 
     async function confirmDeleteCash(rowIndex, date, category, amount) {
@@ -921,14 +950,30 @@
     }
 
     // CASH DASHBOARD VIRTUALIZATION
-    async function loadCashDashboard(fetchServer = true) {
+    async function loadCashDashboard(fetchServer = false) {
+      const cacheKey = "app_cash_dash_data";
+      const cached = localStorage.getItem(cacheKey);
+    
+      // 1. Nếu có dữ liệu trong Cache và không bấm Refresh thủ công -> Dùng ngay dữ liệu Cache
+      if (cached && !fetchServer) {
+        try {
+          const parsedData = JSON.parse(cached);
+          document.getElementById('loadingCashDash').style.display = 'none';
+          document.getElementById('cashDashContent').style.display = 'block';
+          renderCashDashboard(parsedData);
+          return;
+        } catch (e) {}
+      }
+    
+      // 2. Nếu chưa có Cache hoặc người dùng bấm nút "Refresh" -> Tải từ Server
       document.getElementById('loadingCashDash').style.display = 'block';
       document.getElementById('cashDashContent').style.display = 'none';
-
+    
       const data = await sendRequest("getCashDashboardData");
       document.getElementById('loadingCashDash').style.display = 'none';
-
+    
       if (data) {
+        localStorage.setItem(cacheKey, JSON.stringify(data)); // Lưu lại vào Cache
         document.getElementById('cashDashContent').style.display = 'block';
         renderCashDashboard(data);
       }
