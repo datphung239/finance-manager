@@ -143,7 +143,6 @@
           <!-- TAB GỢI Ý CHI TIÊU CARD -->
           <div id="recommendBlock" style="display: none;">
             <div class="card p-3 border mb-3 bg-light text-center align-items-center">
-              <!-- CĂN GIỮA NÚT MIC 1 -->
               <div class="d-flex justify-content-center w-100 mb-2">
                 <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
                   <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
@@ -190,7 +189,6 @@
 
               <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
                 <div class="card-body p-2 text-center">
-                  <!-- CĂN GIỮA NÚT MIC 2 -->
                   <div class="d-flex justify-content-center w-100 mb-2">
                     <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoice" onclick="startVoiceRecognition('spending')" style="width: 55px; height: 55px;">
                       <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
@@ -296,7 +294,6 @@
                 <!-- Voice AI Cash -->
                 <div class="card mb-3 border-success bg-light">
                   <div class="card-body p-2 text-center">
-                    <!-- CĂN GIỮA NÚT MIC 3 -->
                     <div class="d-flex justify-content-center w-100 mb-2">
                       <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceCash" onclick="startVoiceRecognition('cash_spending')" style="width: 55px; height: 55px;">
                         <i class="bi bi-mic-fill fs-4" id="micIconCash"></i>
@@ -369,7 +366,7 @@
                 <div class="mb-3">
                   <label class="form-label fw-bold small">Đối Tượng Chi Tiêu</label>
                   <select class="form-select form-select-sm" id="cashTarget" name="target">
-                    <option value="">Bản thân (Để trống)</option>
+                    <option value="">Bản thân (Mặc định)</option>
                     <option value="Người yêu">Người yêu</option>
                     <option value="Gia đình">Gia đình</option>
                     <option value="Bạn bè">Bạn bè</option>
@@ -400,6 +397,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // URL WEB APP MỚI ĐÃ ĐƯỢC CẬP NHẬT
     const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4XMEITG97lOrdS7VjXi6J-NOtWih021nolsVzQFozI0k4Rdw/exec";
     const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
 
@@ -563,7 +561,6 @@
       if (!isDash) loadRecentCashTransactions();
     }
 
-    // FIX LỖI 2: ĐỔI VÍ DỤ CÂU MẪU KHI CHUYỂN TABS THẺ TÍN DỤNG
     function switchForm(type) {
       document.querySelectorAll('#mainTab .nav-link').forEach(btn => btn.classList.remove('active'));
       document.getElementById(`tab-${type}`).classList.add('active');
@@ -583,7 +580,6 @@
         document.getElementById('spendingBlock').style.display = (type === 'spending') ? 'block' : 'none';
         document.getElementById('paymentBlock').style.display = (type === 'payment') ? 'block' : 'none';
         
-        // ĐỔI CÂU VÍ DỤ GỢI Ý MẪU CHUẨN KHI THANH TOÁN THẺ
         const exSpan = document.getElementById('voiceExampleSpan');
         if (type === 'spending') {
           exSpan.innerText = 'VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"';
@@ -596,7 +592,27 @@
       }
     }
 
-    // FIX LỖI 3: LOGIC BỎ TRỐNG ĐỐI TƯỢNG VÀ ÉP DẤU ÂM KHI BẮT ĐẦU BẰNG "KD-"
+    // KHÔI PHỤC TÍNH NĂNG GỐC: KHÓA BẤM THANH TOÁN "CHƯA TT" TỪ DASHBOARD
+    function quickPay(cardName, remainingAmount) {
+      switchForm('payment');
+      
+      const cardSelect = document.getElementById('card');
+      cardSelect.value = cardName;
+      
+      const amountInput = document.getElementById('amount');
+      if (remainingAmount && remainingAmount > 0) {
+        amountInput.value = remainingAmount;
+      } else {
+        amountInput.value = '';
+      }
+      
+      document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+      document.getElementById('status').value = 'TT Trực Tuyến';
+
+      showAlert(`Đã tự động điền thẻ "${cardName}" để thanh toán!`, 'info');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function validateKDAmount() {
       const catInput = document.getElementById('cashCategory').value.trim();
       const amtInput = document.getElementById('cashAmount');
@@ -610,7 +626,6 @@
         if (val && !val.startsWith("-")) {
           amtInput.value = "-" + val;
         }
-        // VỚI SỐ ÂM/KD: BẮT BỘC KHÓA VÀ XÓA ĐỐI TƯỢNG
         targetSelect.value = "";
         targetSelect.disabled = true;
 
@@ -1064,11 +1079,15 @@
             document.getElementById('cashAmount').value = res.amount;
             document.getElementById('cashCategory').value = res.category || "";
             
-            // XỬ LÝ SỐ ÂM KHÓA ĐỐI TƯỢNG VÀ XỬ LÝ KHÁCH SẠN NGHỈ DƯỠNG
+            // XÓA MẶC ĐỊNH VỀ "BẢN THÂN" (VALUE="") ĐỂ TRÁNH LƯU VẾT "NGƯỜI YÊU" CỦA LẦN NÓI TRƯỚC
+            const targetSelect = document.getElementById('cashTarget');
+            targetSelect.value = ""; 
+
             validateKDAmount();
 
+            // CHỈ GHI BỐ TRÍ LẠI KHI CÓ ĐỐI TƯỢNG VÀ KHÔNG PHẢI SỐ ÂM
             if (res.amount > 0 && res.target) {
-              document.getElementById('cashTarget').value = res.target;
+              targetSelect.value = res.target;
             }
 
             if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
