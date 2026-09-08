@@ -56,15 +56,47 @@
 
       <!-- MAIN APP CONTAINER -->
       <div id="app-container" class="hidden">
+<!-- ========================================================= -->
+  <!-- 📍 BẮT ĐẦU CHÈN CỤM NÚT MỚI TẠI ĐÂY -->
+  <!-- ========================================================= -->
+  <div class="btn-group w-100 mb-3" role="group">
+    <button type="button" class="btn btn-primary fw-bold active" id="btnModeCard" onclick="switchMainMode('card')">
+      <i class="bi bi-credit-card-2-front"></i> THẺ TÍN DỤNG
+    </button>
+    <button type="button" class="btn btn-outline-primary fw-bold" id="btnModeCash" onclick="switchMainMode('cash')">
+      <i class="bi bi-cash-coin"></i> DÒNG TIỀN MẶT / BANK
+    </button>
+  </div>
+  <!-- ========================================================= -->
+
+
+  <!-- 1. BỌC TOÀN BỘ CỤM THẺ TÍN DỤNG CŨ VÀO DIV NÀY: -->
+  <div id="cardAppContainer">
+        <!-- Cụm 4 nút cũ (Dashboard, Gợi Ý, Chi Tiêu, Thanh Toán) -->
         <div class="nav-grid-container nav-pills mb-3" id="mainTab">
+           ...
+        </div>
+        <!-- Nội dung 4 tab cũ (dashboardBlock, recommendBlock, dataForm) -->
+        <div id="dashboardBlock"> ... </div>
+        <div id="recommendBlock"> ... </div>
+        <form id="dataForm"> ... </form>
+      </div>
+      <!-- 2. BỌC CỤM TIỀN MẶT / BANK MỚI VÀO DIV NÀY (Mặc định ẩn): -->
+      <div id="cashAppContainer" class="hidden">
+        <div class="nav-grid-container nav-pills mb-3">
           <div class="nav-row-1">
-            <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
-            <div class="nav-item"><button class="nav-link text-success" id="tab-recommend" onclick="switchForm('recommend')"><i class="bi bi-lightbulb"></i> Gợi Ý</button></div>
+            <button class="nav-link active" id="tab-cash-dash" onclick="switchCashTab('dash')">
+              <i class="bi bi-speedometer2"></i> Dashboard Dòng Tiền
+            </button>
+            <button class="nav-link text-success" id="tab-cash-input" onclick="switchCashTab('input')">
+              <i class="bi bi-plus-circle"></i> Thu / Chi Mới
+            </button>
           </div>
-          <div class="nav-row-2">
-            <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-cart-plus"></i> Chi Tiêu</button></div>
-            <div class="nav-item"><button class="nav-link" id="tab-payment" onclick="switchForm('payment')"><i class="bi bi-cash-stack"></i> Thanh Toán</button></div>
-          </div>
+        </div>
+        <!-- Khối Dashboard Cash & Form Thu/Chi Cash sẽ đặt ở đây -->
+        <div id="cashDashboardBlock"> ... </div>
+        <div id="cashInputBlock" class="hidden"> ... </div>
+      </div>
         </div>
 
         <!-- TAB DASHBOARD -->
@@ -828,6 +860,26 @@
       if (micIconRec) micIconRec.className = "bi bi-mic-fill fs-3";
       if (statusTextRec) statusTextRec.innerText = "Bấm nút để tìm ưu đãi thẻ";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
+    }
+    function switchMainMode(mode) {
+      const isCard = (mode === 'card');
+      
+      // Đổi màu 2 nút chuyển luồng
+      document.getElementById('btnModeCard').className = isCard ? 'btn btn-primary fw-bold active' : 'btn btn-outline-primary fw-bold';
+      document.getElementById('btnModeCash').className = !isCard ? 'btn btn-success fw-bold active' : 'btn btn-outline-success fw-bold';
+    
+      // Ẩn / Hiện container Thẻ Tín Dụng vs Tiền Mặt
+      document.getElementById('cardAppContainer').classList.toggle('hidden', !isCard);
+      document.getElementById('cashAppContainer').classList.toggle('hidden', isCard);
+    }
+    
+    function switchCashTab(type) {
+      const isDash = (type === 'dash');
+      document.getElementById('tab-cash-dash').classList.toggle('active', isDash);
+      document.getElementById('tab-cash-input').classList.toggle('active', !isDash);
+    
+      document.getElementById('cashDashboardBlock').style.display = isDash ? 'block' : 'none';
+      document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
     }
   </script>
 </body>
