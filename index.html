@@ -627,33 +627,38 @@
     }
 
     // LẤY LOG GIAO DỊCH CASH
+// CẬP NHẬT HÀM RENDER LOG CASH TRÁNH LỖI UNDEFINED
     function loadRecentCashTransactions(forceFetch = false) {
       const txList = document.getElementById('txListCash');
       document.getElementById('loadingTxCash').style.display = 'block';
-
+    
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
         document.getElementById('loadingTxCash').style.display = 'none';
         if (!list || list.length === 0) {
           txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
           return;
         }
-
+    
         let html = '<div class="list-group list-group-flush">';
         list.forEach(item => {
-          const amt = Number(item.amount);
+          const amt = Number(item.amount || 0);
           const isIncome = amt < 0;
           const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
           const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
           const sign = isIncome ? '+' : '-';
-
+          
+          const categoryText = item.category || 'Chưa phân loại';
+          const methodText = item.method || 'Tiền Mặt';
+          const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined') ? ` (${item.target})` : '';
+    
           html += `
             <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
               <div>
-                <div class="fw-bold small">${item.date} - <span class="badge bg-secondary">${item.method}</span></div>
-                <div class="text-dark small">${item.category} ${item.target !== 'Bản thân' ? `(${item.target})` : ''}</div>
+                <div class="fw-bold small">${item.date} - <span class="badge bg-secondary">${methodText}</span></div>
+                <div class="text-dark small">${categoryText}${targetText}</div>
                 <div class="${badgeColor} small">${sign} ${amtFormatted} đ</div>
               </div>
-              <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${item.category}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
+              <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${categoryText}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
             </div>`;
         });
         txList.innerHTML = html + '</div>';
