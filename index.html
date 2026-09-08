@@ -15,23 +15,41 @@
     .nav-grid-container { display: flex; flex-direction: column; gap: 6px; }
     .nav-row-1, .nav-row-2 { display: flex; gap: 6px; width: 100%; }
     .nav-row-1 .nav-item, .nav-row-2 .nav-item { flex: 1; }
-    .nav-pills .nav-link {
+    
+    /* NAV PILLS CARD (BLUE THEME) */
+    #cardAppContainer .nav-pills .nav-link {
       font-size: 0.82rem; font-weight: 600; padding: 8px 4px; border-radius: 8px;
-      color: #495057; background-color: #f8f9fa; border: 1px solid #dee2e6;
+      color: #0d6efd; background-color: #f8f9fa; border: 1px solid #0d6efd;
       display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%;
     }
-    .nav-pills .nav-link.active { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+    #cardAppContainer .nav-pills .nav-link.active { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+
+    /* NAV PILLS CASH (GREEN THEME) */
+    #cashAppContainer .nav-pills .nav-link {
+      font-size: 0.82rem; font-weight: 600; padding: 8px 4px; border-radius: 8px;
+      color: #198754; background-color: #f8f9fa; border: 1px solid #198754;
+      display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%;
+    }
+    #cashAppContainer .nav-pills .nav-link.active { background-color: #198754; color: #fff; border-color: #198754; }
+
     .btn-main-mode { white-space: nowrap !important; font-size: 0.85rem; padding: 8px 4px; }
     .bg-purple { background-color: #6f42c1 !important; color: #fff; }
     .btn-check:checked + .btn-outline-purple { background-color: #6f42c1 !important; color: #fff !important; border-color: #6f42c1 !important; }
     .btn-outline-purple { color: #6f42c1; border-color: #6f42c1; }
     .btn-outline-purple:hover { background-color: #6f42c1; color: #fff; }
+
     .kpi-card { border-radius: 10px; padding: 10px 6px; color: #fff; text-align: center; }
     .kpi-blue { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
     .kpi-orange { background: linear-gradient(135deg, #fd7e14, #e06804); }
     .kpi-purple { background: linear-gradient(135deg, #6f42c1, #59319c); }
     .kpi-title { font-size: 0.68rem; opacity: 0.95; text-transform: uppercase; font-weight: 600; white-space: nowrap; }
     .kpi-value { font-size: calc(0.7rem + 0.6vw); font-weight: 700; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* CHỐNG XUỐNG DÒNG TRÊN DI ĐỘNG */
+    .nowrap-text { white-space: nowrap !important; }
+    .fit-title { font-size: clamp(0.75rem, 3vw, 0.95rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fit-val { font-size: clamp(0.7rem, 2.8vw, 0.85rem); white-space: nowrap; }
+
     .stmt-badge { font-size: 0.68rem; padding: 3px 6px; border-radius: 5px; white-space: nowrap; }
     .btn-pay-now { cursor: pointer; transition: all 0.2s ease; border: none; }
     .btn-pay-now:active { transform: scale(0.92); opacity: 0.8; }
@@ -40,8 +58,8 @@
     .card-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 0.85rem; }
     .summary-row { background-color: #e9ecef; font-weight: bold; }
     .highlight-row { background-color: #fff3cd; }
-    .recommend-card { border-left: 4px solid #198754; background-color: #f8f9fa; margin-bottom: 10px; padding: 10px; border-radius: 8px; }
-    .rate-badge { font-size: 0.9rem; font-weight: 700; color: #198754; background-color: #d1e7dd; padding: 3px 8px; border-radius: 6px; }
+    .recommend-card { border-left: 4px solid #0d6efd; background-color: #f8f9fa; margin-bottom: 10px; padding: 10px; border-radius: 8px; }
+    .rate-badge { font-size: 0.9rem; font-weight: 700; color: #0d6efd; background-color: #cff4fc; padding: 3px 8px; border-radius: 6px; }
     .tx-item { border-bottom: 1px solid #eee; padding: 8px 0; }
     .tx-item:last-child { border-bottom: none; }
     .hidden { display: none !important; }
@@ -65,7 +83,7 @@
       <!-- MAIN APP CONTAINER -->
       <div id="app-container" class="hidden">
 
-        <!-- CỤM NÚT CHUYỂN LUỒNG QUẢN LÝ CHÍNH -->
+        <!-- CỤM NÚT CHUYỂN LUỒNG QUẢN LÝ CHÍNH - CHUẨN TONE MÀU XANH DƯƠNG / XANH LÁ -->
         <div class="btn-group w-100 mb-3" role="group">
           <button type="button" class="btn btn-primary fw-bold btn-main-mode active" id="btnModeCard" onclick="switchMainMode('card')">
             <i class="bi bi-credit-card-2-front"></i> THẺ TÍN DỤNG
@@ -76,16 +94,16 @@
         </div>
 
         <!-- ========================================================= -->
-        <!-- 1. LUỒNG THẺ TÍN DỤNG (CREDIT CARDS) -->
+        <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
         <!-- ========================================================= -->
         <div id="cardAppContainer">
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
-              <div class="nav-item"><button class="nav-link text-success" id="tab-recommend" onclick="switchForm('recommend')"><i class="bi bi-lightbulb"></i> Gợi Ý</button></div>
+              <div class="nav-item"><button class="nav-link" id="tab-recommend" onclick="switchForm('recommend')"><i class="bi bi-lightbulb"></i> Gợi Ý Thẻ</button></div>
             </div>
             <div class="nav-row-2">
-              <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-cart-plus"></i> Chi Tiêu</button></div>
+              <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-cart-plus"></i> Chi Tiêu Thẻ</button></div>
               <div class="nav-item"><button class="nav-link" id="tab-payment" onclick="switchForm('payment')"><i class="bi bi-cash-stack"></i> Thanh Toán</button></div>
             </div>
           </div>
@@ -93,7 +111,7 @@
           <!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold text-secondary small"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ</span>
+              <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
             </div>
             <div id="loadingDash" class="text-center py-4 text-muted">
@@ -108,7 +126,7 @@
 
               <div class="card bg-light p-2 mb-3 border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="fw-bold small text-dark"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
+                  <div class="fw-bold small text-dark nowrap-text"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
                   <select class="form-select form-select-sm py-0 px-2" id="stmtFilterStatus" onchange="filterStatementList()" style="width: auto; font-size: 0.75rem;">
                     <option value="">Tất cả</option>
                     <option value="Chưa TT">Chưa TT</option>
@@ -117,7 +135,7 @@
                   </select>
                 </div>
                 <div class="d-flex justify-content-between align-items-center pb-1 border-bottom text-muted px-1" style="font-size: 0.75rem;">
-                  <span>Kỳ sao kê (Từ ngày - Đến ngày) | Hạn thanh toán</span>
+                  <span>Kỳ sao kê | Hạn TT</span>
                   <span class="fw-bold text-danger">Còn phải trả</span>
                 </div>
                 <div id="stmtList" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;"></div>
@@ -152,7 +170,7 @@
           <div id="recommendBlock" style="display: none;">
             <div class="card p-3 border mb-3 bg-light text-center align-items-center">
               <div class="d-flex justify-content-center w-100 mb-2">
-                <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
+                <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
                   <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
                 </button>
               </div>
@@ -160,20 +178,20 @@
               <div class="text-muted small mt-1 w-100" style="font-size: 0.75rem;">
                 <i class="bi bi-lightbulb text-warning"></i> VD: "Hôm nay mua sắm ở Agoda"
               </div>
-              <div id="liveSpeechBoxRec" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-center w-100 hidden" style="min-height: 38px; word-break: break-word;">
+              <div id="liveSpeechBoxRec" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-center w-100 hidden" style="min-height: 38px; word-break: break-word;">
                 <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
                 <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang lắng nghe...</span>
               </div>
               <div class="input-group input-group-sm mt-3 w-100">
                 <input type="text" class="form-control" id="recommendInput" list="categoriesTmpOptions" placeholder="Hoặc nhập tên nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
-                <button class="btn btn-outline-success" type="button" onclick="fetchRecommendation()"><i class="bi bi-search"></i> Tìm</button>
+                <button class="btn btn-outline-primary" type="button" onclick="fetchRecommendation()"><i class="bi bi-search"></i> Tìm</button>
               </div>
               <datalist id="categoriesTmpOptions"></datalist>
             </div>
 
             <div id="alertMsgRec" class="alert alert-danger mb-3 py-2 px-3 small fw-bold shadow-sm text-center" style="display: none;" role="alert"></div>
             <div id="loadingRec" class="text-center py-3 text-muted" style="display:none;">
-              <div class="spinner-border spinner-border-sm text-success"></div> Đang tính toán ưu đãi thẻ...
+              <div class="spinner-border spinner-border-sm text-primary"></div> Đang tính toán ưu đãi thẻ...
             </div>
             <div id="recResultBlock" style="display: none;">
               <div class="alert alert-info py-2 px-3 mb-3 small">
@@ -191,7 +209,7 @@
 
             <div id="inputFormFields" style="display: none;">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="fw-bold text-primary small"><i class="bi bi-credit-card"></i> Giao Dịch Thẻ</span>
+                <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-credit-card"></i> Giao Dịch Thẻ</span>
                 <div class="d-flex align-items-center bg-white border rounded px-2 py-1 shadow-sm">
                   <i class="bi bi-calendar-event text-primary me-1" style="font-size: 0.85rem;"></i>
                   <input type="date" class="form-control form-control-sm p-0 border-0 fw-bold text-dark" id="date" name="date" required style="width: 105px; font-size: 0.78rem; background: transparent;">
@@ -261,7 +279,7 @@
 
 
         <!-- ========================================================= -->
-        <!-- 2. LUỒNG DÒNG TIỀN MẶT / BANK (CASH MANAGEMENT) -->
+        <!-- 2. LUỒNG DÒNG TIỀN MẶT / BANK (GREEN THEME) -->
         <!-- ========================================================= -->
         <div id="cashAppContainer" class="hidden">
           <div class="nav-grid-container nav-pills mb-3">
@@ -272,7 +290,7 @@
                 </button>
               </div>
               <div class="nav-item">
-                <button class="nav-link text-success" id="tab-cash-input" onclick="switchCashTab('input')">
+                <button class="nav-link" id="tab-cash-input" onclick="switchCashTab('input')">
                   <i class="bi bi-plus-circle"></i> Thu / Chi Mới
                 </button>
               </div>
@@ -280,118 +298,117 @@
           </div>
 
           <!-- DASHBOARD CASH VIRTUALIZATION -->
-          <!-- DASHBOARD CASH VIRTUALIZATION HOÀN CHỈNH -->
           <div id="cashDashboardBlock">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <span class="fw-bold text-success"><i class="bi bi-graph-up-arrow"></i> DASHBOARD TÀI CHÍNH DÒNG TIỀN</span>
-              <button class="btn btn-sm btn-outline-success py-0 px-2" onclick="loadCashDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+              <span class="fw-bold text-success fit-title"><i class="bi bi-graph-up-arrow"></i> DASHBOARD TÀI CHÍNH DÒNG TIỀN</span>
+              <button class="btn btn-sm btn-outline-success py-0 px-2 nowrap-text" onclick="loadCashDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
             </div>
-          
+
             <div id="loadingCashDash" class="text-center py-4 text-muted">
               <div class="spinner-border spinner-border-sm text-success"></div> Đang trực quan hóa dữ liệu Cash...
             </div>
-          
+
             <div id="cashDashContent" style="display: none;">
               <!-- 1. TỔNG CHI TIÊU & DOANH THU KÈM FILTER NGÀY -->
               <div class="card p-3 mb-3 border bg-white shadow-sm">
                 <div class="row g-2 mb-2 align-items-center">
-                  <div class="col-6"><label class="small text-muted fw-bold">Từ ngày:</label><input type="date" id="cashFilterStart" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
-                  <div class="col-6"><label class="small text-muted fw-bold">Đến ngày:</label><input type="date" id="cashFilterEnd" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
+                  <div class="col-6"><label class="small text-muted fw-bold nowrap-text">Từ ngày:</label><input type="date" id="cashFilterStart" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
+                  <div class="col-6"><label class="small text-muted fw-bold nowrap-text">Đến ngày:</label><input type="date" id="cashFilterEnd" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
                 </div>
                 <div class="row g-2 text-center">
                   <div class="col-6">
                     <div class="p-2 rounded bg-success-subtle border border-success">
-                      <div class="small text-success fw-bold">TỔNG DOANH THU</div>
-                      <div class="fw-bold fs-6 text-success" id="cashTotalRev">0 đ</div>
+                      <div class="small text-success fw-bold nowrap-text">TỔNG DOANH THU</div>
+                      <div class="fw-bold text-success fit-val" id="cashTotalRev">0 đ</div>
                     </div>
                   </div>
                   <div class="col-6">
                     <div class="p-2 rounded bg-danger-subtle border border-danger">
-                      <div class="small text-danger fw-bold">TỔNG CHI TIÊU</div>
-                      <div class="fw-bold fs-6 text-danger" id="cashTotalExp">0 đ</div>
+                      <div class="small text-danger fw-bold nowrap-text">TỔNG CHI TIÊU</div>
+                      <div class="fw-bold text-danger fit-val" id="cashTotalExp">0 đ</div>
                     </div>
                   </div>
                 </div>
               </div>
-          
-              <!-- 2. BẢNG TỶ LỆ CHI SINH HOẠT / DOANH THU KINH DOANH (E9:H12) -->
+
+              <!-- 2. BẢNG TỶ LỆ CHI SINH HOẠT / DOANH THU KINH DOANH -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold small text-dark"><i class="bi bi-calculator text-primary"></i> Tỷ Lệ Chi Sinh Hoạt / Doanh Thu KD</span>
+                  <span class="fw-bold text-dark fit-title"><i class="bi bi-calculator text-success"></i> Tỷ Lệ Chi Sinh Hoạt / Doanh Thu</span>
                   <div class="d-flex align-items-center gap-1">
-                    <span class="small text-muted" style="font-size:0.72rem;">Tháng:</span>
-                    <input type="date" id="cashRatioMonth" class="form-control form-control-sm p-0 px-1" onchange="applyCashFilters()" style="width: 110px; font-size: 0.72rem;">
+                    <span class="small text-muted nowrap-text" style="font-size:0.72rem;">Tháng:</span>
+                    <input type="date" id="cashRatioMonth" class="form-control form-control-sm p-0 px-1" onchange="applyCashFilters()" style="width: 105px; font-size: 0.72rem;">
                   </div>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-sm table-bordered text-center align-middle mb-0" style="font-size: 0.78rem;">
+                  <table class="table table-sm table-bordered text-center align-middle mb-0" style="font-size: 0.76rem;">
                     <thead class="table-light">
                       <tr>
-                        <th>Chỉ Số</th>
-                        <th id="thRatioM1">-</th>
-                        <th id="thRatioM2">-</th>
-                        <th id="thRatioM3">-</th>
+                        <th class="nowrap-text">Chỉ Số</th>
+                        <th id="thRatioM1" class="nowrap-text">-</th>
+                        <th id="thRatioM2" class="nowrap-text">-</th>
+                        <th id="thRatioM3" class="nowrap-text">-</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td class="fw-semibold text-start">Tổng Doanh Thu KD</td>
-                        <td class="text-success fw-bold" id="tdRevM1">0</td>
-                        <td class="text-success" id="tdRevM2">0</td>
-                        <td class="text-success" id="tdRevM3">0</td>
+                        <td class="fw-semibold text-start nowrap-text">Doanh Thu KD</td>
+                        <td class="text-success fw-bold nowrap-text" id="tdRevM1">0</td>
+                        <td class="text-success nowrap-text" id="tdRevM2">0</td>
+                        <td class="text-success nowrap-text" id="tdRevM3">0</td>
                       </tr>
                       <tr>
-                        <td class="fw-semibold text-start">Tổng Chi Sinh Hoạt</td>
-                        <td class="text-danger fw-bold" id="tdExpM1">0</td>
-                        <td class="text-danger" id="tdExpM2">0</td>
-                        <td class="text-danger" id="tdExpM3">0</td>
+                        <td class="fw-semibold text-start nowrap-text">Chi Sinh Hoạt</td>
+                        <td class="text-danger fw-bold nowrap-text" id="tdExpM1">0</td>
+                        <td class="text-danger nowrap-text" id="tdExpM2">0</td>
+                        <td class="text-danger nowrap-text" id="tdExpM3">0</td>
                       </tr>
                       <tr class="table-warning">
-                        <td class="fw-bold text-start">% Chi / Doanh Thu</td>
-                        <td class="fw-bold text-dark" id="tdPctM1">0%</td>
-                        <td class="fw-bold text-dark" id="tdPctM2">0%</td>
-                        <td class="fw-bold text-dark" id="tdPctM3">0%</td>
+                        <td class="fw-bold text-start nowrap-text">% Chi / Doanh Thu</td>
+                        <td class="fw-bold text-dark nowrap-text" id="tdPctM1">0%</td>
+                        <td class="fw-bold text-dark nowrap-text" id="tdPctM2">0%</td>
+                        <td class="fw-bold text-dark nowrap-text" id="tdPctM3">0%</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
-          
+
               <!-- 3. CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
               <div class="row g-2 mb-3">
                 <div class="col-4">
                   <div class="card p-2 text-center bg-light border">
-                    <div class="text-muted" style="font-size:0.68rem;">SỐ LẦN CHI</div>
-                    <div class="fw-bold text-dark" id="cashTxCount">0</div>
+                    <div class="text-muted nowrap-text" style="font-size:0.65rem;">SỐ LẦN CHI</div>
+                    <div class="fw-bold text-dark nowrap-text" id="cashTxCount">0</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="card p-2 text-center bg-light border">
-                    <div class="text-muted" style="font-size:0.68rem;">CHI TB / LẦN</div>
-                    <div class="fw-bold text-primary" id="cashAvgAmt" style="font-size:0.75rem;">0 đ</div>
+                    <div class="text-muted nowrap-text" style="font-size:0.65rem;">CHI TB / LẦN</div>
+                    <div class="fw-bold text-success fit-val" id="cashAvgAmt">0 đ</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="card p-2 text-center bg-light border">
-                    <div class="text-muted" style="font-size:0.68rem;">KHOẢN CHI LỚN NHẤT</div>
-                    <div class="fw-bold text-danger" id="cashMaxAmt" style="font-size:0.75rem;">0 đ</div>
+                    <div class="text-muted nowrap-text" style="font-size:0.65rem;">KHOẢN CHI LỚN NHẤT</div>
+                    <div class="fw-bold text-danger fit-val" id="cashMaxAmt">0 đ</div>
                   </div>
                 </div>
               </div>
-          
-              <!-- 4. BIẾN ĐỘNG CHI TIÊU 4 THÁNG (SỬA LỖI ĐƯỜNG LINE BỊ ĐÈ BỞI CỘT BAR) -->
+
+              <!-- 4. BIẾN ĐỘNG CHI TIÊU 4 THÁNG (CÓ HẠN CHẾ BỊ CHE KHẤT % BẰNG PADDING) -->
               <div class="card p-3 mb-3 border shadow-sm">
-                <div class="fw-bold small text-dark mb-2"><i class="bi bi-bar-chart-line-fill text-primary"></i> Biến Động Chi Tiêu 4 Tháng (Cột Số Tiền & Đường % Tăng/Giảm)</div>
-                <canvas id="chartMonthTrends" height="180"></canvas>
+                <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-bar-chart-line-fill text-success"></i> Biến Động Chi Tiêu 4 Tháng (% Tăng/Giảm)</div>
+                <canvas id="chartMonthTrends" height="190"></canvas>
               </div>
-          
-              <!-- 5. TỶ LỆ HÌNH THỨC THANH TOÁN (CÓ FILTER MỚI F4) -->
+
+              <!-- 5. TỶ LỆ HÌNH THỨC THANH TOÁN -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold text-dark small"><i class="bi bi-pie-chart-fill text-info"></i> Tỷ Lệ Hình Thức Thanh Toán</span>
+                  <span class="fw-bold text-dark small nowrap-text"><i class="bi bi-pie-chart-fill text-success"></i> Tỷ Lệ Hình Thức Thanh Toán</span>
                   <div class="d-flex align-items-center gap-1">
-                    <span class="small text-muted" style="font-size:0.72rem;">Tháng:</span>
-                    <input type="date" id="cashPaymentMonth" class="form-control form-control-sm p-0 px-1" onchange="applyCashFilters()" style="width: 110px; font-size: 0.72rem;">
+                    <span class="small text-muted nowrap-text" style="font-size:0.72rem;">Tháng:</span>
+                    <input type="date" id="cashPaymentMonth" class="form-control form-control-sm p-0 px-1" onchange="applyCashFilters()" style="width: 105px; font-size: 0.72rem;">
                   </div>
                 </div>
                 <div class="d-flex justify-content-center">
@@ -400,36 +417,36 @@
                   </div>
                 </div>
               </div>
-          
-              <!-- 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG -->
+
+              <!-- 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG (PHỐI MÀU MỚI ĐỒNG BỘ NỀN) -->
               <div class="card p-3 mb-3 border shadow-sm">
-                <div class="fw-bold text-dark mb-2 small"><i class="bi bi-people-fill text-purple"></i> Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng</div>
+                <div class="fw-bold text-dark mb-2 small nowrap-text"><i class="bi bi-people-fill text-success"></i> Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng</div>
                 <canvas id="chartTargetData" height="200"></canvas>
               </div>
-          
+
               <!-- 7. BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC -->
               <div class="card p-3 mb-3 border shadow-sm">
-                <div class="fw-bold small text-dark mb-2"><i class="bi bi-list-stars text-success"></i> Biến Động Chi Tiêu Theo Danh Mục (Tháng Này vs Tháng Trước)</div>
+                <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-list-stars text-success"></i> Biến Động Chi Tiêu Theo Danh Mục</div>
                 <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
                   <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.78rem;">
                     <thead class="table-light sticky-top">
                       <tr>
-                        <th>Danh Mục</th>
-                        <th class="text-end">Tháng Này</th>
-                        <th class="text-end">Tháng Trước</th>
-                        <th class="text-end">Tăng/Giảm</th>
-                        <th class="text-end">% Tăng/Giảm</th>
+                        <th class="nowrap-text">Danh Mục</th>
+                        <th class="text-end nowrap-text">Tháng Này</th>
+                        <th class="text-end nowrap-text">Tháng Trước</th>
+                        <th class="text-end nowrap-text">Tăng/Giảm</th>
+                        <th class="text-end nowrap-text">% Tăng/Giảm</th>
                       </tr>
                     </thead>
                     <tbody id="tableCatChanges"></tbody>
                   </table>
                 </div>
               </div>
-          
-              <!-- 8. TỔNG CHI TIÊU HẰNG NGÀY -->
+
+              <!-- 8. TỔNG CHI TIÊU HẰNG NGÀY ( BỎ NĂM - CHỈ LẤY DD/MM ) -->
               <div class="card p-3 border shadow-sm">
-                <div class="fw-bold small text-dark mb-2"><i class="bi bi-calendar3 text-danger"></i> Chi Tiêu Hằng Ngày</div>
-                <canvas id="chartDailyList" height="140"></canvas>
+                <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-calendar3 text-success"></i> Chi Tiêu Hằng Ngày</div>
+                <canvas id="chartDailyList" height="150"></canvas>
               </div>
             </div>
           </div>
@@ -441,7 +458,7 @@
 
               <div class="card p-3 border shadow-sm mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h6 class="fw-bold text-success m-0"><i class="bi bi-pencil-square"></i> Nhập Liệu Thu / Chi Cash</h6>
+                  <h6 class="fw-bold text-success m-0 nowrap-text"><i class="bi bi-pencil-square"></i> Nhập Liệu Thu / Chi Cash</h6>
                   <div class="d-flex align-items-center bg-white border border-success-subtle rounded px-2 py-1 shadow-sm">
                     <i class="bi bi-calendar-check text-success me-1" style="font-size: 0.85rem;"></i>
                     <input type="date" class="form-control form-control-sm p-0 border-0 fw-bold text-dark" id="cashDate" name="date" required style="width: 105px; font-size: 0.78rem; background: transparent;">
@@ -477,7 +494,7 @@
                     <label class="btn btn-outline-secondary method-btn" for="mCash">💵 Tiền Mặt</label>
 
                     <input type="radio" class="btn-check" name="method" id="mBank" value="Chuyển Khoản">
-                    <label class="btn btn-outline-primary method-btn" for="mBank">🏦 Chuyển Khoản</label>
+                    <label class="btn btn-outline-success method-btn" for="mBank">🏦 Chuyển Khoản</label>
 
                     <input type="radio" class="btn-check" name="method" id="mWallet" value="Ví Điện Tử">
                     <label class="btn btn-outline-purple method-btn" for="mWallet">📲 Ví Điện Tử</label>
@@ -517,7 +534,7 @@
             <div class="card p-2 bg-light border">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH CASH GẦN ĐÂY</span>
-                <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentCashTransactions()"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none text-success" type="button" onclick="loadRecentCashTransactions()"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
               </div>
               <div id="loadingTxCash" class="text-center py-2 text-muted" style="display:none;">
                 <div class="spinner-border spinner-border-sm text-success"></div> Đang tải...
@@ -852,7 +869,7 @@
           const methodText = item.method || 'Tiền Mặt';
           
           let methodBadgeClass = 'bg-secondary';
-          if (methodText === 'Chuyển Khoản') methodBadgeClass = 'bg-primary';
+          if (methodText === 'Chuyển Khoản') methodBadgeClass = 'bg-success';
           else if (methodText === 'Ví Điện Tử') methodBadgeClass = 'bg-purple';
 
           const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` : '';
@@ -916,36 +933,36 @@
       const filterEnd = document.getElementById('cashFilterEnd');
       if (filterStart && d.period.startDate) filterStart.value = convertDisplayToInputDate(d.period.startDate);
       if (filterEnd && d.period.endDate) filterEnd.value = convertDisplayToInputDate(d.period.endDate);
-    
+
       const payMonthInput = document.getElementById('cashPaymentMonth');
       if (payMonthInput && d.paymentData.filterMonth) payMonthInput.value = convertDisplayToInputDate(d.paymentData.filterMonth);
-    
+
       const ratioMonthInput = document.getElementById('cashRatioMonth');
       if (ratioMonthInput && d.ratioTableData.filterMonth) ratioMonthInput.value = convertDisplayToInputDate(d.ratioTableData.filterMonth);
-    
+
       // 2. Render Bảng Tỷ Lệ Chi Sinh Hoạt / Doanh Thu (E9:H12)
       document.getElementById('thRatioM1').innerText = d.ratioTableData.months[0] || '-';
       document.getElementById('thRatioM2').innerText = d.ratioTableData.months[1] || '-';
       document.getElementById('thRatioM3').innerText = d.ratioTableData.months[2] || '-';
-    
+
       document.getElementById('tdRevM1').innerText = formatVND(d.ratioTableData.revenue[0]);
       document.getElementById('tdRevM2').innerText = formatVND(d.ratioTableData.revenue[1]);
       document.getElementById('tdRevM3').innerText = formatVND(d.ratioTableData.revenue[2]);
-    
+
       document.getElementById('tdExpM1').innerText = formatVND(d.ratioTableData.expense[0]);
       document.getElementById('tdExpM2').innerText = formatVND(d.ratioTableData.expense[1]);
       document.getElementById('tdExpM3').innerText = formatVND(d.ratioTableData.expense[2]);
-    
+
       document.getElementById('tdPctM1').innerText = d.ratioTableData.ratio[0];
       document.getElementById('tdPctM2').innerText = d.ratioTableData.ratio[1];
       document.getElementById('tdPctM3').innerText = d.ratioTableData.ratio[2];
-    
+
       // 3. KPI Tần Suất
       document.getElementById('cashTxCount').innerText = d.frequencyData.txCount + " lần";
       document.getElementById('cashAvgAmt').innerText = formatVND(d.frequencyData.avgAmt);
       document.getElementById('cashMaxAmt').innerText = formatVND(d.frequencyData.maxAmt);
-    
-      // 4. CHART 4 THÁNG DUAL AXES (SỬA LỖI ĐƯỜNG MÀU ĐỎ BỊ CỘT CHE LẤP BẰNG THUỘC TÍNH ORDER)
+
+      // 4. CHART 4 THÁNG DUAL AXES (SỬA LỖI MẤT SỐ % BẰNG PADDING)
       if (chartTrendsInstance) chartTrendsInstance.destroy();
       const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
       chartTrendsInstance = new Chart(ctxTrends, {
@@ -970,6 +987,7 @@
                 align: 'top',
                 anchor: 'center',
                 color: '#dc3545',
+                offset: 4,
                 font: { weight: 'bold', size: 10 },
                 formatter: (val, ctx) => {
                   const rawStr = d.monthTrends[ctx.dataIndex]?.changeStr;
@@ -981,16 +999,17 @@
               type: 'bar',
               label: 'Số Tiền Chi (VNĐ)',
               data: d.monthTrends.map(m => m.amount),
-              backgroundColor: '#0d6efd',
+              backgroundColor: '#198754',
               borderRadius: 6,
               yAxisID: 'y',
               order: 2,
-              datalabels: { display: false } // Tắt số liệu trên cột xanh cho khỏi đè chữ
+              datalabels: { display: false }
             }
           ]
         },
         options: {
           responsive: true,
+          layout: { padding: { top: 25 } }, // KÍCH THƯỚC PADDING ĐỈNH GIÚP NỐT % KHÔNG BỊ LẤP
           scales: {
             y: {
               type: 'linear',
@@ -1009,8 +1028,8 @@
           }
         }
       });
-    
-      // 5. TỶ LỆ HÌNH THỨC THANH TOÁN (DONUT CHART)
+
+      // 5. TỶ LỆ HÌNH THỨC THANH TOÁN (DONUT CHART - GREEN THEME)
       if (chartPaymentInstance) chartPaymentInstance.destroy();
       const ctxPayment = document.getElementById('chartPaymentMethods').getContext('2d');
       
@@ -1025,7 +1044,7 @@
           }),
           datasets: [{
             data: d.paymentData.list.map(p => p.amount),
-            backgroundColor: ['#0d6efd', '#6c757d', '#6f42c1']
+            backgroundColor: ['#198754', '#6c757d', '#6f42c1']
           }]
         },
         options: { 
@@ -1036,9 +1055,8 @@
           } 
         }
       });
-    
-      // 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG
-      // Thay thế đoạn cấu hình dataset chartTargetInstance trong renderCashDashboard()
+
+      // 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG (GREEN GRADIENT THEME)
       if (chartTargetInstance) chartTargetInstance.destroy();
       const ctxTarget = document.getElementById('chartTargetData').getContext('2d');
       chartTargetInstance = new Chart(ctxTarget, {
@@ -1046,9 +1064,9 @@
         data: {
           labels: d.targetData.list.map(t => t.target),
           datasets: [
-            { label: d.targetData.months[0] || 'Tháng này', data: d.targetData.list.map(t => t.m1Amt), backgroundColor: '#0d6efd', borderRadius: 4 },
-            { label: d.targetData.months[1] || 'Tháng trước', data: d.targetData.list.map(t => t.m2Amt), backgroundColor: '#6f42c1', borderRadius: 4 },
-            { label: d.targetData.months[2] || 'Tháng cũ', data: d.targetData.list.map(t => t.m3Amt), backgroundColor: '#20c997', borderRadius: 4 }
+            { label: d.targetData.months[0] || 'Tháng này', data: d.targetData.list.map(t => t.m1Amt), backgroundColor: '#198754', borderRadius: 4 },
+            { label: d.targetData.months[1] || 'Tháng trước', data: d.targetData.list.map(t => t.m2Amt), backgroundColor: '#20c997', borderRadius: 4 },
+            { label: d.targetData.months[2] || 'Tháng cũ', data: d.targetData.list.map(t => t.m3Amt), backgroundColor: '#0dcaf0', borderRadius: 4 }
           ]
         },
         options: { 
@@ -1058,7 +1076,7 @@
           } 
         }
       });
-    
+
       // 7. BẢNG BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC
       const catTbody = document.getElementById('tableCatChanges');
       catTbody.innerHTML = '';
@@ -1069,41 +1087,47 @@
           const sign = isInc ? '+' : '';
           catTbody.innerHTML += `
             <tr>
-              <td class="fw-bold">${c.category}</td>
-              <td class="text-end">${formatVND(c.thisMonth)}</td>
-              <td class="text-end text-muted">${formatVND(c.lastMonth)}</td>
-              <td class="text-end fw-bold ${colorClass}">${sign}${formatVND(c.diff)}</td>
-              <td class="text-end fw-bold ${colorClass}">${c.percent}</td>
+              <td class="fw-bold nowrap-text">${c.category}</td>
+              <td class="text-end nowrap-text">${formatVND(c.thisMonth)}</td>
+              <td class="text-end text-muted nowrap-text">${formatVND(c.lastMonth)}</td>
+              <td class="text-end fw-bold ${colorClass} nowrap-text">${sign}${formatVND(c.diff)}</td>
+              <td class="text-end fw-bold ${colorClass} nowrap-text">${c.percent}</td>
             </tr>`;
         });
       } else {
         catTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-2">Không có dữ liệu danh mục.</td></tr>';
       }
-    
-      // 8. CHI TIÊU HẰNG NGÀY
+
+      // 8. TỔNG CHI TIÊU HẰNG NGÀY ( BỎ NĂM - CHỈ LẤY DD/MM )
       if (chartDailyInstance) chartDailyInstance.destroy();
       const ctxDaily = document.getElementById('chartDailyList').getContext('2d');
-      
-      // Tính số tiền chi trung bình mỗi ngày
+
       const dailyList = d.dailyData.list || [];
       const validDailyAmts = dailyList.map(i => i.amount).filter(a => a > 0);
       const avgDailyAmt = validDailyAmts.length > 0 
         ? Math.round(validDailyAmts.reduce((sum, v) => sum + v, 0) / validDailyAmts.length) 
         : 0;
-      
+
       const avgFormatted = avgDailyAmt.toLocaleString('vi-VN') + ' đ';
-      
+
+      // RÚT GỌN CHỈ LẤY DD/MM (BỎ NĂM YYYY)
+      const shortDateLabels = dailyList.map(i => {
+        if (!i.date) return '';
+        const parts = i.date.split('/');
+        return parts.length >= 2 ? `${parts[0].padStart(2,'0')}/${parts[1].padStart(2,'0')}` : i.date;
+      });
+
       chartDailyInstance = new Chart(ctxDaily, {
         data: {
-          labels: dailyList.map(i => i.date),
+          labels: shortDateLabels,
           datasets: [
             {
               type: 'line',
-              label: `Trung bình tháng: ${avgFormatted}`,
+              label: `TB tháng: ${avgFormatted}`,
               data: dailyList.map(() => avgDailyAmt),
               borderColor: '#fd7e14',
               borderWidth: 2,
-              borderDash: [5, 5], // Tạo nét đứt
+              borderDash: [5, 5],
               pointRadius: 0,
               fill: false,
               order: 1
@@ -1112,8 +1136,8 @@
               type: 'line',
               label: 'Số tiền chi',
               data: dailyList.map(i => i.amount),
-              borderColor: '#dc3545',
-              backgroundColor: 'rgba(220, 53, 69, 0.1)',
+              borderColor: '#198754',
+              backgroundColor: 'rgba(25, 135, 84, 0.1)',
               fill: true,
               tension: 0.3,
               order: 2
@@ -1126,13 +1150,13 @@
             legend: { 
               display: true, 
               position: 'top',
-              labels: { boxWidth: 20, font: { size: 11, weight: 'bold' } } 
+              labels: { boxWidth: 15, font: { size: 10, weight: 'bold' } } 
             } 
           } 
         }
       });
     }
-    
+
     async function applyCashFilters() {
       const filterObj = {
         startDate: document.getElementById('cashFilterStart').value,
@@ -1598,7 +1622,7 @@
       const statusTextRec = document.getElementById('voiceStatusTextRec');
       const liveBoxRec = document.getElementById('liveSpeechBoxRec');
 
-      if (btnVoiceRec) btnVoiceRec.className = "btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
+      if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIconRec) micIconRec.className = "bi bi-mic-fill fs-3";
       if (statusTextRec) statusTextRec.innerText = "Bấm nút để tìm ưu đãi thẻ";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
