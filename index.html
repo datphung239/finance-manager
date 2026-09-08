@@ -664,7 +664,7 @@
     }
 
     function clearAppCache() {
-      ["app_init_data", "app_dash_data", "app_tx_spending", "app_tx_payment", "app_tx_cash"].forEach(k => localStorage.removeItem(k));
+      ["app_init_data", "app_dash_data", "app_cash_dash_data", "app_tx_spending", "app_tx_payment", "app_tx_cash"].forEach(k => localStorage.removeItem(k));
     }
 
     async function sendRequest(action, payload = {}) {
@@ -694,10 +694,11 @@
         applyInitialData(data);
       }
       
-      // Tải đồng thời dữ liệu Card & Cash để nạp sẵn Cache ngay từ đầu
+      // F5 -> Bắt buộc gọi Server tải mới cả 2 Dashboard
       loadDashboard(true);
       loadCashDashboard(true);
     
+      // Tải ngầm các danh sách giao dịch gần đây
       sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
       sendRequest("getRecentTransactions", { type: 'payment' }).then(list => list && localStorage.setItem("app_tx_payment", JSON.stringify(list)));
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => list && localStorage.setItem("app_tx_cash", JSON.stringify(list)));
@@ -762,12 +763,10 @@
       document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
     
       if (isDash) {
-        // Đọc từ Cache (FALSE = Không bắt buộc fetch Server)
-        loadCashDashboard(false);
+        loadCashDashboard(false); // Dùng Cache
       } else {
         setTodayDefaultDates();
-        // Đọc log giao dịch từ Cache (FALSE = Không bắt buộc fetch Server)
-        loadRecentCashTransactions(false);
+        loadRecentCashTransactions(false); // Dùng Cache
       }
     }
 
@@ -853,13 +852,11 @@
       event.preventDefault();
       const btn = document.getElementById('btnSubmitCash');
       btn.disabled = true; btn.innerText = 'Đang lưu...';
-
+    
       const formObject = Object.fromEntries(new FormData(form).entries());
-
       const msg = await sendRequest("submitData", { formObject });
       btn.disabled = false; btn.innerText = 'Lưu Giao Dịch Cash';
-
-      // Thêm 2 dòng lệnh xóa Cache và tải mới dữ liệu sau khi submit Cash thành công:
+    
       if (msg) {
         showAlertCash(msg, 'success');
         form.reset();
@@ -867,7 +864,7 @@
         document.getElementById('mCash').checked = true;
         document.getElementById('cashTarget').disabled = false;
         
-        // Tải mới và cập nhật lại cache cho cả giao dịch lẫn Dashboard Cash
+        // Đã thêm/sửa -> Bắt buộc tải mới Server (forceFetch = true)
         loadRecentCashTransactions(true);
         loadCashDashboard(true);
       }
@@ -878,16 +875,13 @@
       const txList = document.getElementById('txListCash');
       const cached = localStorage.getItem(cacheKey);
     
-      // Render ngay nếu Cache khả dụng
       if (cached && !forceFetch) {
         try {
-          const list = JSON.parse(cached);
-          renderRecentCashListUI(list);
+          renderRecentCashListUI(JSON.parse(cached));
           return;
-        } catch (e) {}
+        } catch(e){}
       }
     
-      // Tải mới từ Server khi thêm giao dịch mới hoặc bấm Refresh
       document.getElementById('loadingTxCash').style.display = 'block';
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
         document.getElementById('loadingTxCash').style.display = 'none';
@@ -963,18 +957,34 @@
     // CASH DASHBOARD VIRTUALIZATION
     async function loadCashDashboard(fetchServer = false) {
       const cacheKey = "app_cash_dash_data";
-      const cached = localStorage.getItem(cacheKey);
     
-      // Nếu đã có Cache và không bấm nút Refresh thủ công -> Render tức thì từ Cache!
-      if (cached && !fetchServer) {
-        try {
-          const parsedData = JSON.parse(cached);
-          document.getElementById('loadingCashDash').style.display = 'none';
+      if (fetchServer) {
+        document.getElementById('loadingCashDash').style.display = 'block';
+        document.getElementById('cashDashContent').style.display = 'none';
+    
+        const data = await sendRequest("getCashDashboardData");
+        document.getElementById('loadingCashDash').style.display = 'none';
+    
+        if (data) {
+          localStorage.setItem(cacheKey, JSON.stringify(data));
           document.getElementById('cashDashContent').style.display = 'block';
-          renderCashDashboard(parsedData);
-          return;
-        } catch (e) {}
+          renderCashDashboard(data);
+        }
+      } else {
+        // Chuyển Tab -> Đọc từ Cache hiển thị ngay 0ms
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            renderCashDashboard(JSON.parse(cached));
+            document.getElementById('loadingCashDash').style.display = 'none';
+            document.getElementById('cashDashContent').style.display = 'block';
+          } catch(e){}
+        } else {
+          // Nếu rỗng Cache thì mới gọi Server
+          loadCashDashboard(true);
+        }
       }
+    }
     
       // Nếu chưa có Cache hoặc người dùng bấm nút Refresh / F5
       document.getElementById('loadingCashDash').style.display = 'block';
@@ -1254,7 +1264,7 @@
       const data = await sendRequest("updateCashDashboardFilters", { filterObj });
       document.getElementById('loadingCashDash').style.display = 'none';
       if (data) {
-        localStorage.setItem("app_cash_dash_data", JSON.stringify(data)); // Cập nhật lại Cache sau khi lọc
+        localStorage.setItem("app_cash_dash_data", JSON.stringify(data));
         renderCashDashboard(data);
       }
     }
