@@ -56,212 +56,228 @@
 
       <!-- MAIN APP CONTAINER -->
       <div id="app-container" class="hidden">
-<!-- ========================================================= -->
-  <!-- 📍 BẮT ĐẦU CHÈN CỤM NÚT MỚI TẠI ĐÂY -->
-  <!-- ========================================================= -->
-  <div class="btn-group w-100 mb-3" role="group">
-    <button type="button" class="btn btn-primary fw-bold active" id="btnModeCard" onclick="switchMainMode('card')">
-      <i class="bi bi-credit-card-2-front"></i> THẺ TÍN DỤNG
-    </button>
-    <button type="button" class="btn btn-outline-primary fw-bold" id="btnModeCash" onclick="switchMainMode('cash')">
-      <i class="bi bi-cash-coin"></i> DÒNG TIỀN MẶT / BANK
-    </button>
-  </div>
-  <!-- ========================================================= -->
-
-
-  <!-- 1. BỌC TOÀN BỘ CỤM THẺ TÍN DỤNG CŨ VÀO DIV NÀY: -->
-  <div id="cardAppContainer">
-        <!-- Cụm 4 nút cũ (Dashboard, Gợi Ý, Chi Tiêu, Thanh Toán) -->
-        <div class="nav-grid-container nav-pills mb-3" id="mainTab">
-           ...
+      
+        <!-- 1. CỤM NÚT CHUYỂN LUỒNG QUẢN LÝ CHÍNH -->
+        <div class="btn-group w-100 mb-3" role="group">
+          <button type="button" class="btn btn-primary fw-bold active" id="btnModeCard" onclick="switchMainMode('card')">
+            <i class="bi bi-credit-card-2-front"></i> THẺ TÍN DỤNG
+          </button>
+          <button type="button" class="btn btn-outline-success fw-bold" id="btnModeCash" onclick="switchMainMode('cash')">
+            <i class="bi bi-cash-coin"></i> DÒNG TIỀN MẶT / BANK
+          </button>
         </div>
-        <!-- Nội dung 4 tab cũ (dashboardBlock, recommendBlock, dataForm) -->
-        <div id="dashboardBlock"> ... </div>
-        <div id="recommendBlock"> ... </div>
-        <form id="dataForm"> ... </form>
-      </div>
-      <!-- 2. BỌC CỤM TIỀN MẶT / BANK MỚI VÀO DIV NÀY (Mặc định ẩn): -->
-      <div id="cashAppContainer" class="hidden">
-        <div class="nav-grid-container nav-pills mb-3">
-          <div class="nav-row-1">
-            <button class="nav-link active" id="tab-cash-dash" onclick="switchCashTab('dash')">
-              <i class="bi bi-speedometer2"></i> Dashboard Dòng Tiền
-            </button>
-            <button class="nav-link text-success" id="tab-cash-input" onclick="switchCashTab('input')">
-              <i class="bi bi-plus-circle"></i> Thu / Chi Mới
-            </button>
-          </div>
-        </div>
-        <!-- Khối Dashboard Cash & Form Thu/Chi Cash sẽ đặt ở đây -->
-        <div id="cashDashboardBlock"> ... </div>
-        <div id="cashInputBlock" class="hidden"> ... </div>
-      </div>
-        </div>
-
-        <!-- TAB DASHBOARD -->
-        <div id="dashboardBlock">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold text-secondary small"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ</span>
-            <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
-          </div>
-          <div id="loadingDash" class="text-center py-4 text-muted">
-            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
-          </div>
-          <div id="dashContent" style="display: none;">
-            <div class="row g-1 g-sm-2 mb-3">
-              <div class="col-4"><div class="kpi-card kpi-blue"><div class="kpi-title">CHƯA ĐẾN HẠN</div><div class="kpi-value" id="kpiNotDue">0 đ</div></div></div>
-              <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
-              <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
+      
+        <!-- ========================================================= -->
+        <!-- 2. TOÀN BỘ KHỐI THẺ TÍN DỤNG (Credit Cards) -->
+        <!-- ========================================================= -->
+        <div id="cardAppContainer">
+      
+          <!-- Cụm 4 nút Tab con của Thẻ tín dụng -->
+          <div class="nav-grid-container nav-pills mb-3" id="mainTab">
+            <div class="nav-row-1">
+              <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
+              <div class="nav-item"><button class="nav-link text-success" id="tab-recommend" onclick="switchForm('recommend')"><i class="bi bi-lightbulb"></i> Gợi Ý</button></div>
             </div>
-
-            <div class="card bg-light p-2 mb-3 border">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="fw-bold small text-dark"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
-                <select class="form-select form-select-sm py-0 px-2" id="stmtFilterStatus" onchange="filterStatementList()" style="width: auto; font-size: 0.75rem;">
-                  <option value="">Tất cả</option>
-                  <option value="Chưa TT">Chưa TT</option>
-                  <option value="Đã TT">Đã TT</option>
-                  <option value="Chưa sao kê">Chưa sao kê</option>
-                </select>
-              </div>
-              <div class="d-flex justify-content-between align-items-center pb-1 border-bottom text-muted px-1" style="font-size: 0.75rem;">
-                <span>Kỳ sao kê (Từ ngày - Đến ngày) | Hạn thanh toán</span>
-                <span class="fw-bold text-danger">Còn phải trả</span>
-              </div>
-              <div id="stmtList" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;"></div>
+            <div class="nav-row-2">
+              <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-cart-plus"></i> Chi Tiêu</button></div>
+              <div class="nav-item"><button class="nav-link" id="tab-payment" onclick="switchForm('payment')"><i class="bi bi-cash-stack"></i> Thanh Toán</button></div>
             </div>
-
-            <div class="card p-2 border">
-              <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
-              <div class="row g-2 mb-2">
-                <div class="col-12"><select class="form-select form-select-sm" id="dashFilterCard" onchange="applyCategoryFilter()"></select></div>
-                <div class="col-6"><select class="form-select form-select-sm" id="dashFilterCategory" onchange="applyCategoryFilter()"></select></div>
-                <div class="col-6">
-                  <select class="form-select form-select-sm" id="dashFilterStatus" onchange="applyCategoryFilter()">
-                    <option value="">-- Tất cả Trạng Thái --</option>
+          </div>
+      
+          <!-- TAB DASHBOARD CARD -->
+          <div id="dashboardBlock">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold text-secondary small"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ</span>
+              <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+            </div>
+            <div id="loadingDash" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
+            </div>
+            <div id="dashContent" style="display: none;">
+              <div class="row g-1 g-sm-2 mb-3">
+                <div class="col-4"><div class="kpi-card kpi-blue"><div class="kpi-title">CHƯA ĐẾN HẠN</div><div class="kpi-value" id="kpiNotDue">0 đ</div></div></div>
+                <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
+                <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
+              </div>
+      
+              <div class="card bg-light p-2 mb-3 border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="fw-bold small text-dark"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
+                  <select class="form-select form-select-sm py-0 px-2" id="stmtFilterStatus" onchange="filterStatementList()" style="width: auto; font-size: 0.75rem;">
+                    <option value="">Tất cả</option>
                     <option value="Chưa TT">Chưa TT</option>
+                    <option value="Đã TT">Đã TT</option>
                     <option value="Chưa sao kê">Chưa sao kê</option>
                   </select>
                 </div>
+                <div class="d-flex justify-content-between align-items-center pb-1 border-bottom text-muted px-1" style="font-size: 0.75rem;">
+                  <span>Kỳ sao kê (Từ ngày - Đến ngày) | Hạn thanh toán</span>
+                  <span class="fw-bold text-danger">Còn phải trả</span>
+                </div>
+                <div id="stmtList" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;"></div>
               </div>
-              <div id="loadingReport" class="text-center py-2 text-muted" style="display:none;">
-                <div class="spinner-border spinner-border-sm text-primary"></div> Đang lọc dữ liệu...
+      
+              <div class="card p-2 border">
+                <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
+                <div class="row g-2 mb-2">
+                  <div class="col-12"><select class="form-select form-select-sm" id="dashFilterCard" onchange="applyCategoryFilter()"></select></div>
+                  <div class="col-6"><select class="form-select form-select-sm" id="dashFilterCategory" onchange="applyCategoryFilter()"></select></div>
+                  <div class="col-6">
+                    <select class="form-select form-select-sm" id="dashFilterStatus" onchange="applyCategoryFilter()">
+                      <option value="">-- Tất cả Trạng Thái --</option>
+                      <option value="Chưa TT">Chưa TT</option>
+                      <option value="Chưa sao kê">Chưa sao kê</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="loadingReport" class="text-center py-2 text-muted" style="display:none;">
+                  <div class="spinner-border spinner-border-sm text-primary"></div> Đang lọc dữ liệu...
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover mb-0 mt-1" style="font-size: 0.8rem;">
+                    <tbody id="categoryReportTable"></tbody>
+                  </table>
+                </div>
               </div>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0 mt-1" style="font-size: 0.8rem;">
-                  <tbody id="categoryReportTable"></tbody>
-                </table>
-              </div>
             </div>
           </div>
-        </div>
-
-        <!-- TAB GỢI Ý CHI TIÊU -->
-        <div id="recommendBlock" style="display: none;">
-          <div class="card p-3 border mb-3 bg-light text-center align-items-center">
-            <div class="d-flex justify-content-center w-100 mb-2">
-              <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
-                <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
-              </button>
-            </div>
-            <div class="fw-bold text-dark small w-100" id="voiceStatusTextRec">Bấm nút để tìm ưu đãi thẻ</div>
-            <div class="text-muted small mt-1 w-100" style="font-size: 0.75rem;">
-              <i class="bi bi-lightbulb text-warning"></i> VD: "Hôm nay mua sắm ở Agoda"
-            </div>
-            <div id="liveSpeechBoxRec" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-center w-100 hidden" style="min-height: 38px; word-break: break-word;">
-              <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
-              <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang lắng nghe...</span>
-            </div>
-            <div class="input-group input-group-sm mt-3 w-100">
-              <input type="text" class="form-control" id="recommendInput" list="categoriesTmpOptions" placeholder="Hoặc nhập tên nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
-              <button class="btn btn-outline-success" type="button" onclick="fetchRecommendation()"><i class="bi bi-search"></i> Tìm</button>
-            </div>
-            <datalist id="categoriesTmpOptions"></datalist>
-          </div>
-
-          <div id="alertMsgRec" class="alert alert-danger mb-3 py-2 px-3 small fw-bold shadow-sm text-center" style="display: none;" role="alert"></div>
-          <div id="loadingRec" class="text-center py-3 text-muted" style="display:none;">
-            <div class="spinner-border spinner-border-sm text-success"></div> Đang tính toán ưu đãi thẻ...
-          </div>
-          <div id="recResultBlock" style="display: none;">
-            <div class="alert alert-info py-2 px-3 mb-3 small">
-              <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
-              <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
-            </div>
-            <div class="fw-bold small text-secondary mb-2"><i class="bi bi-trophy"></i> DANH SÁCH THẺ NÊN CHỌN:</div>
-            <div id="cardRecommendList"></div>
-          </div>
-        </div>
-
-        <!-- FORM CHI TIÊU / THANH TOÁN -->
-        <form id="dataForm" onsubmit="handleFormSubmit(this)">
-          <input type="hidden" id="entryType" name="entryType" value="spending">
-
-          <div id="inputFormFields" style="display: none;">
-            <div class="mb-3">
-              <label class="form-label fw-bold">Ngày hạch toán / Giao dịch</label>
-              <input type="date" class="form-control" id="date" name="date" required>
-            </div>
-
-            <!-- MICROPHONE KHỐI CHI TIÊU / THANH TOÁN -->
-            <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
-              <div class="card-body p-2 text-center">
-                <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm mb-2" id="btnVoice" onclick="startVoiceRecognition()" style="width: 55px; height: 55px;">
-                  <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
+      
+          <!-- TAB GỢI Ý CHI TIÊU -->
+          <div id="recommendBlock" style="display: none;">
+            <div class="card p-3 border mb-3 bg-light text-center align-items-center">
+              <div class="d-flex justify-content-center w-100 mb-2">
+                <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
+                  <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
                 </button>
-                <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch</div>
-                <div class="text-muted small mt-1" id="voiceExampleText" style="font-size: 0.75rem;">
-                  <i class="bi bi-lightbulb text-warning"></i> VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"
-                </div>
-                <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
-                  <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
-                  <span id="liveSpeechText" class="fst-italic text-dark">Đang lắng nghe...</span>
-                </div>
               </div>
-            </div>
-
-            <div id="alertMsg" class="alert alert-danger mt-2 py-2 px-3 small fw-bold shadow-sm" style="display: none;" role="alert"></div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Chọn Thẻ</label>
-              <select class="form-select" id="card" name="card" required></select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Số Tiền (VNĐ)</label>
-              <input type="text" class="form-control" id="amount" name="amount" placeholder="Ví dụ: 1888000" required oninput="cleanAmountInput(this)">
-            </div>
-
-            <div id="spendingBlock" class="mb-3">
-              <label class="form-label fw-bold">Merchant / Danh Mục</label>
-              <input type="text" class="form-control" id="categoryInput" name="category" list="categoryOptions" placeholder="Nhập hoặc chọn danh mục/cửa hàng">
-              <datalist id="categoryOptions"></datalist>
-            </div>
-
-            <div id="paymentBlock" class="mb-3" style="display: none;">
-              <label class="form-label fw-bold">Trạng Thái Thanh Toán</label>
-              <select class="form-select" id="status" name="status">
-                <option value="TT Trực Tuyến">TT Trực Tuyến</option>
-                <option value="Trừ vào sao kê">Trừ vào sao kê</option>
-                <option value="Dùng điểm thanh toán">Dùng điểm thanh toán</option>
-              </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 mb-4" id="btnSubmit">Lưu Dữ Liệu</button>
-
-            <div class="card p-2 bg-light border">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY</span>
-                <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+              <div class="fw-bold text-dark small w-100" id="voiceStatusTextRec">Bấm nút để tìm ưu đãi thẻ</div>
+              <div class="text-muted small mt-1 w-100" style="font-size: 0.75rem;">
+                <i class="bi bi-lightbulb text-warning"></i> VD: "Hôm nay mua sắm ở Agoda"
               </div>
-              <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
-                <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải...
+              <div id="liveSpeechBoxRec" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-center w-100 hidden" style="min-height: 38px; word-break: break-word;">
+                <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
+                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang lắng nghe...</span>
               </div>
-              <div id="txList"></div>
+              <div class="input-group input-group-sm mt-3 w-100">
+                <input type="text" class="form-control" id="recommendInput" list="categoriesTmpOptions" placeholder="Hoặc nhập tên nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
+                <button class="btn btn-outline-success" type="button" onclick="fetchRecommendation()"><i class="bi bi-search"></i> Tìm</button>
+              </div>
+              <datalist id="categoriesTmpOptions"></datalist>
+            </div>
+      
+            <div id="alertMsgRec" class="alert alert-danger mb-3 py-2 px-3 small fw-bold shadow-sm text-center" style="display: none;" role="alert"></div>
+            <div id="loadingRec" class="text-center py-3 text-muted" style="display:none;">
+              <div class="spinner-border spinner-border-sm text-success"></div> Đang tính toán ưu đãi thẻ...
+            </div>
+            <div id="recResultBlock" style="display: none;">
+              <div class="alert alert-info py-2 px-3 mb-3 small">
+                <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+                <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+              </div>
+              <div class="fw-bold small text-secondary mb-2"><i class="bi bi-trophy"></i> DANH SÁCH THẺ NÊN CHỌN:</div>
+              <div id="cardRecommendList"></div>
             </div>
           </div>
-        </form>
+      
+          <!-- FORM CHI TIÊU / THANH TOÁN CARD -->
+          <form id="dataForm" onsubmit="handleFormSubmit(this)">
+            <input type="hidden" id="entryType" name="entryType" value="spending">
+      
+            <div id="inputFormFields" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label fw-bold">Ngày hạch toán / Giao dịch</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+              </div>
+      
+              <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
+                <div class="card-body p-2 text-center">
+                  <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm mb-2" id="btnVoice" onclick="startVoiceRecognition()" style="width: 55px; height: 55px;">
+                    <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
+                  </button>
+                  <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch</div>
+                  <div class="text-muted small mt-1" id="voiceExampleText" style="font-size: 0.75rem;">
+                    <i class="bi bi-lightbulb text-warning"></i> VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"
+                  </div>
+                  <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
+                    <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
+                    <span id="liveSpeechText" class="fst-italic text-dark">Đang lắng nghe...</span>
+                  </div>
+                </div>
+              </div>
+      
+              <div id="alertMsg" class="alert alert-danger mt-2 py-2 px-3 small fw-bold shadow-sm" style="display: none;" role="alert"></div>
+      
+              <div class="mb-3">
+                <label class="form-label fw-bold">Chọn Thẻ</label>
+                <select class="form-select" id="card" name="card" required></select>
+              </div>
+      
+              <div class="mb-3">
+                <label class="form-label fw-bold">Số Tiền (VNĐ)</label>
+                <input type="text" class="form-control" id="amount" name="amount" placeholder="Ví dụ: 1888000" required oninput="cleanAmountInput(this)">
+              </div>
+      
+              <div id="spendingBlock" class="mb-3">
+                <label class="form-label fw-bold">Merchant / Danh Mục</label>
+                <input type="text" class="form-control" id="categoryInput" name="category" list="categoryOptions" placeholder="Nhập hoặc chọn danh mục/cửa hàng">
+                <datalist id="categoryOptions"></datalist>
+              </div>
+      
+              <div id="paymentBlock" class="mb-3" style="display: none;">
+                <label class="form-label fw-bold">Trạng Thái Thanh Toán</label>
+                <select class="form-select" id="status" name="status">
+                  <option value="TT Trực Tuyến">TT Trực Tuyến</option>
+                  <option value="Trừ vào sao kê">Trừ vào sao kê</option>
+                  <option value="Dùng điểm thanh toán">Dùng điểm thanh toán</option>
+                </select>
+              </div>
+      
+              <button type="submit" class="btn btn-primary w-100 mb-4" id="btnSubmit">Lưu Dữ Liệu</button>
+      
+              <div class="card p-2 bg-light border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY</span>
+                  <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+                </div>
+                <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
+                  <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải...
+                </div>
+                <div id="txList"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+      
+      
+        <!-- ========================================================= -->
+        <!-- 3. TOÀN BỘ KHỐI DÒNG TIỀN MẶT / BANK (Cash & Banking) -->
+        <!-- ========================================================= -->
+        <div id="cashAppContainer" class="hidden">
+          <!-- Sub-tabs Tiền Mặt/Bank -->
+          <div class="nav-grid-container nav-pills mb-3">
+            <div class="nav-row-1">
+              <div class="nav-item">
+                <button class="nav-link active" id="tab-cash-dash" onclick="switchCashTab('dash')">
+                  <i class="bi bi-speedometer2"></i> Dashboard Dòng Tiền
+                </button>
+              </div>
+              <div class="nav-item">
+                <button class="nav-link text-success" id="tab-cash-input" onclick="switchCashTab('input')">
+                  <i class="bi bi-plus-circle"></i> Thu / Chi Mới
+                </button>
+              </div>
+            </div>
+          </div>
+      
+          <!-- NỘI DUNG TABS CASH SẼ Ở ĐÂY -->
+          <div id="cashDashboardBlock">
+            <p class="text-center text-muted py-3">Nội dung Dashboard Dòng Tiền đang thiết lập...</p>
+          </div>
+          <div id="cashInputBlock" style="display: none;">
+            <p class="text-center text-muted py-3">Nội dung Form Thu/Chi Mới đang thiết lập...</p>
+          </div>
+        </div>
+      
       </div>
     </div>
   </div>
