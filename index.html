@@ -143,6 +143,7 @@
           <!-- TAB GỢI Ý CHI TIÊU CARD -->
           <div id="recommendBlock" style="display: none;">
             <div class="card p-3 border mb-3 bg-light text-center align-items-center">
+              <!-- CĂN GIỮA NÚT MIC 1 -->
               <div class="d-flex justify-content-center w-100 mb-2">
                 <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
                   <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
@@ -189,12 +190,15 @@
 
               <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
                 <div class="card-body p-2 text-center">
-                  <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm mb-2" id="btnVoice" onclick="startVoiceRecognition('spending')" style="width: 55px; height: 55px;">
-                    <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
-                  </button>
+                  <!-- CĂN GIỮA NÚT MIC 2 -->
+                  <div class="d-flex justify-content-center w-100 mb-2">
+                    <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoice" onclick="startVoiceRecognition('spending')" style="width: 55px; height: 55px;">
+                      <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
+                    </button>
+                  </div>
                   <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch</div>
                   <div class="text-muted small mt-1" id="voiceExampleText" style="font-size: 0.75rem;">
-                    <i class="bi bi-lightbulb text-warning"></i> VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"
+                    <i class="bi bi-lightbulb text-warning"></i> <span id="voiceExampleSpan">VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"</span>
                   </div>
                   <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
                     <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
@@ -292,9 +296,12 @@
                 <!-- Voice AI Cash -->
                 <div class="card mb-3 border-success bg-light">
                   <div class="card-body p-2 text-center">
-                    <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm mb-2" id="btnVoiceCash" onclick="startVoiceRecognition('cash_spending')" style="width: 55px; height: 55px;">
-                      <i class="bi bi-mic-fill fs-4" id="micIconCash"></i>
-                    </button>
+                    <!-- CĂN GIỮA NÚT MIC 3 -->
+                    <div class="d-flex justify-content-center w-100 mb-2">
+                      <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceCash" onclick="startVoiceRecognition('cash_spending')" style="width: 55px; height: 55px;">
+                        <i class="bi bi-mic-fill fs-4" id="micIconCash"></i>
+                      </button>
+                    </div>
                     <div class="fw-bold text-dark small" id="voiceStatusTextCash">Bấm nút để nói thông tin Thu / Chi</div>
                     <div class="text-muted small mt-1" style="font-size: 0.75rem;">
                       <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản" hoặc "Khách trả tiền phòng 500k"
@@ -328,10 +335,12 @@
                   <label class="form-label fw-bold small">Danh Mục Thu Chi <span class="text-danger">*</span></label>
                   <input type="text" class="form-control form-control-sm" id="cashCategory" name="category" list="cashCategoryOptions" placeholder="Nhập hoặc chọn danh mục (KD- cho thu nhập)" required onchange="validateKDAmount()">
                   <datalist id="cashCategoryOptions">
-                    <option value="KD-Khách Sạn">🏢 KD-Khách Sạn (Thu nhập)</option>
-                    <option value="KD-Cà phê & Nông sản">🏢 KD-Cà phê & Nông sản (Thu nhập)</option>
-                    <option value="KD-Đầu tư & Tài chính">🏢 KD-Đầu tư & Tài chính (Thu nhập)</option>
-                    <option value="KD-Thu hồi công nợ">🏢 KD-Thu hồi công nợ (Thu nhập)</option>
+                    <option value="KD-Khách Sạn">🏢 KD-Khách Sạn (Thu tiền phòng / Doanh thu)</option>
+                    <option value="KD-Cà phê & Nông sản">🏢 KD-Cà phê & Nông sản (Thu tiền)</option>
+                    <option value="KD-Đầu tư & Tài chính">🏢 KD-Đầu tư & Tài chính (Lãi / Chốt lời)</option>
+                    <option value="KD-Thu hồi công nợ">🏢 KD-Thu hồi công nợ</option>
+                    <option value="Khách sạn">Khách sạn (Chi tiền ở khách sạn / Du lịch)</option>
+                    <option value="Du lịch">Du lịch</option>
                     <option value="Ăn sáng">Ăn sáng</option>
                     <option value="Ăn trưa">Ăn trưa</option>
                     <option value="Ăn tối">Ăn tối</option>
@@ -344,8 +353,6 @@
                     <option value="Xăng dầu">Xăng dầu</option>
                     <option value="Sửa xe">Sửa xe</option>
                     <option value="Gửi xe">Gửi xe</option>
-                    <option value="Điện & Nước">Điện & Nước</option>
-                    <option value="Internet & Điện thoại">Internet & Điện thoại</option>
                     <option value="Chi tiêu cho gia đình">Chi tiêu cho gia đình</option>
                     <option value="Quà tặng / Biếu tặng">Quà tặng / Biếu tặng</option>
                   </datalist>
@@ -354,7 +361,7 @@
                 <!-- Số Tiền -->
                 <div class="mb-3">
                   <label class="form-label fw-bold small">Số Tiền (VNĐ) <span class="text-muted font-monospace">(Dương: Chi | Âm: Thu)</span></label>
-                  <input type="text" class="form-control form-control-sm" id="cashAmount" name="amount" placeholder="Ví dụ: 420000 hoặc -500000" required oninput="validateKDAmount()">
+                  <input type="text" class="form-control form-control-sm" id="cashAmount" name="amount" placeholder="Ví dụ: 500000 hoặc -500000" required oninput="validateKDAmount()">
                   <div id="amountHelp" class="form-text small"></div>
                 </div>
 
@@ -393,7 +400,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4XMEITG97lOrdS7VjXi6J-NOtWih021nolsVzQFozI0k4Rdw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxypWvIq8NF_QEZmrwpYbHFnlatBooadbV-SlIFbgUPD25T0woXn7ltXGbMrACxwLxS/exec";
     const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
 
     let googleToken = null;
@@ -536,7 +543,6 @@
       list.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
     }
 
-    // CHUYỂN LUỒNG QUẢN LÝ CHÍNH
     function switchMainMode(mode) {
       const isCard = (mode === 'card');
       document.getElementById('btnModeCard').className = isCard ? 'btn btn-primary fw-bold active' : 'btn btn-outline-primary fw-bold';
@@ -546,7 +552,6 @@
       document.getElementById('cashAppContainer').classList.toggle('hidden', isCard);
     }
 
-    // CHUYỂN SUB-TABS TRONG CASH
     function switchCashTab(type) {
       const isDash = (type === 'dash');
       document.getElementById('tab-cash-dash').classList.toggle('active', isDash);
@@ -558,6 +563,7 @@
       if (!isDash) loadRecentCashTransactions();
     }
 
+    // FIX LỖI 2: ĐỔI VÍ DỤ CÂU MẪU KHI CHUYỂN TABS THẺ TÍN DỤNG
     function switchForm(type) {
       document.querySelectorAll('#mainTab .nav-link').forEach(btn => btn.classList.remove('active'));
       document.getElementById(`tab-${type}`).classList.add('active');
@@ -577,36 +583,50 @@
         document.getElementById('spendingBlock').style.display = (type === 'spending') ? 'block' : 'none';
         document.getElementById('paymentBlock').style.display = (type === 'payment') ? 'block' : 'none';
         
+        // ĐỔI CÂU VÍ DỤ GỢI Ý MẪU CHUẨN KHI THANH TOÁN THẺ
+        const exSpan = document.getElementById('voiceExampleSpan');
+        if (type === 'spending') {
+          exSpan.innerText = 'VD: "Thanh toán Shopee 500k bằng thẻ VIB Max"';
+        } else {
+          exSpan.innerText = 'VD: "Thanh toán dư nợ 2 triệu thẻ VIB"';
+        }
+
         resetVoiceUI();
         loadRecentTransactions(false);
       }
     }
 
-    // KIỂM TRA RÀNG BUỘC KD-
+    // FIX LỖI 3: LOGIC BỎ TRỐNG ĐỐI TƯỢNG VÀ ÉP DẤU ÂM KHI BẮT ĐẦU BẰNG "KD-"
     function validateKDAmount() {
       const catInput = document.getElementById('cashCategory').value.trim();
       const amtInput = document.getElementById('cashAmount');
+      const targetSelect = document.getElementById('cashTarget');
       const help = document.getElementById('amountHelp');
       
       let val = amtInput.value.replace(/[^0-9-]/g, '');
       const isKD = catInput.toUpperCase().startsWith("KD-");
 
-      if (isKD) {
+      if (isKD || (val && val.startsWith("-"))) {
         if (val && !val.startsWith("-")) {
           amtInput.value = "-" + val;
         }
+        // VỚI SỐ ÂM/KD: BẮT BỘC KHÓA VÀ XÓA ĐỐI TƯỢNG
+        targetSelect.value = "";
+        targetSelect.disabled = true;
+
         help.className = "form-text small text-success fw-bold";
-        help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-)";
+        help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Khóa Đối tượng chi";
       } else {
         if (val.startsWith("-")) {
           amtInput.value = val.replace("-", "");
         }
+        targetSelect.disabled = false;
+
         help.className = "form-text small text-danger";
         help.innerText = "Chi tiêu sinh hoạt -> Tự động ghi DƯƠNG (+)";
       }
     }
 
-    // SUBMIT CASH FORM
     async function handleCashFormSubmit(form) {
       event.preventDefault();
       const btn = document.getElementById('btnSubmitCash');
@@ -622,11 +642,11 @@
         form.reset();
         document.getElementById('cashDate').value = new Date().toISOString().substring(0, 10);
         document.getElementById('mCash').checked = true;
+        document.getElementById('cashTarget').disabled = false;
         loadRecentCashTransactions();
       }
     }
 
-    // LẤY LOG GIAO DỊCH CASH TRỰC TIẾP TỪ SERVER
     function loadRecentCashTransactions() {
       const txList = document.getElementById('txListCash');
       document.getElementById('loadingTxCash').style.display = 'block';
@@ -961,8 +981,7 @@
       recognition.interimResults = true;
       recognition.continuous = false;
 
-      // ÉP CỐ ĐỊNH MODE THEO NÚT ĐÃ BẤM
-      const currentMode = forcedMode ? forcedMode : 'cash_spending';
+      const currentMode = forcedMode ? forcedMode : (document.getElementById('entryType').value || 'spending');
       const isCashMode = (currentMode === 'cash_spending');
       const isRec = (currentMode === 'recommend');
 
@@ -993,7 +1012,7 @@
       statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
 
       liveBox.classList.remove('hidden');
-      liveText.innerText = "Đang lắng hệ...";
+      liveText.innerText = "Đang lắng nghe...";
 
       let finalTranscript = '';
 
@@ -1044,14 +1063,19 @@
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
             document.getElementById('cashCategory').value = res.category || "";
-            if (res.target) document.getElementById('cashTarget').value = res.target;
+            
+            // XỬ LÝ SỐ ÂM KHÓA ĐỐI TƯỢNG VÀ XỬ LÝ KHÁCH SẠN NGHỈ DƯỠNG
+            validateKDAmount();
+
+            if (res.amount > 0 && res.target) {
+              document.getElementById('cashTarget').value = res.target;
+            }
 
             if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
             else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
             else document.getElementById('mCash').checked = true;
 
-            validateKDAmount();
-            showAlertCash(`AI đã điền thành công: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
+            showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
           } else {
             showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
           }
@@ -1102,7 +1126,7 @@
       const statusText = document.getElementById('voiceStatusText');
       const liveBox = document.getElementById('liveSpeechBox');
 
-      if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow-sm mb-2";
+      if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIcon) micIcon.className = "bi bi-mic-fill fs-4";
       if (statusText) statusText.innerText = "Bấm nút để nói thông tin giao dịch";
       if (liveBox) liveBox.classList.add('hidden');
@@ -1112,7 +1136,7 @@
       const statusTextCash = document.getElementById('voiceStatusTextCash');
       const liveBoxCash = document.getElementById('liveSpeechBoxCash');
 
-      if (btnVoiceCash) btnVoiceCash.className = "btn btn-success rounded-circle p-3 shadow-sm mb-2";
+      if (btnVoiceCash) btnVoiceCash.className = "btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIconCash) micIconCash.className = "bi bi-mic-fill fs-4";
       if (statusTextCash) statusTextCash.innerText = "Bấm nút để nói thông tin Thu / Chi";
       if (liveBoxCash) liveBoxCash.classList.add('hidden');
