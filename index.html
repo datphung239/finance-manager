@@ -382,22 +382,23 @@
               </div>
 
               <!-- 3. CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
-              <div class="row g-2 mb-3">
+              <!-- MỚI (ĐÃ SỬA KHÔNG BỊ CẮT CHỮ): -->
+              <div class="row g-1 g-sm-2 mb-3">
                 <div class="col-4">
-                  <div class="card p-2 text-center bg-light border">
-                    <div class="text-muted nowrap-text" style="font-size:0.65rem;">SỐ LẦN CHI</div>
-                    <div class="fw-bold text-dark nowrap-text" id="cashTxCount">0</div>
+                  <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
+                    <div class="text-muted fw-semibold" style="font-size: 0.6rem;">SỐ LẦN CHI</div>
+                    <div class="fw-bold text-dark fit-val" id="cashTxCount">0</div>
                   </div>
                 </div>
                 <div class="col-4">
-                  <div class="card p-2 text-center bg-light border">
-                    <div class="text-muted nowrap-text" style="font-size:0.65rem;">CHI TB / LẦN</div>
+                  <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
+                    <div class="text-muted fw-semibold" style="font-size: 0.6rem;">CHI TB / LẦN</div>
                     <div class="fw-bold text-success fit-val" id="cashAvgAmt">0 đ</div>
                   </div>
                 </div>
                 <div class="col-4">
-                  <div class="card p-2 text-center bg-light border">
-                    <div class="text-muted nowrap-text" style="font-size:0.65rem;">KHOẢN CHI LỚN NHẤT</div>
+                  <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
+                    <div class="text-muted fw-semibold" style="font-size: 0.6rem;">CHI LỚN NHẤT</div>
                     <div class="fw-bold text-danger fit-val" id="cashMaxAmt">0 đ</div>
                   </div>
                 </div>
@@ -972,8 +973,10 @@
       document.getElementById('cashMaxAmt').innerText = formatVND(d.frequencyData.maxAmt);
 
       // 4. CHART 4 THÁNG DUAL AXES (SỬA LỖI MẤT SỐ % BẰNG PADDING)
+      // ✅ MỚI: TỐI ƯU HIỂN THỊ % VÀ THÊM SỐ TIỀN THÁNG CUỐI CÙNG
       if (chartTrendsInstance) chartTrendsInstance.destroy();
       const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
+      
       chartTrendsInstance = new Chart(ctxTrends, {
         plugins: [ChartDataLabels],
         data: {
@@ -985,8 +988,8 @@
               data: d.monthTrends.map(m => m.changePct),
               borderColor: '#dc3545',
               backgroundColor: '#dc3545',
-              pointRadius: 5,
-              pointHoverRadius: 7,
+              pointRadius: 4,
+              pointHoverRadius: 6,
               borderWidth: 2,
               tension: 0.1,
               yAxisID: 'y1',
@@ -996,8 +999,8 @@
                 align: 'top',
                 anchor: 'center',
                 color: '#dc3545',
-                offset: 4,
-                font: { weight: 'bold', size: 10 },
+                offset: 2,
+                font: { weight: 'bold', size: 9 },
                 formatter: (val, ctx) => {
                   const rawStr = d.monthTrends[ctx.dataIndex]?.changeStr;
                   return rawStr ? rawStr : (val > 0 ? '+' : '') + val.toFixed(1) + '%';
@@ -1012,27 +1015,41 @@
               borderRadius: 6,
               yAxisID: 'y',
               order: 2,
-              datalabels: { display: false }
+              datalabels: {
+                // BẬT SỐ TIỀN HIỂN THỊ Ở ĐỈNH CỘT CHO THÁNG CUỐI CÙNG
+                display: (ctx) => ctx.dataIndex === d.monthTrends.length - 1,
+                align: 'top',
+                anchor: 'end',
+                color: '#198754',
+                font: { weight: 'bold', size: 9 },
+                formatter: (val) => formatVND(val)
+              }
             }
           ]
         },
         options: {
           responsive: true,
-          layout: { padding: { top: 25 } }, // KÍCH THƯỚC PADDING ĐỈNH GIÚP NỐT % KHÔNG BỊ LẤP
+          layout: { 
+            padding: { top: 30, right: 15, left: 5 } // MỞ RỘNG PADDING ĐỂ KHÔNG MẤT CHỮ THÁNG CUỐI
+          },
           scales: {
             y: {
               type: 'linear',
               display: true,
               position: 'left',
-              title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 10 } }
+              title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 9 } },
+              ticks: { font: { size: 9 } }
             },
             y1: {
               type: 'linear',
               display: true,
               position: 'right',
               grid: { drawOnChartArea: false },
-              title: { display: true, text: '% Tăng giảm', font: { size: 10 } },
-              ticks: { callback: value => value + '%' }
+              title: { display: true, text: '% Tăng giảm', font: { size: 9 } },
+              ticks: { font: { size: 9 }, callback: value => value + '%' },
+              // MỞ RỘNG BIÊN ĐỘ ĐỂ CHỮ % KHÔNG BỊ TRÀN BỎ MẤT NÚT
+              suggestedMax: Math.max(...d.monthTrends.map(m => m.changePct)) + 15,
+              suggestedMin: Math.min(...d.monthTrends.map(m => m.changePct)) - 10
             }
           }
         }
