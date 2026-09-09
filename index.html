@@ -926,40 +926,29 @@
     function renderRecentCashListUI(list) {
       const txList = document.getElementById('txListCash');
       if (!txList) return;
-
       if (!list || list.length === 0) {
-        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
+        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Chưa có giao dịch Cash.</p>';
         return;
       }
       
-      let html = '<div class="list-group list-group-flush">';
-      list.forEach(item => {
+      txList.innerHTML = '<div class="list-group list-group-flush">' + list.map(item => {
         const amt = Number(item.amount || 0);
-        const isIncome = amt < 0;
+        const isInc = amt < 0;
+        const dateFormatted = formatDate(item.date);
         const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
-        const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
-        const sign = isIncome ? '+' : '-';
-        const categoryText = item.category || 'Chưa phân loại';
-        const methodText = item.method || 'Tiền Mặt';
-        
-        let methodBadgeClass = 'bg-secondary';
-        if (methodText === 'Chuyển Khoản') methodBadgeClass = 'bg-success';
-        else if (methodText === 'Ví Điện Tử') methodBadgeClass = 'bg-purple';
-        
-        const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') 
-          ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` : '';
-        
-        html += `
+        const methodBadge = `<span class="badge ${item.method === 'Chuyển Khoản' ? 'bg-success' : (item.method === 'Ví Điện Tử' ? 'bg-purple' : 'bg-secondary')}">${item.method || 'Tiền Mặt'}</span>`;
+        const targetBadge = (item.target && item.target !== 'Bản thân' && item.target.trim()) ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` : '';
+    
+        return `
           <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
             <div>
-              <div class="fw-bold small">${item.date} - <span class="badge ${methodBadgeClass}">${methodText}</span></div>
-              <div class="text-dark small">${categoryText} ${targetText}</div>
-              <div class="${badgeColor} small">${sign} ${amtFormatted} đ</div>
+              <div class="fw-bold small">${dateFormatted} - ${methodBadge}</div>
+              <div class="text-dark small">${item.category || 'Chưa phân loại'} ${targetBadge}</div>
+              <div class="${isInc ? 'text-success' : 'text-danger'} fw-bold small">${isInc ? '+' : '-'}${amtFormatted} đ</div>
             </div>
-            <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${item.date}', '${categoryText}', '${amtFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDeleteCash(${item.rowIndex}, '${dateFormatted}', '${item.category}', '${amtFormatted}')"><i class="bi bi-trash"></i></button>
           </div>`;
-      });
-      txList.innerHTML = html + '</div>';
+      }).join('') + '</div>';
     }
 
     async function confirmDeleteCash(rowIndex, date, category, amount) {
@@ -1215,38 +1204,30 @@
 
     function renderTxList(list) {
       const txList = document.getElementById('txList');
+      if (!txList) return;
       if (!list || list.length === 0) {
-        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Chưa có dữ liệu giao dịch trong bảng SPENDING_PAYMENTS.</p>';
+        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Chưa có giao dịch thẻ.</p>';
         return;
       }
       
-      let html = '<div class="list-group list-group-flush">';
-      list.forEach(item => {
+      txList.innerHTML = '<div class="list-group list-group-flush">' + list.map(item => {
         const amt = Number(item.amount || 0);
-        const isPayment = amt < 0;
-        const amountFormatted = Math.abs(amt).toLocaleString('vi-VN');
-        const colorClass = isPayment ? 'text-success fw-bold' : 'amount-text';
-        const sign = isPayment ? '-' : '';
-        
-        // Hiển thị Badge Merchant
-        const merchantInfo = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
-        
-        // Hiển thị Badge Đối Tượng Chi Tiêu (Cột F)
-        const targetInfo = (item.target && item.target !== 'undefined' && item.target.trim() !== '') 
-          ? `<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1">${item.target}</span>` 
-          : '';
+        const isPay = amt < 0;
+        const dateFormatted = formatDate(item.date);
+        const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
+        const merchBadge = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
+        const targetBadge = (item.target && item.target.trim()) ? `<span class="badge bg-info-subtle text-info border border-info ms-1">${item.target}</span>` : '';
     
-        html += `
-          <div class="tx-item d-flex justify-content-between align-items-center">
+        return `
+          <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
             <div>
-              <div class="fw-bold small">${item.date} - <span class="text-primary">${item.card}</span></div>
-              <div class="text-dark small">${item.category || 'Chưa phân loại'} ${merchantInfo} ${targetInfo}</div>
-              <div class="${colorClass} small">${sign}${amountFormatted} đ</div>
+              <div class="fw-bold small">${dateFormatted} - <span class="text-primary">${item.card}</span></div>
+              <div class="text-dark small">${item.category || 'Chưa phân loại'} ${merchBadge} ${targetBadge}</div>
+              <div class="${isPay ? 'text-success fw-bold' : 'amount-text'} small">${isPay ? '-' : ''}${amtFormatted} đ</div>
             </div>
-            <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDelete('${item.type || 'spending'}', ${item.rowIndex}, '${item.date}', '${item.card}', '${amountFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
+            <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDelete('spending', ${item.rowIndex}, '${dateFormatted}', '${item.card}', '${amtFormatted}')"><i class="bi bi-trash"></i></button>
           </div>`;
-      });
-      txList.innerHTML = html + '</div>';
+      }).join('') + '</div>';
     }
 
     async function confirmDelete(type, rowIndex, date, card, amount) {
@@ -1742,6 +1723,17 @@
       if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
+    // Hàm bổ trợ ép chuẩn ngày dd/MM/yyyy
+    const formatDate = (str) => {
+      if (!str) return '';
+      const clean = str.toString().replace("'", "").trim();
+      const p = clean.includes('/') ? clean.split('/') : clean.split('-');
+      if (p.length !== 3) return clean;
+      // Nếu là YYYY-MM-DD
+      if (clean.includes('-')) return `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
+      // Nếu là D/M/YYYY hoặc DD/MM/YYYY
+      return `${p[0].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[2]}`;
+    };
   </script>
 </body>
 </html>
