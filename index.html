@@ -73,12 +73,11 @@
     }
     /* Khung chứa danh sách Log giao dịch dạng cuộn */
     #txList, #txListCash {
-      max-height: 480px; /* Chiều cao tương đương hiển thị ~10 giao dịch */
-      overflow-y: auto;  /* Bật thanh cuộn dọc khi danh sách dài hơn */
+      max-height: 480px;
+      overflow-y: auto; 
       padding-right: 4px;
     }
     
-    /* Tùy chỉnh thanh cuộn nhỏ gọn (tùy chọn) */
     #txList::-webkit-scrollbar, #txListCash::-webkit-scrollbar {
       width: 5px;
     }
@@ -86,21 +85,39 @@
       background: #ccc;
       border-radius: 4px;
     }
-    /* Container AI Loading Hiện Đại */
+
+    /* CSS MIC ĐANG LẮNG NGHE (TONE VÀNG AMBER) */
+    .btn-mic-listening {
+      background-color: #ffc107 !important;
+      border-color: #ffc107 !important;
+      color: #212529 !important;
+      box-shadow: 0 0 15px rgba(255, 193, 7, 0.6) !important;
+    }
+    .mic-pulse-icon {
+      display: inline-block;
+      animation: micPulseAnim 1.2s infinite ease-in-out;
+    }
+    @keyframes micPulseAnim {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.25); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+
+    /* CONTAINER AI LOADING SÓNG ÂM */
     .ai-wave-container {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      height: 28px;
+      gap: 3px;
+      height: 20px;
+      vertical-align: middle;
     }
     
-    /* Các thanh sóng âm thanh AI nhảy động */
     .ai-wave-bar {
-      width: 4px;
-      height: 8px;
+      width: 3px;
+      height: 6px;
       background: linear-gradient(180deg, #0d6efd, #0dcaf0);
-      border-radius: 4px;
+      border-radius: 3px;
       animation: aiWaveAnim 1.2s ease-in-out infinite alternate;
     }
     
@@ -111,21 +128,21 @@
     .ai-wave-bar:nth-child(5) { animation-delay: 0.0s; }
     
     @keyframes aiWaveAnim {
-      0% { height: 6px; opacity: 0.4; }
-      100% { height: 26px; opacity: 1; transform: scaleY(1.1); }
+      0% { height: 4px; opacity: 0.4; }
+      100% { height: 18px; opacity: 1; transform: scaleY(1.1); }
     }
     
-    /* Biểu tượng AI Ngôi sao tỏa sáng chớp động */
     .ai-sparkle-icon {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: #0d6efd;
       display: inline-block;
+      vertical-align: middle;
       animation: aiGlow 1.5s infinite alternate ease-in-out;
     }
     
     @keyframes aiGlow {
-      0% { transform: scale(0.9) rotate(-10deg); opacity: 0.6; filter: drop-shadow(0 0 2px rgba(13,110,253,0.3)); }
-      100% { transform: scale(1.2) rotate(10deg); opacity: 1; filter: drop-shadow(0 0 8px rgba(13,202,240,0.8)); }
+      0% { transform: scale(0.9) rotate(-10deg); opacity: 0.6; }
+      100% { transform: scale(1.2) rotate(10deg); opacity: 1; filter: drop-shadow(0 0 6px rgba(13,202,240,0.8)); }
     }
   </style>
 </head>
@@ -183,7 +200,6 @@
                 <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
               </div>
               <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
-                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
                 <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
               </div>
             </div>
@@ -274,7 +290,6 @@
                     <i class="bi bi-lightbulb text-warning"></i> <span id="voiceExampleSpan">VD: "Tôi mua ở shopee 400k dùng thẻ jcb ultimate mb"</span>
                   </div>
                   <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
-                    <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
                     <span id="liveSpeechText" class="fst-italic text-dark">Đang lắng nghe...</span>
                   </div>
                 </div>
@@ -316,6 +331,7 @@
                 <label class="form-label fw-bold small">Số Tiền (VNĐ) <span class="text-danger">*</span></label>
                 <input type="text" class="form-control form-control-sm" id="amount" name="amount" placeholder="Ví dụ: 400000 hoặc -1000000" required oninput="cleanAmountInput(this)">
               </div>
+              
               <!-- ĐỐI TƯỢNG CHI TIÊU THẺ -->
               <div class="mb-3">
                 <label class="form-label fw-bold small">Đối Tượng Chi Tiêu</label>
@@ -543,7 +559,6 @@
                       <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản"
                     </div>
                     <div id="liveSpeechBoxCash" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
-                      <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
                       <span id="liveSpeechTextCash" class="fst-italic text-dark">Đang lắng nghe...</span>
                     </div>
                   </div>
@@ -613,7 +628,7 @@
     </div>
   </div>
 
-  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (DUY NHẤT VÀ CHUẨN ĐỊNH DẠNG) -->
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ -->
   <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -978,7 +993,7 @@
         }
       });
     }
-        // 2. Render Log Cash
+
     function renderRecentCashListUI(list) {
       const txList = document.getElementById('txListCash');
       if (!txList) return;
@@ -1258,7 +1273,6 @@
       });
     }
 
-    // 1. Render Log Thẻ
     function renderTxList(list) {
       const txList = document.getElementById('txList');
       if (!txList) return;
@@ -1274,7 +1288,7 @@
         const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
         const merchBadge = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
         const targetBadge = (item.target && item.target.trim()) ? `<span class="badge bg-info-subtle text-info border border-info ms-1">${item.target}</span>` : '';
-    
+
         return `
           <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
             <div>
@@ -1286,6 +1300,7 @@
           </div>`;
       }).join('') + '</div>';
     }
+
     async function confirmDelete(type, rowIndex, date, card, amount) {
       if (confirm(`Bạn có chắc chắn muốn XÓA giao dịch này?\n\n- Ngày: ${date}\n- Thẻ: ${card}\n- Số tiền: ${amount} đ`)) {
         document.getElementById('loadingTx').style.display = 'block';
@@ -1300,7 +1315,6 @@
       }
     }
 
-    /* HÀM GỢI Ý THẺ CHUẨN XỬ LÝ TRÊN POPUP MODAL (KHÔNG TRÙNG LẶP ID) */
     async function fetchRecommendation() {
       const kwInput = document.getElementById('recommendInput');
       if (!kwInput) return;
@@ -1518,6 +1532,7 @@
 
     let silenceTimer = null;
 
+    /* KÍCH HOẠT MIC LẮNG NGHE GIỌNG NÓI (CẬP NHẬT TONE VÀNG AMBER) */
     function startVoiceRecognition(forcedMode = null) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ nhận diện giọng nói!"); return; }
@@ -1560,13 +1575,14 @@
         liveText = document.getElementById('liveSpeechText');
       }
 
+      /* ĐỔI GIAO DIỆN SANG MÀU VÀNG KHI LẮNG NGHE */
       if (isRec) {
-        btnVoice.className = "btn btn-danger py-0 px-2 text-white";
-        micIcon.className = "bi bi-record-circle-fill spinner-grow spinner-grow-sm";
+        btnVoice.className = "btn btn-warning py-0 px-2 text-dark";
+        micIcon.className = "bi bi-soundwave mic-pulse-icon";
       } else {
-        btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-        micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
-        if (statusText) statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
+        btnVoice.className = "btn btn-mic-listening rounded-circle p-3 shadow mb-2 d-flex align-items-center justify-content-center";
+        micIcon.className = "bi bi-soundwave fs-3 mic-pulse-icon text-dark";
+        if (statusText) statusText.innerHTML = `<span class="text-warning fw-bold">🎙️ Đang nghe giọng nói...</span>`;
       }
 
       liveBox.classList.remove('hidden');
@@ -1625,129 +1641,132 @@
 
       try { recognition.start(); } catch(err) { resetVoiceUI(); }
     }
+
+    /* XỬ LÝ AI BÓC TÁCH GIỌNG NÓI (KHÔNG CÒN CHẤM ĐỎ, DÙNG HÌNH ĐỘNG SÓNG ÂM VÀ NGÔI SAO) */
     async function processParsedVoiceText(transcript, mode) {
-    if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
-  
-    const isCashMode = (mode === 'cash_spending');
-    const isRec = (mode === 'recommend');
-  
-    // HTML Template Hiệu ứng Sóng AI Chuyển Động
-    const aiAnimationHTML = `
-      <div class="d-inline-flex align-items-center gap-2">
-        <i class="bi bi-stars ai-sparkle-icon"></i>
-        <div class="ai-wave-container mx-1">
-          <div class="ai-wave-bar"></div>
-          <div class="ai-wave-bar"></div>
-          <div class="ai-wave-bar"></div>
-          <div class="ai-wave-bar"></div>
-          <div class="ai-wave-bar"></div>
-        </div>
-      </div>`;
-  
-    // 1. CẬP NHẬT TRẠNG THÁI "AI ĐANG XỬ LÝ" VỚI HÌNH ĐỘNG SÓNG ÂM
-    if (isRec) {
-      const btnVoiceRec = document.getElementById('btnVoiceRec');
-      const micIconRec = document.getElementById('micIconRec');
-      const liveBoxRec = document.getElementById('liveSpeechBoxRec');
-      const liveTextRec = document.getElementById('liveSpeechTextRec');
-  
-      if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary py-0 px-2";
-      if (micIconRec) micIconRec.className = "bi bi-stars ai-sparkle-icon";
-      if (liveBoxRec && liveTextRec) {
-        liveBoxRec.classList.remove('hidden');
-        liveTextRec.innerHTML = `${aiAnimationHTML} <span class="ms-2 fw-semibold text-primary">AI đang bóc tách từ khóa...</span>`;
-      }
-    } else if (isCashMode) {
-      const btnVoiceCash = document.getElementById('btnVoiceCash');
-      const micIconCash = document.getElementById('micIconCash');
-      const liveBoxCash = document.getElementById('liveSpeechBoxCash');
-      const liveTextCash = document.getElementById('liveSpeechTextCash');
-      const statusTextCash = document.getElementById('voiceStatusTextCash');
-  
-      if (btnVoiceCash) btnVoiceCash.className = "btn btn-primary rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-      if (micIconCash) micIconCash.className = "bi bi-stars fs-3 ai-sparkle-icon text-white";
-      if (liveBoxCash && liveTextCash) {
-        liveBoxCash.classList.remove('hidden');
-        liveTextCash.innerHTML = `${aiAnimationHTML} <span class="ms-2 fw-semibold text-primary">AI đang phân tích Cash...</span>`;
-      }
-      if (statusTextCash) statusTextCash.innerHTML = `<span class="text-primary fw-bold">AI đang suy nghĩ...</span>`;
-    } else {
-      const btnVoice = document.getElementById('btnVoice');
-      const micIcon = document.getElementById('micIcon');
-      const liveBox = document.getElementById('liveSpeechBox');
-      const liveText = document.getElementById('liveSpeechText');
-      const statusText = document.getElementById('voiceStatusText');
-  
-      if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-      if (micIcon) micIcon.className = "bi bi-stars fs-3 ai-sparkle-icon text-white";
-      if (liveBox && liveText) {
-        liveBox.classList.remove('hidden');
-        liveText.innerHTML = `${aiAnimationHTML} <span class="ms-2 fw-semibold text-primary">AI đang bóc tách thẻ...</span>`;
-      }
-      if (statusText) statusText.innerHTML = `<span class="text-primary fw-bold">AI đang suy nghĩ...</span>`;
-    }
-  
-    // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
-    if (isRec) {
-      const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
-      const finalKw = keywordClean || transcript.trim();
-      
-      document.getElementById('recommendInput').value = finalKw;
-      resetVoiceUI();
-      fetchRecommendation();
-      return;
-    }
-  
-    try {
-      const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
-  
-      if (isCashMode) {
-        if (res && res.success) {
-          document.getElementById('cashAmount').value = res.amount;
-          document.getElementById('cashCategory').value = res.category || "";
-          
-          const targetSelect = document.getElementById('cashTarget');
-          targetSelect.value = ""; 
-          validateKDAmount();
-  
-          if (res.amount > 0 && res.target) {
-            targetSelect.value = res.target;
-          }
-  
-          if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
-          else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
-          else document.getElementById('mCash').checked = true;
-  
-          showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
-        } else {
-          showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
+      if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
+    
+      const isCashMode = (mode === 'cash_spending');
+      const isRec = (mode === 'recommend');
+    
+      // Template Sóng AI 5 Cột + Ngôi sao tỏa sáng
+      const aiAnimationHTML = `
+        <div class="d-inline-flex align-items-center gap-1 me-1">
+          <i class="bi bi-stars ai-sparkle-icon"></i>
+          <div class="ai-wave-container mx-1">
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+          </div>
+        </div>`;
+    
+      // 1. CẬP NHẬT TRẠNG THÁI "AI ĐANG XỬ LÝ" (ĐÃ LOẠI BỎ CHẤM ĐỎ)
+      if (isRec) {
+        const btnVoiceRec = document.getElementById('btnVoiceRec');
+        const micIconRec = document.getElementById('micIconRec');
+        const liveBoxRec = document.getElementById('liveSpeechBoxRec');
+        const liveTextRec = document.getElementById('liveSpeechTextRec');
+    
+        if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary py-0 px-2";
+        if (micIconRec) micIconRec.className = "bi bi-stars ai-sparkle-icon";
+        if (liveBoxRec && liveTextRec) {
+          liveBoxRec.classList.remove('hidden');
+          liveTextRec.innerHTML = `${aiAnimationHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách từ khóa...</span>`;
         }
+      } else if (isCashMode) {
+        const btnVoiceCash = document.getElementById('btnVoiceCash');
+        const micIconCash = document.getElementById('micIconCash');
+        const liveBoxCash = document.getElementById('liveSpeechBoxCash');
+        const liveTextCash = document.getElementById('liveSpeechTextCash');
+        const statusTextCash = document.getElementById('voiceStatusTextCash');
+    
+        if (btnVoiceCash) btnVoiceCash.className = "btn btn-primary rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        if (micIconCash) micIconCash.className = "bi bi-stars fs-3 ai-sparkle-icon text-white";
+        if (liveBoxCash && liveTextCash) {
+          liveBoxCash.classList.remove('hidden');
+          liveTextCash.innerHTML = `${aiAnimationHTML} <span class="ms-1 fw-semibold text-primary">AI đang phân tích Cash...</span>`;
+        }
+        if (statusTextCash) statusTextCash.innerHTML = `<span class="text-primary fw-bold"><i class="bi bi-stars me-1"></i> AI đang suy nghĩ...</span>`;
+      } else {
+        const btnVoice = document.getElementById('btnVoice');
+        const micIcon = document.getElementById('micIcon');
+        const liveBox = document.getElementById('liveSpeechBox');
+        const liveText = document.getElementById('liveSpeechText');
+        const statusText = document.getElementById('voiceStatusText');
+    
+        if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        if (micIcon) micIcon.className = "bi bi-stars fs-3 ai-sparkle-icon text-white";
+        if (liveBox && liveText) {
+          liveBox.classList.remove('hidden');
+          liveText.innerHTML = `${aiAnimationHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách thẻ...</span>`;
+        }
+        if (statusText) statusText.innerHTML = `<span class="text-primary fw-bold"><i class="bi bi-stars me-1"></i> AI đang suy nghĩ...</span>`;
+      }
+    
+      // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
+      if (isRec) {
+        const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
+        const finalKw = keywordClean || transcript.trim();
+        
+        document.getElementById('recommendInput').value = finalKw;
+        resetVoiceUI();
+        fetchRecommendation();
         return;
       }
-  
-      if (!res || res.success === false) {
-        showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
-        return;
+    
+      try {
+        const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
+    
+        if (isCashMode) {
+          if (res && res.success) {
+            document.getElementById('cashAmount').value = res.amount;
+            document.getElementById('cashCategory').value = res.category || "";
+            
+            const targetSelect = document.getElementById('cashTarget');
+            targetSelect.value = ""; 
+            validateKDAmount();
+    
+            if (res.amount > 0 && res.target) {
+              targetSelect.value = res.target;
+            }
+    
+            if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
+            else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
+            else document.getElementById('mCash').checked = true;
+    
+            showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
+          } else {
+            showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
+          }
+          return;
+        }
+    
+        if (!res || res.success === false) {
+          showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
+          return;
+        }
+    
+        document.getElementById('card').value = res.card || "";
+        document.getElementById('amount').value = res.amount || "";
+        document.getElementById('merchantInput').value = res.merchant || "";
+        document.getElementById('categoryInput').value = res.category || "";
+        
+        const cardTargetSelect = document.getElementById('cardTarget');
+        if (cardTargetSelect) {
+          cardTargetSelect.value = res.target || "";
+        }
+        handleCategoryChange();
+        showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
+    
+      } catch (err) {
+        alert("Lỗi xử lý kết nối giọng nói!");
+      } finally {
+        resetVoiceUI();
       }
-  
-      document.getElementById('card').value = res.card || "";
-      document.getElementById('amount').value = res.amount || "";
-      document.getElementById('merchantInput').value = res.merchant || "";
-      document.getElementById('categoryInput').value = res.category || "";
-      
-      const cardTargetSelect = document.getElementById('cardTarget');
-      if (cardTargetSelect) {
-        cardTargetSelect.value = res.target || "";
-      }
-      handleCategoryChange();
-      showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
-  
-    } catch (err) {
-      alert("Lỗi xử lý kết nối giọng nói!");
-    } finally {
-      resetVoiceUI();
     }
-  }
+
     function resetVoiceUI() {
       isProcessingVoice = false;
       if (typeof silenceTimer !== 'undefined' && silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
@@ -1790,6 +1809,7 @@
       if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
+
     // Hàm bổ trợ hiển thị chuẩn ngày dd/MM/yyyy ở Client
     const formatDate = (str) => {
       if (!str) return '';
