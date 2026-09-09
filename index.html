@@ -260,7 +260,17 @@
                 <label class="form-label fw-bold small">Số Tiền (VNĐ) <span class="text-danger">*</span></label>
                 <input type="text" class="form-control form-control-sm" id="amount" name="amount" placeholder="Ví dụ: 400000 hoặc -1000000" required oninput="cleanAmountInput(this)">
               </div>
-
+              <!-- ĐỐI TƯỢNG CHI TIÊU THẺ -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Đối Tượng Chi Tiêu</label>
+                <select class="form-select form-select-sm" id="cardTarget" name="target">
+                  <option value="">Bản thân (Mặc định)</option>
+                  <option value="Bạn Bè">Bạn Bè</option>
+                  <option value="Gia Đình">Gia Đình</option>
+                  <option value="Người Yêu">Người Yêu</option>
+                  <option value="Kinh Doanh">Kinh Doanh</option>
+                </select>
+              </div>
               <button type="submit" class="btn btn-primary w-100 mb-4 fw-bold" id="btnSubmit">Lưu Giao Dịch SPENDING_PAYMENTS</button>
 
               <div class="card p-2 bg-light border">
@@ -1668,7 +1678,11 @@
         document.getElementById('amount').value = res.amount || "";
         document.getElementById('merchantInput').value = res.merchant || "";
         document.getElementById('categoryInput').value = res.category || "";
-
+        // Tự động chọn Đối tượng chi tiêu từ AI (nếu có)
+        const cardTargetSelect = document.getElementById('cardTarget');
+        if (cardTargetSelect) {
+          cardTargetSelect.value = res.target || "";
+        }
         handleCategoryChange();
         showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
 
