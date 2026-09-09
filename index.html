@@ -114,15 +114,15 @@
           </div>
 
           <!-- TAB DASHBOARD CARD -->
-<!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
-            <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT ĐẦU DASHBOARD, KHÔNG TỐN DIỆN TÍCH) -->
+          
+            <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT NGOÀI DASHCONTENT ĐỂ LUÔN HOẠT ĐỘNG TỨC THÌ) -->
             <div class="card p-2 mb-3 border bg-light shadow-sm">
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
                   <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi Ý Thẻ
                 </span>
-                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
+                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onkeyup="if(event.key==='Enter') fetchRecommendation()">
                 <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
                   <i class="bi bi-mic-fill" id="micIconRec"></i>
                 </button>
@@ -133,22 +133,25 @@
                 <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
               </div>
             </div>
-
-            <!-- TỔNG QUAN NỢ THẺ TÍN DỤNG -->
+          
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
             </div>
+          
             <div id="loadingDash" class="text-center py-4 text-muted">
               <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
             </div>
+          
             <div id="dashContent" style="display: none;">
-              <div class="row g-1 g-sm-2 mb-3">
+              <!-- KPI CARDS -->
+              <div class="row g-1 g-sm-2 mb-2">
                 <div class="col-4"><div class="kpi-card kpi-blue"><div class="kpi-title">CHƯA ĐẾN HẠN</div><div class="kpi-value" id="kpiNotDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
               </div>
-
+          
+              <!-- KỲ SAO KÊ THẺ HẠN THỜI -->
               <div class="card bg-light p-2 mb-3 border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <div class="fw-bold small text-dark nowrap-text"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
@@ -163,9 +166,10 @@
                   <span>Kỳ sao kê | Hạn TT</span>
                   <span class="fw-bold text-danger">Còn phải trả</span>
                 </div>
-                <div id="stmtList" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;"></div>
+                <div id="stmtList" class="list-group list-group-flush small" style="max-height: 220px; overflow-y: auto;"></div>
               </div>
-
+          
+              <!-- BẢNG TRA CỨU DANH MỤC -->
               <div class="card p-2 border">
                 <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
                 <div class="row g-2 mb-2">
@@ -1362,40 +1366,44 @@
     async function fetchRecommendation() {
       const kwInput = document.getElementById('recommendInput');
       if (!kwInput) return;
+    
       const kw = kwInput.value.trim();
       if (!kw) return;
     
-      // Mở Popup Modal
+      // Lấy hoặc tạo Instance Popup Modal chuẩn Bootstrap
       const recModalEl = document.getElementById('recommendModal');
+      if (!recModalEl) return;
       const recModal = bootstrap.Modal.getOrCreateInstance(recModalEl);
-      
+    
+      // Bật trạng thái Loading & Reset chữ
       document.getElementById('loadingRecModal').style.display = 'block';
       document.getElementById('cardRecommendList').innerHTML = '';
-      document.getElementById('resMainCat').innerText = '-';
-      document.getElementById('resSubCat').innerText = '-';
+      document.getElementById('resMainCat').innerText = 'Đang tra cứu...';
+      document.getElementById('resSubCat').innerText = 'Đang tra cứu...';
+      
       recModal.show();
     
-      // Gọi API lấy dữ liệu chuẩn code gốc
+      // Gọi Server Backend
       const data = await sendRequest("getCardRecommendation", { keyword: kw });
       document.getElementById('loadingRecModal').style.display = 'none';
     
       if (data) {
-        // Đổ danh mục chính & con
-        document.getElementById('resMainCat').innerText = data.category?.main || "Chưa xác định";
-        document.getElementById('resSubCat').innerText = data.category?.sub || "Chưa xác định";
+        // Đổ danh mục nhận diện được
+        document.getElementById('resMainCat').innerText = (data.category && data.category.main) ? data.category.main : "Chưa xác định";
+        document.getElementById('resSubCat').innerText = (data.category && data.category.sub) ? data.category.sub : "Chưa xác định";
     
         const listContainer = document.getElementById('cardRecommendList');
         listContainer.innerHTML = '';
     
         if (!data.cards || data.cards.length === 0) {
-          listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
+          listContainer.innerHTML = '<p class="text-center text-muted py-3 small m-0">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
           return;
         }
     
-        // Đổ danh sách thẻ chuẩn logic code gốc
+        // Đổ danh sách thẻ khuyến nghị
         data.cards.forEach(item => {
           listContainer.innerHTML += `
-            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
+            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded shadow-sm">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="fw-bold text-dark small">${item.cardName}</span>
                 <span class="rate-badge">${item.rate}</span>
@@ -1407,6 +1415,9 @@
               </div>
             </div>`;
         });
+      } else {
+        document.getElementById('resMainCat').innerText = "Lỗi kết nối";
+        document.getElementById('resSubCat').innerText = "Lỗi kết nối";
       }
     }
     async function loadDashboard(fetchServer = false) {
