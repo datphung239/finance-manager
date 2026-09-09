@@ -1654,13 +1654,14 @@
     }
 
     /* XỬ LÝ AI BÓC TÁCH GIỌNG NÓI (THÊM SÓNG ÂM + NGÔI SAO VÀO DÒNG TRẠNG THÁI BÊN TRÁI & PHÂN MÀU XANH DƯƠNG / XANH LÁ) */
+/* XỬ LÝ AI BÓC TÁCH GIỌNG NÓI (GIỮ NGUYÊN TEXT ĐÃ NÓI & BỔ SUNG SÓNG ÂM + NGÔI SAO DÒNG "AI ĐANG SUY NGHĨ") */
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
     
       const isCashMode = (mode === 'cash_spending');
       const isRec = (mode === 'recommend');
     
-      // Template Sóng ÂM + Ngôi Sao XANH DƯƠNG (Thẻ Tín Dụng)
+      // Template Sóng Âm + Ngôi Sao XANH DƯƠNG (Cho Thẻ Tín Dụng)
       const aiAnimationBlueHTML = `
         <div class="d-inline-flex align-items-center gap-1 me-1 wave-blue">
           <i class="bi bi-stars ai-sparkle-icon sparkle-blue"></i>
@@ -1672,8 +1673,8 @@
             <div class="ai-wave-bar"></div>
           </div>
         </div>`;
-
-      // Template Sóng ÂM + Ngôi Sao XANH LÁ (Dòng Tiền Mặt / Bank)
+    
+      // Template Sóng Âm + Ngôi Sao XANH LÁ (Cho Dòng Tiền Mặt / Bank)
       const aiAnimationGreenHTML = `
         <div class="d-inline-flex align-items-center gap-1 me-1 wave-green">
           <i class="bi bi-stars ai-sparkle-icon sparkle-green"></i>
@@ -1686,7 +1687,7 @@
           </div>
         </div>`;
     
-      // 1. CẬP NHẬT TRẠNG THÁI "AI ĐANG XỬ LÝ" DỰA THEO THEME MÀU
+      // 1. CẬP NHẬT TRẠNG THÁI "AI ĐANG SUY NGHĨ" VÀ GIỮ NGUYÊN TEXT BẠN ĐÃ NÓI
       if (isRec) {
         const btnVoiceRec = document.getElementById('btnVoiceRec');
         const micIconRec = document.getElementById('micIconRec');
@@ -1697,10 +1698,10 @@
         if (micIconRec) micIconRec.className = "bi bi-stars ai-sparkle-icon sparkle-blue";
         if (liveBoxRec && liveTextRec) {
           liveBoxRec.classList.remove('hidden');
-          liveTextRec.innerHTML = `${aiAnimationBlueHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách từ khóa...</span>`;
+          liveTextRec.innerText = transcript; // Giữ nguyên câu nói của bạn
         }
       } else if (isCashMode) {
-        // LUỒNG DÒNG TIỀN MẶT / BANK -> TONE XANH LÁ (GREEN)
+        // LUỒNG DÒNG TIỀN MẶT / BANK -> TONE XANH LÁ
         const btnVoiceCash = document.getElementById('btnVoiceCash');
         const micIconCash = document.getElementById('micIconCash');
         const liveBoxCash = document.getElementById('liveSpeechBoxCash');
@@ -1711,13 +1712,13 @@
         if (micIconCash) micIconCash.className = "bi bi-stars fs-3 ai-sparkle-icon sparkle-green text-white";
         if (liveBoxCash && liveTextCash) {
           liveBoxCash.classList.remove('hidden');
-          liveTextCash.innerHTML = `${aiAnimationGreenHTML} <span class="ms-1 fw-semibold text-success">AI đang phân tích Cash...</span>`;
+          liveTextCash.innerText = transcript; // Giữ nguyên câu nói của bạn
         }
         if (statusTextCash) {
           statusTextCash.innerHTML = `${aiAnimationGreenHTML} <span class="text-success fw-bold">AI đang suy nghĩ...</span>`;
         }
       } else {
-        // LUỒNG THẺ TÍN DỤNG -> TONE XANH DƯƠNG (BLUE/PRIMARY)
+        // LUỒNG THẺ TÍN DỤNG -> TONE XANH DƯƠNG
         const btnVoice = document.getElementById('btnVoice');
         const micIcon = document.getElementById('micIcon');
         const liveBox = document.getElementById('liveSpeechBox');
@@ -1728,14 +1729,14 @@
         if (micIcon) micIcon.className = "bi bi-stars fs-3 ai-sparkle-icon sparkle-blue text-white";
         if (liveBox && liveText) {
           liveBox.classList.remove('hidden');
-          liveText.innerHTML = `${aiAnimationBlueHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách thẻ...</span>`;
+          liveText.innerText = transcript; // Giữ nguyên câu nói của bạn
         }
         if (statusText) {
           statusText.innerHTML = `${aiAnimationBlueHTML} <span class="text-primary fw-bold">AI đang suy nghĩ...</span>`;
         }
       }
     
-      // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
+      // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT VỚI SERVER
       if (isRec) {
         const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
         const finalKw = keywordClean || transcript.trim();
@@ -1796,7 +1797,7 @@
         resetVoiceUI();
       }
     }
-
+    
     function resetVoiceUI() {
       isProcessingVoice = false;
       if (typeof silenceTimer !== 'undefined' && silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
