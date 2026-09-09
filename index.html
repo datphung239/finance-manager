@@ -1362,61 +1362,246 @@
         }
       }
     }
-    
     async function fetchRecommendation() {
-      const kwInput = document.getElementById('recommendInput');
-      if (!kwInput) return;
-    
-      const kw = kwInput.value.trim();
-      if (!kw) return;
-    
-      if (document.activeElement) document.activeElement.blur();
-    
-      const recModalEl = document.getElementById('recommendModal');
-      if (!recModalEl) return;
-      const recModal = bootstrap.Modal.getOrCreateInstance(recModalEl);
-    
-      document.getElementById('loadingRecModal').style.display = 'block';
-      document.getElementById('cardRecommendList').innerHTML = '';
-      document.getElementById('resMainCat').innerText = 'Đang tra cứu...';
-      document.getElementById('resSubCat').innerText = 'Đang tra cứu...';
-    
-      recModal.show();
-    
-      const res = await sendRequest("getCardRecommendation", { keyword: kw });
-      document.getElementById('loadingRecModal').style.display = 'none';
-    
-      if (res) {
-        const mainText = res.category && res.category.main ? res.category.main : "Chưa xác định";
-        const subText = res.category && res.category.sub ? res.category.sub : "Chưa xác định";
-    
-        document.getElementById('resMainCat').innerText = mainText;
-        document.getElementById('resSubCat').innerText = subText;
-    
-        const listContainer = document.getElementById('cardRecommendList');
-        listContainer.innerHTML = '';
-    
-        if (!res.cards || res.cards.length === 0) {
-          listContainer.innerHTML = '<p class="text-center text-muted py-3 small m-0">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
-          return;
-        }
-    
-        res.cards.forEach(item => {
-          listContainer.innerHTML += `
-            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded shadow-sm">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="fw-bold text-dark small">${item.cardName}</span>
-                <span class="rate-badge">${item.rate}</span>
-              </div>
-              <div class="text-muted small" style="font-size: 0.75rem;">
-                <div>• <strong>Kiểu áp dụng:</strong> ${item.applyType}</div>
-                <div>• <strong>Hoàn max/danh mục:</strong> ${item.maxCat} | <strong>Max/kỳ:</strong> ${item.maxCycle}</div>
-                ${item.minSpend ? `<div>• <strong>Chi tối thiểu:</strong> ${item.minSpend}</div>` : ''}
-              </div>
-            </div>`;
-        });
+
+  const kwInput = document.getElementById('recommendInput');
+
+  if (!kwInput) return;
+
+  const kw = kwInput.value.trim();
+
+  if (!kw) return;
+
+  // Bỏ focus khỏi input
+  if (document.activeElement) {
+    document.activeElement.blur();
+  }
+
+  const recModalEl = document.getElementById('recommendModal');
+
+  if (!recModalEl) return;
+
+  const recModal =
+    bootstrap.Modal.getOrCreateInstance(recModalEl);
+
+  // =====================================================
+  // RESET MODAL
+  // =====================================================
+
+  document.getElementById('loadingRecModal').style.display = 'block';
+
+  document.getElementById('cardRecommendList').innerHTML = '';
+
+  document.getElementById('resMainCat').innerText =
+    'Đang tra cứu...';
+
+  document.getElementById('resSubCat').innerText =
+    'Đang tra cứu...';
+
+  recModal.show();
+
+  try {
+
+    // =====================================================
+    // GỌI GAS
+    // =====================================================
+
+    const response = await sendRequest(
+      "getCardRecommendation",
+      {
+        keyword: kw
       }
+    );
+
+    console.log("Recommendation RAW:", response);
+
+    // =====================================================
+    // HỖ TRỢ NHIỀU KIỂU RESPONSE
+    // =====================================================
+
+    let res = response;
+
+    // Trường hợp:
+    // { success:true, data:{...} }
+    if (
+      response &&
+      response.data &&
+      typeof response.data === 'object'
+    ) {
+      res = response.data;
     }
+
+    // Trường hợp:
+    // { success:true, result:{...} }
+    else if (
+      response &&
+      response.result &&
+      typeof response.result === 'object'
+    ) {
+      res = response.result;
+    }
+
+    console.log("Recommendation DATA:", res);
+
+    // =====================================================
+    // TẮT LOADING
+    // =====================================================
+
+    document.getElementById('loadingRecModal').style.display = 'none';
+
+    // =====================================================
+    // KIỂM TRA RESPONSE
+    // =====================================================
+
+    if (!res) {
+
+      document.getElementById('resMainCat').innerText =
+        'Chưa xác định';
+
+      document.getElementById('resSubCat').innerText =
+        'Chưa xác định';
+
+      document.getElementById('cardRecommendList').innerHTML =
+        '<p class="text-center text-danger py-3 small m-0">' +
+        'Không nhận được dữ liệu từ máy chủ.' +
+        '</p>';
+
+      return;
+    }
+
+    // =====================================================
+    // LẤY CATEGORY
+    // =====================================================
+
+    const category = res.category || {};
+
+    const mainText =
+      category.main ||
+      "Chưa xác định";
+
+    const subText =
+      category.sub ||
+      "Chưa xác định";
+
+    document.getElementById('resMainCat').innerText =
+      mainText;
+
+    document.getElementById('resSubCat').innerText =
+      subText;
+
+    // =====================================================
+    // LẤY DANH SÁCH THẺ
+    // =====================================================
+
+    const cards = Array.isArray(res.cards)
+      ? res.cards
+      : [];
+
+    const listContainer =
+      document.getElementById('cardRecommendList');
+
+    listContainer.innerHTML = '';
+
+    // Không có thẻ
+    if (cards.length === 0) {
+
+      listContainer.innerHTML =
+        '<p class="text-center text-muted py-3 small m-0">' +
+        'Không tìm thấy thẻ có ưu đãi phù hợp.' +
+        '</p>';
+
+      return;
+    }
+
+    // =====================================================
+    // HIỂN THỊ THẺ
+    // =====================================================
+
+    cards.forEach(item => {
+
+      const cardName = item.cardName || '';
+
+      const rate = item.rate || '';
+
+      const applyType = item.applyType || '';
+
+      const maxCat = item.maxCat || '';
+
+      const maxCycle = item.maxCycle || '';
+
+      const minSpend = item.minSpend || '';
+
+      listContainer.innerHTML += `
+        <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded shadow-sm">
+
+          <div class="d-flex justify-content-between align-items-center mb-1">
+
+            <span class="fw-bold text-dark small">
+              ${escapeHtml(cardName)}
+            </span>
+
+            <span class="rate-badge">
+              ${escapeHtml(rate)}
+            </span>
+
+          </div>
+
+          <div class="text-muted small" style="font-size:0.75rem;">
+
+            <div>
+              • <strong>Kiểu áp dụng:</strong>
+              ${escapeHtml(applyType)}
+            </div>
+
+            <div>
+              • <strong>Hoàn max/danh mục:</strong>
+              ${escapeHtml(maxCat)}
+              |
+              <strong>Max/kỳ:</strong>
+              ${escapeHtml(maxCycle)}
+            </div>
+
+            ${
+              minSpend
+              ? `
+                <div>
+                  • <strong>Chi tối thiểu:</strong>
+                  ${escapeHtml(minSpend)}
+                </div>
+              `
+              : ''
+            }
+
+          </div>
+
+        </div>
+      `;
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Lỗi fetchRecommendation:",
+      error
+    );
+
+    document.getElementById('loadingRecModal').style.display = 'none';
+
+    document.getElementById('resMainCat').innerText =
+      'Lỗi';
+
+    document.getElementById('resSubCat').innerText =
+      'Không thể lấy dữ liệu';
+
+    document.getElementById('cardRecommendList').innerHTML =
+      `
+      <p class="text-center text-danger py-3 small m-0">
+        ${escapeHtml(error.message || 'Có lỗi xảy ra.')}
+      </p>
+      `;
+
+  }
+}
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
