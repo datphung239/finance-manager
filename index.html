@@ -833,22 +833,23 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // TỰ ĐỘNG BẮT ĐIỀU KIỆN KHI THAY ĐỔI DANH MỤC
     function handleCategoryChange() {
       const catVal = document.getElementById('categoryInput').value.trim();
       const amtInput = document.getElementById('amount');
       const help = document.getElementById('cardCategoryHelp');
       
       let rawVal = amtInput.value.replace(/[^0-9-]/g, '');
-
+    
       if (catVal.toUpperCase().startsWith("TTT_")) {
         if (rawVal && !rawVal.startsWith("-")) {
-          amtInput.value = "-" + rawVal;
+          amtInput.value = "-" + rawVal.replace(/-/g, '');
         }
         help.className = "form-text small text-danger fw-bold";
-        help.innerText = "✓ Thanh toán thẻ (TTT_) -> Tự động đổi Số Tiền sang ÂM (-)";
+        help.innerText = "✓ Thanh toán thẻ (TTT_) -> Số tiền BẮT BỘC ÂM (-)";
       } else {
         if (rawVal.startsWith("-")) {
-          amtInput.value = rawVal.replace("-", "");
+          amtInput.value = rawVal.replace(/-/g, '');
         }
         help.className = "form-text small text-muted";
         help.innerText = "Chi tiêu thẻ -> Số Tiền DƯƠNG (+)";
@@ -1484,11 +1485,23 @@
       }
     }
 
-    const cleanAmountInput = (input) => {
-      let isNegative = input.value.startsWith('-');
+    // XỬ LÝ SỐ TIỀN KHI NHẬP, PASTE HOẶC XÓA
+    function cleanAmountInput(input) {
+      const catVal = document.getElementById('categoryInput').value.trim();
       let raw = input.value.replace(/[^0-9]/g, '');
-      input.value = (isNegative ? '-' : '') + raw;
-    };
+      
+      if (!raw) {
+        input.value = '';
+        return;
+      }
+    
+      // Nếu Danh mục bắt đầu bằng TTT_ -> Luôn giữ dấu ÂM (-) dù paste hay xóa
+      if (catVal.toUpperCase().startsWith("TTT_")) {
+        input.value = '-' + raw;
+      } else {
+        input.value = raw;
+      }
+    }
     const formatVND = (val) => typeof val === 'number' ? val.toLocaleString('vi-VN') + ' đ' : val;
 
     async function handleFormSubmit(form) {
