@@ -1362,7 +1362,6 @@
         }
       }
     }
-
     async function fetchRecommendation() {
       const kwInput = document.getElementById('recommendInput');
       if (!kwInput) return;
@@ -1370,17 +1369,12 @@
       const kw = kwInput.value.trim();
       if (!kw) return;
     
-      // Giải phóng focus của bàn phím/chuột tránh lỗi aria-hidden
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
+      if (document.activeElement) document.activeElement.blur();
     
-      // Khởi tạo Bootstrap Modal
       const recModalEl = document.getElementById('recommendModal');
       if (!recModalEl) return;
       const recModal = bootstrap.Modal.getOrCreateInstance(recModalEl);
     
-      // Reset hiển thị
       document.getElementById('loadingRecModal').style.display = 'block';
       document.getElementById('cardRecommendList').innerHTML = '';
       document.getElementById('resMainCat').innerText = 'Đang tra cứu...';
@@ -1388,22 +1382,25 @@
     
       recModal.show();
     
-      const data = await sendRequest("getCardRecommendation", { keyword: kw });
+      const res = await sendRequest("getCardRecommendation", { keyword: kw });
       document.getElementById('loadingRecModal').style.display = 'none';
     
-      if (data) {
-        document.getElementById('resMainCat').innerText = (data.category && data.category.main) ? data.category.main : "Chưa xác định";
-        document.getElementById('resSubCat').innerText = (data.category && data.category.sub) ? data.category.sub : "Chưa xác định";
+      if (res) {
+        const mainText = res.category && res.category.main ? res.category.main : "Chưa xác định";
+        const subText = res.category && res.category.sub ? res.category.sub : "Chưa xác định";
+    
+        document.getElementById('resMainCat').innerText = mainText;
+        document.getElementById('resSubCat').innerText = subText;
     
         const listContainer = document.getElementById('cardRecommendList');
         listContainer.innerHTML = '';
     
-        if (!data.cards || data.cards.length === 0) {
+        if (!res.cards || res.cards.length === 0) {
           listContainer.innerHTML = '<p class="text-center text-muted py-3 small m-0">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
           return;
         }
     
-        data.cards.forEach(item => {
+        res.cards.forEach(item => {
           listContainer.innerHTML += `
             <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded shadow-sm">
               <div class="d-flex justify-content-between align-items-center mb-1">
