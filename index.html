@@ -64,7 +64,6 @@
     .hidden { display: none !important; }
     .method-btn { font-size: 0.78rem; padding: 5px 2px; white-space: nowrap; }
 
-    /* NỔI BẬT KHUNG MERCHANT */
     .merchant-highlight-box {
       border: 2px solid #0d6efd !important;
       background-color: #f0f7ff;
@@ -105,15 +104,34 @@
         <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
         <!-- ========================================================= -->
         <div id="cardAppContainer">
-          <!-- CHỈ GIỮ 2 TAB CHÍNH -->
+          <!-- THANH TAB CHÍNH CÒN 2 TAB -->
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
               <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu Chi & Thanh Toán Thẻ</button></div>
             </div>
           </div>
-        <!-- TAB DASHBOARD CARD -->
+
+          <!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
+            <!-- THANH GỢI Ý THẺ 1 DÒNG DÙNG MODAL -->
+            <div class="card p-2 mb-3 border bg-light shadow-sm">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
+                  <i class="bi bi-lightbulb-fill me-1 text-warning"></i> Gợi Ý Thẻ
+                </span>
+                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onkeyup="if(event.key==='Enter') fetchRecommendation()">
+                <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
+                  <i class="bi bi-mic-fill" id="micIconRec"></i>
+                </button>
+                <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
+              </div>
+              <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
+                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
+                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
+              </div>
+            </div>
+
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
@@ -128,24 +146,6 @@
                 <div class="col-4"><div class="kpi-card kpi-blue"><div class="kpi-title">CHƯA ĐẾN HẠN</div><div class="kpi-value" id="kpiNotDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
-              </div>
-        
-              <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (INTEGRATED IN DASHBOARD) -->
-              <div class="card p-2 mb-3 border bg-light shadow-sm">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
-                    <i class="bi bi-lightbulb-fill me-1 text-warning"></i> Gợi Ý
-                  </span>
-                  <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
-                  <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
-                    <i class="bi bi-mic-fill" id="micIconRec"></i>
-                  </button>
-                  <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
-                </div>
-                <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
-                  <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
-                  <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
-                </div>
               </div>
         
               <!-- KỲ SAO KÊ THẺ HẠN THỜI -->
@@ -189,41 +189,6 @@
                   </table>
                 </div>
               </div>
-            </div>
-          </div>
-          <!-- TAB GỢI Ý CHI TIÊU CARD -->
-          <div id="recommendBlock" style="display: none;">
-            <div class="card p-3 border mb-3 bg-light text-center align-items-center">
-              <div class="d-flex justify-content-center w-100 mb-2">
-                <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" style="width: 60px; height: 60px;">
-                  <i class="bi bi-mic-fill fs-3" id="micIconRec"></i>
-                </button>
-              </div>
-              <div class="fw-bold text-dark small w-100" id="voiceStatusTextRec">Bấm nút để tìm ưu đãi thẻ</div>
-              <div class="text-muted small mt-1 w-100" style="font-size: 0.75rem;">
-                <i class="bi bi-lightbulb text-warning"></i> VD: "Hôm nay mua sắm ở Agoda"
-              </div>
-              <div id="liveSpeechBoxRec" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-center w-100 hidden" style="min-height: 38px; word-break: break-word;">
-                <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
-                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang lắng nghe...</span>
-              </div>
-              <div class="input-group input-group-sm mt-3 w-100">
-                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Hoặc nhập tên nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
-                <button class="btn btn-outline-primary" type="button" onclick="fetchRecommendation()"><i class="bi bi-search"></i> Tìm</button>
-              </div>
-            </div>
-
-            <div id="alertMsgRec" class="alert alert-danger mb-3 py-2 px-3 small fw-bold shadow-sm text-center" style="display: none;" role="alert"></div>
-            <div id="loadingRec" class="text-center py-3 text-muted" style="display:none;">
-              <div class="spinner-border spinner-border-sm text-primary"></div> Đang tính toán ưu đãi thẻ...
-            </div>
-            <div id="recResultBlock" style="display: none;">
-              <div class="alert alert-info py-2 px-3 mb-3 small">
-                <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
-                <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
-              </div>
-              <div class="fw-bold small text-secondary mb-2"><i class="bi bi-trophy"></i> DANH SÁCH THẺ NÊN CHỌN:</div>
-              <div id="cardRecommendList"></div>
             </div>
           </div>
 
@@ -312,7 +277,6 @@
           </form>
         </div>
 
-
         <!-- ========================================================= -->
         <!-- 2. LUỒNG DÒNG TIỀN MẶT / BANK (GREEN THEME) -->
         <!-- ========================================================= -->
@@ -344,7 +308,7 @@
             </div>
 
             <div id="cashDashContent" style="display: none;">
-              <!-- 1. TỔNG CHI TIÊU & DOANH THU KÈM FILTER NGÀY -->
+              <!-- TỔNG CHI TIÊU & DOANH THU KÈM FILTER NGÀY -->
               <div class="card p-3 mb-3 border bg-white shadow-sm">
                 <div class="row g-2 mb-2 align-items-center">
                   <div class="col-6"><label class="small text-muted fw-bold nowrap-text">Từ ngày:</label><input type="date" id="cashFilterStart" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
@@ -366,7 +330,7 @@
                 </div>
               </div>
 
-              <!-- 2. BẢNG TỶ LỆ CHI SINH HOẠT / DOANH THU KINH DOANH -->
+              <!-- BẢNG TỶ LỆ CHI SINH HOẠT / DOANH THU KINH DOANH -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="fw-bold text-dark fit-title"><i class="bi bi-calculator text-success"></i> Tỷ Lệ Chi Sinh Hoạt / Doanh Thu</span>
@@ -409,7 +373,7 @@
                 </div>
               </div>
 
-              <!-- 3. CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
+              <!-- CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
               <div class="row g-1 g-sm-2 mb-3">
                 <div class="col-4">
                   <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
@@ -431,13 +395,13 @@
                 </div>
               </div>
 
-              <!-- 4. BIẾN ĐỘNG CHI TIÊU 4 THÁNG -->
+              <!-- BIẾN ĐỘNG CHI TIÊU 4 THÁNG -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-bar-chart-line-fill text-success"></i> Biến Động Chi Tiêu 4 Tháng (% Tăng/Giảm)</div>
                 <canvas id="chartMonthTrends" height="190"></canvas>
               </div>
 
-              <!-- 5. TỶ LỆ HÌNH THỨC THANH TOÁN -->
+              <!-- TỶ LỆ HÌNH THỨC THANH TOÁN -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                   <span class="fw-bold text-dark fit-title"><i class="bi bi-pie-chart-fill text-success"></i> Tỷ Lệ Hình Thức TT</span>
@@ -453,13 +417,13 @@
                 </div>
               </div>
 
-              <!-- 6. CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG -->
+              <!-- CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="fw-bold text-dark mb-2 small nowrap-text"><i class="bi bi-people-fill text-success"></i> Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng</div>
                 <canvas id="chartTargetData" height="200"></canvas>
               </div>
 
-              <!-- 7. BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC -->
+              <!-- BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC -->
               <div class="card p-3 mb-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-list-stars text-success"></i> Biến Động Chi Tiêu Theo Danh Mục</div>
                 <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
@@ -478,7 +442,7 @@
                 </div>
               </div>
 
-              <!-- 8. TỔNG CHI TIÊU HẰNG NGÀY -->
+              <!-- TỔNG CHI TIÊU HẰNG NGÀY -->
               <div class="card p-3 border shadow-sm">
                 <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-calendar3 text-success"></i> Chi Tiêu Hằng Ngày</div>
                 <canvas id="chartDailyList" height="150"></canvas>
@@ -510,7 +474,7 @@
                     </div>
                     <div class="fw-bold text-dark small" id="voiceStatusTextCash">Bấm nút để nói thông tin Thu / Chi</div>
                     <div class="text-muted small mt-1" style="font-size: 0.75rem;">
-                      <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản" hoặc "Khách trả tiền phòng 500k"
+                      <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản"
                     </div>
                     <div id="liveSpeechBoxCash" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
                       <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
@@ -583,6 +547,31 @@
     </div>
   </div>
 
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (DUY NHẤT VÀ CHUẨN ĐỊNH DẠNG) -->
+  <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2 bg-primary text-white">
+          <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-3">
+          <div class="alert alert-info py-2 px-3 mb-2 small">
+            <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+            <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+          </div>
+          <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
+          </div>
+          <div id="cardRecommendList"></div>
+        </div>
+        <div class="modal-footer py-1">
+          <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4XMEITG97lOrdS7VjXi6J-NOtWih021nolsVzQFozI0k4Rdw/exec";
@@ -592,7 +581,7 @@
     let currentStatementsData = [];
     let recognitionInstance = null;
     let isProcessingVoice = false;
-    let merchantMapData = {}; // Bản đồ lưu Merchant -> Category
+    let merchantMapData = {};
 
     let chartTrendsInstance = null;
     let chartPaymentInstance = null;
@@ -735,17 +724,13 @@
       const catOpt = document.getElementById('categoryOptions');
       if (catOpt && data.categories) {
         catOpt.innerHTML = '';
-        data.categories.forEach(item => {
-          catOpt.innerHTML += `<option value="${item}">`;
-        });
+        data.categories.forEach(item => { catOpt.innerHTML += `<option value="${item}">`; });
       }
 
       const merchOpt = document.getElementById('merchantOptions');
       if (merchOpt && data.merchants) {
         merchOpt.innerHTML = '';
-        data.merchants.forEach(item => {
-          merchOpt.innerHTML += `<option value="${item}">`;
-        });
+        data.merchants.forEach(item => { merchOpt.innerHTML += `<option value="${item}">`; });
       }
 
       if (data.merchantCategoryMap) {
@@ -755,9 +740,7 @@
       const cashCatOpt = document.getElementById('cashCategoryOptions');
       if (cashCatOpt && data.cashCategories) {
         cashCatOpt.innerHTML = '';
-        data.cashCategories.forEach(item => {
-          cashCatOpt.innerHTML += `<option value="${item}">`;
-        });
+        data.cashCategories.forEach(item => { cashCatOpt.innerHTML += `<option value="${item}">`; });
       }
     }
 
@@ -768,11 +751,9 @@
       list.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
     }
 
-    // TỰ ĐỘNG KHỚP CATEGORY KHI TÊN MERCHANT ĐƯỢC NHẬP
     function autoMatchCategoryFromMerchant(val) {
       if (!val) return;
       const cleanVal = val.trim().toLowerCase();
-      
       for (const [merch, cat] of Object.entries(merchantMapData)) {
         if (merch.toLowerCase() === cleanVal || cleanVal.includes(merch.toLowerCase())) {
           document.getElementById('categoryInput').value = cat;
@@ -792,11 +773,8 @@
 
       if (!isCard) {
         const isDashActive = document.getElementById('tab-cash-dash').classList.contains('active');
-        if (isDashActive) {
-          loadCashDashboard(false);
-        } else {
-          loadRecentCashTransactions(false);
-        }
+        if (isDashActive) loadCashDashboard(false);
+        else loadRecentCashTransactions(false);
       }
     }
 
@@ -833,32 +811,25 @@
 
     function quickPay(cardName, remainingAmount) {
       switchForm('spending');
-      
       const cardSelect = document.getElementById('card');
       if (cardSelect) cardSelect.value = cardName;
-      
       const catInput = document.getElementById('categoryInput');
       if (catInput) catInput.value = "TTT_Trực Tuyến";
-
       const amountInput = document.getElementById('amount');
       if (amountInput) {
         const amt = (remainingAmount && remainingAmount > 0) ? -Math.abs(remainingAmount) : '';
         amountInput.value = amt;
       }
-      
       setTodayDefaultDates();
       handleCategoryChange();
-
       showAlert(`Đã điền tự động thanh toán thẻ "${cardName}"!`, 'info');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // TỰ ĐỘNG BẮT ĐIỀU KIỆN KHI THAY ĐỔI DANH MỤC
     function handleCategoryChange() {
       const catVal = document.getElementById('categoryInput').value.trim();
       const amtInput = document.getElementById('amount');
       const help = document.getElementById('cardCategoryHelp');
-      
       let rawVal = amtInput.value.replace(/[^0-9-]/g, '');
     
       if (catVal.toUpperCase().startsWith("TTT_")) {
@@ -891,7 +862,6 @@
         }
         targetSelect.value = "";
         targetSelect.disabled = true;
-
         help.className = "form-text small text-success fw-bold";
         help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Khóa Đối tượng chi";
       } else {
@@ -899,7 +869,6 @@
           amtInput.value = val.replace("-", "");
         }
         targetSelect.disabled = false;
-
         help.className = "form-text small text-danger";
         help.innerText = "Chi tiêu sinh hoạt -> Tự động ghi DƯƠNG (+)";
       }
@@ -911,7 +880,6 @@
       btn.disabled = true; btn.innerText = 'Đang lưu...';
 
       const formObject = Object.fromEntries(new FormData(form).entries());
-
       const msg = await sendRequest("submitData", { formObject });
       btn.disabled = false; btn.innerText = 'Lưu Giao Dịch Cash';
 
@@ -921,7 +889,6 @@
         setTodayDefaultDates();
         document.getElementById('mCash').checked = true;
         document.getElementById('cashTarget').disabled = false;
-        
         loadRecentCashTransactions(true);
         await loadCashDashboard(true);
       }
@@ -930,15 +897,12 @@
     function loadRecentCashTransactions(forceFetch = false) {
       const cacheKey = "app_tx_cash";
       const cached = localStorage.getItem(cacheKey);
-    
       if (cached && !forceFetch) {
         try {
-          const list = JSON.parse(cached);
-          renderRecentCashListUI(list);
+          renderRecentCashListUI(JSON.parse(cached));
           return;
         } catch (e) {}
       }
-    
       document.getElementById('loadingTxCash').style.display = 'block';
       sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => {
         document.getElementById('loadingTxCash').style.display = 'none';
@@ -957,7 +921,7 @@
         txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch Cash gần đây.</p>';
         return;
       }
-    
+      
       let html = '<div class="list-group list-group-flush">';
       list.forEach(item => {
         const amt = Number(item.amount || 0);
@@ -965,18 +929,16 @@
         const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
         const badgeColor = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
         const sign = isIncome ? '+' : '-';
-    
         const categoryText = item.category || 'Chưa phân loại';
         const methodText = item.method || 'Tiền Mặt';
         
         let methodBadgeClass = 'bg-secondary';
         if (methodText === 'Chuyển Khoản') methodBadgeClass = 'bg-success';
         else if (methodText === 'Ví Điện Tử') methodBadgeClass = 'bg-purple';
-    
+        
         const targetText = (item.target && item.target !== 'Bản thân' && item.target !== 'undefined' && item.target.trim() !== '') 
-          ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` 
-          : '';
-    
+          ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` : '';
+        
         html += `
           <div class="tx-item d-flex justify-content-between align-items-center py-2 border-bottom">
             <div>
@@ -1016,7 +978,6 @@
     async function loadCashDashboard(fetchServer = false) {
       const cacheKey = "app_cash_dash_data";
       const cached = localStorage.getItem(cacheKey);
-    
       if (cached && !fetchServer) {
         try {
           const parsedData = JSON.parse(cached);
@@ -1026,13 +987,10 @@
           return;
         } catch (e) {}
       }
-    
       document.getElementById('loadingCashDash').style.display = 'block';
       document.getElementById('cashDashContent').style.display = 'none';
-    
       const data = await sendRequest("getCashDashboardData");
       document.getElementById('loadingCashDash').style.display = 'none';
-    
       if (data) {
         localStorage.setItem(cacheKey, JSON.stringify(data));
         document.getElementById('cashDashContent').style.display = 'block';
@@ -1092,18 +1050,12 @@
               borderColor: '#dc3545',
               backgroundColor: '#dc3545',
               pointRadius: 4,
-              pointHoverRadius: 6,
               borderWidth: 2,
               tension: 0.1,
               yAxisID: 'y1',
               order: 1,
               datalabels: {
-                display: true,
-                align: 'top',
-                anchor: 'center',
-                color: '#dc3545',
-                offset: 4,
-                font: { weight: 'bold', size: 9 },
+                display: true, align: 'top', anchor: 'center', color: '#dc3545', offset: 4, font: { weight: 'bold', size: 9 },
                 formatter: (val, ctx) => {
                   const rawStr = d.monthTrends[ctx.dataIndex]?.changeStr;
                   return rawStr ? rawStr : (val > 0 ? '+' : '') + val.toFixed(1) + '%';
@@ -1120,10 +1072,7 @@
               order: 2,
               datalabels: {
                 display: (ctx) => ctx.dataIndex === d.monthTrends.length - 1,
-                align: 'top',
-                anchor: 'end',
-                color: '#198754',
-                font: { weight: 'bold', size: 9 },
+                align: 'top', anchor: 'end', color: '#198754', font: { weight: 'bold', size: 9 },
                 formatter: (val) => formatVND(val)
               }
             }
@@ -1133,22 +1082,8 @@
           responsive: true,
           layout: { padding: { top: 20, right: 10, left: 5 } },
           scales: {
-            y: {
-              type: 'linear',
-              display: true,
-              position: 'left',
-              max: customYMax,
-              title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 9 } },
-              ticks: { font: { size: 9 } }
-            },
-            y1: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              grid: { drawOnChartArea: false },
-              title: { display: true, text: '% Tăng giảm', font: { size: 9 } },
-              ticks: { font: { size: 9 }, callback: value => value + '%' }
-            }
+            y: { type: 'linear', display: true, position: 'left', max: customYMax, title: { display: true, text: 'Số tiền (VNĐ)', font: { size: 9 } } },
+            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: '% Tăng giảm', font: { size: 9 } }, ticks: { callback: value => value + '%' } }
           }
         }
       });
@@ -1164,16 +1099,9 @@
             const pct = totalPaymentAmt > 0 ? ((p.amount / totalPaymentAmt) * 100).toFixed(1) : 0;
             return `${p.method} (${pct}%)`;
           }),
-          datasets: [{
-            data: d.paymentData.list.map(p => p.amount),
-            backgroundColor: ['#198754', '#6c757d', '#6f42c1']
-          }]
+          datasets: [{ data: d.paymentData.list.map(p => p.amount), backgroundColor: ['#198754', '#6c757d', '#6f42c1'] }]
         },
-        options: { 
-          responsive: true, 
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } 
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
       });
 
       if (chartTargetInstance) chartTargetInstance.destroy();
@@ -1188,10 +1116,7 @@
             { label: d.targetData.months[2] || 'Tháng cũ', data: d.targetData.list.map(t => t.m3Amt), backgroundColor: '#0dcaf0', borderRadius: 4 }
           ]
         },
-        options: { 
-          responsive: true, 
-          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } } 
-        }
+        options: { responsive: true, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } } }
       });
 
       const catTbody = document.getElementById('tableCatChanges');
@@ -1218,10 +1143,7 @@
       const ctxDaily = document.getElementById('chartDailyList').getContext('2d');
       const dailyList = d.dailyData.list || [];
       const validDailyAmts = dailyList.map(i => i.amount).filter(a => a > 0);
-      const avgDailyAmt = validDailyAmts.length > 0 
-        ? Math.round(validDailyAmts.reduce((sum, v) => sum + v, 0) / validDailyAmts.length) 
-        : 0;
-
+      const avgDailyAmt = validDailyAmts.length > 0 ? Math.round(validDailyAmts.reduce((sum, v) => sum + v, 0) / validDailyAmts.length) : 0;
       const avgFormatted = avgDailyAmt.toLocaleString('vi-VN') + ' đ';
       const shortDateLabels = dailyList.map(i => {
         if (!i.date) return '';
@@ -1233,39 +1155,11 @@
         data: {
           labels: shortDateLabels,
           datasets: [
-            {
-              type: 'line',
-              label: `TB tháng: ${avgFormatted}`,
-              data: dailyList.map(() => avgDailyAmt),
-              borderColor: '#fd7e14',
-              borderWidth: 2,
-              borderDash: [5, 5],
-              pointRadius: 0,
-              fill: false,
-              order: 1
-            },
-            {
-              type: 'line',
-              label: 'Số tiền chi',
-              data: dailyList.map(i => i.amount),
-              borderColor: '#198754',
-              backgroundColor: 'rgba(25, 135, 84, 0.1)',
-              fill: true,
-              tension: 0.3,
-              order: 2
-            }
+            { type: 'line', label: `TB tháng: ${avgFormatted}`, data: dailyList.map(() => avgDailyAmt), borderColor: '#fd7e14', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false, order: 1 },
+            { type: 'line', label: 'Số tiền chi', data: dailyList.map(i => i.amount), borderColor: '#198754', backgroundColor: 'rgba(25, 135, 84, 0.1)', fill: true, tension: 0.3, order: 2 }
           ]
         },
-        options: { 
-          responsive: true, 
-          plugins: { 
-            legend: { 
-              display: true, 
-              position: 'top',
-              labels: { boxWidth: 15, font: { size: 10, weight: 'bold' } } 
-            } 
-          } 
-        }
+        options: { responsive: true, plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 15, font: { size: 10, weight: 'bold' } } } } }
       });
     }
 
@@ -1288,22 +1182,15 @@
     function convertDisplayToInputDate(dStr) {
       if (!dStr) return '';
       const parts = dStr.split('/');
-      if (parts.length === 3) {
-        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-      }
-      return dStr;
+      return parts.length === 3 ? `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}` : dStr;
     }
 
-    // TẢI GIAO DỊCH THẺ TỪ TRANG TÍNH SPENDING_PAYMENTS
     function loadRecentTransactions(forceFetch = false) {
       const cacheKey = "app_tx_spending";
       const cached = localStorage.getItem(cacheKey);
 
       if (cached && !forceFetch) {
-        try { 
-          renderTxList(JSON.parse(cached));
-          return;
-        } catch(e) {}
+        try { renderTxList(JSON.parse(cached)); return; } catch(e) {}
       }
 
       document.getElementById('loadingTx').style.display = 'block';
@@ -1330,7 +1217,6 @@
         const amountFormatted = Math.abs(amt).toLocaleString('vi-VN');
         const colorClass = isPayment ? 'text-success fw-bold' : 'amount-text';
         const sign = isPayment ? '-' : '';
-
         const merchantInfo = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
 
         html += `
@@ -1360,38 +1246,44 @@
       }
     }
 
+    /* HÀM GỢI Ý THẺ CHUẨN XỬ LÝ TRÊN POPUP MODAL (KHÔNG TRÙNG LẶP ID) */
     async function fetchRecommendation() {
-      const kw = document.getElementById('recommendInput').value.trim();
+      const kwInput = document.getElementById('recommendInput');
+      if (!kwInput) return;
+      const kw = kwInput.value.trim();
       if (!kw) return;
-    
-      // Khởi tạo Bootstrap Modal
+
+      if (document.activeElement) document.activeElement.blur();
+
       const recModalEl = document.getElementById('recommendModal');
-      const recModal = new bootstrap.Modal(recModalEl);
-      
-      // Hiển thị Popup Modal ngay lập tức
+      if (!recModalEl) return;
+      const recModal = bootstrap.Modal.getOrCreateInstance(recModalEl);
+
       document.getElementById('loadingRecModal').style.display = 'block';
       document.getElementById('cardRecommendList').innerHTML = '';
-      document.getElementById('resMainCat').innerText = '-';
-      document.getElementById('resSubCat').innerText = '-';
+      document.getElementById('resMainCat').innerText = 'Đang tra cứu...';
+      document.getElementById('resSubCat').innerText = 'Đang tra cứu...';
+
       recModal.show();
-    
+
       const data = await sendRequest("getCardRecommendation", { keyword: kw });
       document.getElementById('loadingRecModal').style.display = 'none';
-    
+
       if (data) {
-        document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
-        document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
-    
+        document.getElementById('resMainCat').innerText = data.category?.main || "Chưa xác định";
+        document.getElementById('resSubCat').innerText = data.category?.sub || "Chưa xác định";
+
         const listContainer = document.getElementById('cardRecommendList');
         listContainer.innerHTML = '';
+
         if (!data.cards || data.cards.length === 0) {
-          listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
+          listContainer.innerHTML = '<p class="text-center text-muted py-3 small m-0">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
           return;
         }
-    
+
         data.cards.forEach(item => {
           listContainer.innerHTML += `
-            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
+            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded shadow-sm">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="fw-bold text-dark small">${item.cardName}</span>
                 <span class="rate-badge">${item.rate}</span>
@@ -1405,6 +1297,7 @@
         });
       }
     }    
+
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
@@ -1513,17 +1406,10 @@
       }
     }
 
-    // XỬ LÝ SỐ TIỀN KHI NHẬP, PASTE HOẶC XÓA
     function cleanAmountInput(input) {
       const catVal = document.getElementById('categoryInput').value.trim();
       let raw = input.value.replace(/[^0-9]/g, '');
-      
-      if (!raw) {
-        input.value = '';
-        return;
-      }
-    
-      // Nếu Danh mục bắt đầu bằng TTT_ -> Luôn giữ dấu ÂM (-) dù paste hay xóa
+      if (!raw) { input.value = ''; return; }
       if (catVal.toUpperCase().startsWith("TTT_")) {
         input.value = '-' + raw;
       } else {
@@ -1538,7 +1424,6 @@
       btn.disabled = true; btn.innerText = 'Đang lưu...';
 
       const formObject = Object.fromEntries(new FormData(form).entries());
-
       const dashCache = localStorage.getItem("app_dash_data");
       if (dashCache) {
         try {
@@ -1564,8 +1449,7 @@
     }
 
     function showAlert(msg, type) {
-      const isRecTab = (document.getElementById('recommendBlock').style.display !== 'none');
-      const alert = isRecTab ? document.getElementById('alertMsgRec') : document.getElementById('alertMsg');
+      const alert = document.getElementById('alertMsg');
       if (!alert) return;
 
       alert.className = `alert alert-${type} mb-3 py-2 px-3 small fw-bold shadow-sm border`;
@@ -1651,7 +1535,6 @@
           liveText.innerText = displayText;
         }
 
-        // Tự động ngắt Mic khi dừng nói quá 1.2s
         if (silenceTimer) clearTimeout(silenceTimer);
         silenceTimer = setTimeout(() => {
           if (recognitionInstance && !isProcessingVoice) {
@@ -1688,6 +1571,7 @@
 
       try { recognition.start(); } catch(err) { resetVoiceUI(); }
     }
+
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
     
@@ -1737,7 +1621,7 @@
         if (statusText) statusText.innerHTML = `<span class="text-info fw-bold">⏳ AI đang xử lý...</span>`;
       }
     
-      // 2. XỬ LÝ DỮ LIỆU VỚI BACKEND
+      // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
       if (isRec) {
         const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
         const finalKw = keywordClean || transcript.trim();
@@ -1751,7 +1635,6 @@
       try {
         const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
     
-        // CẬP NHẬT DỮ LIỆU CASH
         if (isCashMode) {
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
@@ -1759,17 +1642,16 @@
             
             const targetSelect = document.getElementById('cashTarget');
             targetSelect.value = ""; 
-    
             validateKDAmount();
-    
+
             if (res.amount > 0 && res.target) {
               targetSelect.value = res.target;
             }
-    
+
             if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
             else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
             else document.getElementById('mCash').checked = true;
-    
+
             showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
           } else {
             showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
@@ -1777,27 +1659,26 @@
           return;
         }
     
-        // CẬP NHẬT DỮ LIỆU SPENDING (THẺ)
         if (!res || res.success === false) {
           showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
           return;
         }
-    
+
         document.getElementById('card').value = res.card || "";
         document.getElementById('amount').value = res.amount || "";
         document.getElementById('merchantInput').value = res.merchant || "";
         document.getElementById('categoryInput').value = res.category || "";
-    
+
         handleCategoryChange();
-    
         showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
-    
+
       } catch (err) {
         alert("Lỗi xử lý kết nối giọng nói!");
       } finally {
         resetVoiceUI();
       }
     }
+
     function resetVoiceUI() {
       isProcessingVoice = false;
       if (typeof silenceTimer !== 'undefined' && silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
@@ -1812,7 +1693,6 @@
         recognitionInstance = null;
       }
     
-      // Khôi phục nút Mic Thẻ Tín Dụng
       const btnVoice = document.getElementById('btnVoice');
       const micIcon = document.getElementById('micIcon');
       const statusText = document.getElementById('voiceStatusText');
@@ -1823,7 +1703,6 @@
       if (statusText) statusText.innerText = "Bấm nút để nói thông tin giao dịch / thanh toán";
       if (liveBox) liveBox.classList.add('hidden');
     
-      // Khôi phục nút Mic Dòng Tiền / Cash
       const btnVoiceCash = document.getElementById('btnVoiceCash');
       const micIconCash = document.getElementById('micIconCash');
       const statusTextCash = document.getElementById('voiceStatusTextCash');
@@ -1834,7 +1713,6 @@
       if (statusTextCash) statusTextCash.innerText = "Bấm nút để nói thông tin Thu / Chi";
       if (liveBoxCash) liveBoxCash.classList.add('hidden');
     
-      // Khôi phục nút Mic Gợi Ý Thẻ (Ô 1 dòng)
       const btnVoiceRec = document.getElementById('btnVoiceRec');
       const micIconRec = document.getElementById('micIconRec');
       const liveBoxRec = document.getElementById('liveSpeechBoxRec');
@@ -1844,31 +1722,5 @@
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
   </script>
-  <!-- ========================================================= -->
-  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (BẤM X ĐỂ TẮT) -->
-  <!-- ========================================================= -->
-  <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header py-2 bg-primary text-white">
-          <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-3">
-          <div class="alert alert-info py-2 px-3 mb-2 small">
-            <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
-            <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
-          </div>
-          <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
-            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
-          </div>
-          <div id="cardRecommendList"></div>
-        </div>
-        <div class="modal-footer py-1">
-          <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
-        </div>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
