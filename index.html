@@ -280,7 +280,7 @@
 
               <div class="card p-2 bg-light border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY (`SPENDING_PAYMENTS`)</span>
+                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY </span>
                   <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
                 </div>
                 <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
@@ -708,7 +708,7 @@
     }
 
     function applyInitialData(data) {
-      populateDropdown('card', data.cards || [], '-- Chọn thẻ (CARDS B2:B) --');
+      populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
       populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
       populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
       
