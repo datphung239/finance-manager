@@ -71,7 +71,6 @@
       padding: 12px;
       box-shadow: 0 2px 6px rgba(13, 110, 253, 0.12);
     }
-    /* Khung chứa danh sách Log giao dịch dạng cuộn */
     #txList, #txListCash {
       max-height: 480px;
       overflow-y: auto; 
@@ -86,21 +85,21 @@
       border-radius: 4px;
     }
 
-    /* CSS MIC ĐANG LẮNG NGHE (TONE VÀNG AMBER) */
+    /* CSS MIC ĐANG LẮNG NGHE (MÀU VÀNG ĐẬM RÕ NÉT - AMBER DARK) */
     .btn-mic-listening {
-      background-color: #ffc107 !important;
-      border-color: #ffc107 !important;
+      background-color: #ffab00 !important;
+      border-color: #ff8f00 !important;
       color: #212529 !important;
-      box-shadow: 0 0 15px rgba(255, 193, 7, 0.6) !important;
+      box-shadow: 0 0 15px rgba(255, 171, 0, 0.7) !important;
     }
     .mic-pulse-icon {
       display: inline-block;
       animation: micPulseAnim 1.2s infinite ease-in-out;
     }
     @keyframes micPulseAnim {
-      0% { transform: scale(1); opacity: 0.8; }
+      0% { transform: scale(1); opacity: 0.85; }
       50% { transform: scale(1.25); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 0.85; }
     }
 
     /* CONTAINER AI LOADING SÓNG ÂM */
@@ -116,9 +115,17 @@
     .ai-wave-bar {
       width: 3px;
       height: 6px;
-      background: linear-gradient(180deg, #0d6efd, #0dcaf0);
       border-radius: 3px;
       animation: aiWaveAnim 1.2s ease-in-out infinite alternate;
+    }
+
+    /* Sóng âm Xanh Dương cho Thẻ */
+    .wave-blue .ai-wave-bar {
+      background: linear-gradient(180deg, #0d6efd, #0dcaf0);
+    }
+    /* Sóng âm Xanh Lá cho Cash */
+    .wave-green .ai-wave-bar {
+      background: linear-gradient(180deg, #198754, #20c997);
     }
     
     .ai-wave-bar:nth-child(1) { animation-delay: 0.0s; }
@@ -134,10 +141,15 @@
     
     .ai-sparkle-icon {
       font-size: 1.1rem;
-      color: #0d6efd;
       display: inline-block;
       vertical-align: middle;
       animation: aiGlow 1.5s infinite alternate ease-in-out;
+    }
+    .ai-sparkle-icon.sparkle-blue {
+      color: #0d6efd;
+    }
+    .ai-sparkle-icon.sparkle-green {
+      color: #198754;
     }
     
     @keyframes aiGlow {
@@ -177,7 +189,7 @@
         <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
         <!-- ========================================================= -->
         <div id="cardAppContainer">
-          <!-- THANH TAB CHÍNH CÒN 2 TAB -->
+          <!-- THANH TAB CHÍNH -->
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
@@ -187,7 +199,6 @@
 
           <!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
-            <!-- THANH GỢI Ý THẺ 1 DÒNG DÙNG MODAL -->
             <div class="card p-2 mb-3 border bg-light shadow-sm">
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
@@ -277,7 +288,7 @@
                 </div>
               </div>
 
-              <!-- VOICE AI THẺ -->
+              <!-- VOICE AI THẺ (TONE XANH DƯƠNG) -->
               <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
                 <div class="card-body p-2 text-center">
                   <div class="d-flex justify-content-center w-100 mb-2">
@@ -546,7 +557,7 @@
                   </div>
                 </div>
 
-                <!-- Voice AI Cash -->
+                <!-- Voice AI Cash (TONE XANH LÁ) -->
                 <div class="card mb-3 border-success bg-light">
                   <div class="card-body p-2 text-center">
                     <div class="d-flex justify-content-center w-100 mb-2">
@@ -1532,7 +1543,7 @@
 
     let silenceTimer = null;
 
-    /* KÍCH HOẠT MIC LẮNG NGHE GIỌNG NÓI (CẬP NHẬT TONE VÀNG AMBER) */
+    /* KÍCH HOẠT MIC LẮNG NGHE GIỌNG NÓI (VÀNG ĐẬM RÕ NÉT) */
     function startVoiceRecognition(forcedMode = null) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ nhận diện giọng nói!"); return; }
@@ -1575,14 +1586,14 @@
         liveText = document.getElementById('liveSpeechText');
       }
 
-      /* ĐỔI GIAO DIỆN SANG MÀU VÀNG KHI LẮNG NGHE */
+      /* ĐỔI GIAO DIỆN SANG MÀU VÀNG ĐẬM RÕ NÉT KHI ĐANG LẮNG NGHE */
       if (isRec) {
-        btnVoice.className = "btn btn-warning py-0 px-2 text-dark";
+        btnVoice.className = "btn btn-mic-listening py-0 px-2 text-dark";
         micIcon.className = "bi bi-soundwave mic-pulse-icon";
       } else {
         btnVoice.className = "btn btn-mic-listening rounded-circle p-3 shadow mb-2 d-flex align-items-center justify-content-center";
         micIcon.className = "bi bi-soundwave fs-3 mic-pulse-icon text-dark";
-        if (statusText) statusText.innerHTML = `<span class="text-warning fw-bold">🎙️ Đang nghe giọng nói...</span>`;
+        if (statusText) statusText.innerHTML = `<span class="fw-bold" style="color:#d97706;">🎙️ Đang nghe giọng nói...</span>`;
       }
 
       liveBox.classList.remove('hidden');
@@ -1642,17 +1653,30 @@
       try { recognition.start(); } catch(err) { resetVoiceUI(); }
     }
 
-    /* XỬ LÝ AI BÓC TÁCH GIỌNG NÓI (KHÔNG CÒN CHẤM ĐỎ, DÙNG HÌNH ĐỘNG SÓNG ÂM VÀ NGÔI SAO) */
+    /* XỬ LÝ AI BÓC TÁCH GIỌNG NÓI (THÊM SÓNG ÂM + NGÔI SAO VÀO DÒNG TRẠNG THÁI BÊN TRÁI & PHÂN MÀU XANH DƯƠNG / XANH LÁ) */
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
     
       const isCashMode = (mode === 'cash_spending');
       const isRec = (mode === 'recommend');
     
-      // Template Sóng AI 5 Cột + Ngôi sao tỏa sáng
-      const aiAnimationHTML = `
-        <div class="d-inline-flex align-items-center gap-1 me-1">
-          <i class="bi bi-stars ai-sparkle-icon"></i>
+      // Template Sóng ÂM + Ngôi Sao XANH DƯƠNG (Thẻ Tín Dụng)
+      const aiAnimationBlueHTML = `
+        <div class="d-inline-flex align-items-center gap-1 me-1 wave-blue">
+          <i class="bi bi-stars ai-sparkle-icon sparkle-blue"></i>
+          <div class="ai-wave-container mx-1">
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+            <div class="ai-wave-bar"></div>
+          </div>
+        </div>`;
+
+      // Template Sóng ÂM + Ngôi Sao XANH LÁ (Dòng Tiền Mặt / Bank)
+      const aiAnimationGreenHTML = `
+        <div class="d-inline-flex align-items-center gap-1 me-1 wave-green">
+          <i class="bi bi-stars ai-sparkle-icon sparkle-green"></i>
           <div class="ai-wave-container mx-1">
             <div class="ai-wave-bar"></div>
             <div class="ai-wave-bar"></div>
@@ -1662,7 +1686,7 @@
           </div>
         </div>`;
     
-      // 1. CẬP NHẬT TRẠNG THÁI "AI ĐANG XỬ LÝ" (ĐÃ LOẠI BỎ CHẤM ĐỎ)
+      // 1. CẬP NHẬT TRẠNG THÁI "AI ĐANG XỬ LÝ" DỰA THEO THEME MÀU
       if (isRec) {
         const btnVoiceRec = document.getElementById('btnVoiceRec');
         const micIconRec = document.getElementById('micIconRec');
@@ -1670,26 +1694,30 @@
         const liveTextRec = document.getElementById('liveSpeechTextRec');
     
         if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary py-0 px-2";
-        if (micIconRec) micIconRec.className = "bi bi-stars ai-sparkle-icon";
+        if (micIconRec) micIconRec.className = "bi bi-stars ai-sparkle-icon sparkle-blue";
         if (liveBoxRec && liveTextRec) {
           liveBoxRec.classList.remove('hidden');
-          liveTextRec.innerHTML = `${aiAnimationHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách từ khóa...</span>`;
+          liveTextRec.innerHTML = `${aiAnimationBlueHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách từ khóa...</span>`;
         }
       } else if (isCashMode) {
+        // LUỒNG DÒNG TIỀN MẶT / BANK -> TONE XANH LÁ (GREEN)
         const btnVoiceCash = document.getElementById('btnVoiceCash');
         const micIconCash = document.getElementById('micIconCash');
         const liveBoxCash = document.getElementById('liveSpeechBoxCash');
         const liveTextCash = document.getElementById('liveSpeechTextCash');
         const statusTextCash = document.getElementById('voiceStatusTextCash');
     
-        if (btnVoiceCash) btnVoiceCash.className = "btn btn-primary rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-        if (micIconCash) micIconCash.className = "bi bi-stars fs-3 ai-sparkle-icon text-white";
+        if (btnVoiceCash) btnVoiceCash.className = "btn btn-success rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        if (micIconCash) micIconCash.className = "bi bi-stars fs-3 ai-sparkle-icon sparkle-green text-white";
         if (liveBoxCash && liveTextCash) {
           liveBoxCash.classList.remove('hidden');
-          liveTextCash.innerHTML = `${aiAnimationHTML} <span class="ms-1 fw-semibold text-primary">AI đang phân tích Cash...</span>`;
+          liveTextCash.innerHTML = `${aiAnimationGreenHTML} <span class="ms-1 fw-semibold text-success">AI đang phân tích Cash...</span>`;
         }
-        if (statusTextCash) statusTextCash.innerHTML = `<span class="text-primary fw-bold"><i class="bi bi-stars me-1"></i> AI đang suy nghĩ...</span>`;
+        if (statusTextCash) {
+          statusTextCash.innerHTML = `${aiAnimationGreenHTML} <span class="text-success fw-bold">AI đang suy nghĩ...</span>`;
+        }
       } else {
+        // LUỒNG THẺ TÍN DỤNG -> TONE XANH DƯƠNG (BLUE/PRIMARY)
         const btnVoice = document.getElementById('btnVoice');
         const micIcon = document.getElementById('micIcon');
         const liveBox = document.getElementById('liveSpeechBox');
@@ -1697,12 +1725,14 @@
         const statusText = document.getElementById('voiceStatusText');
     
         if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-        if (micIcon) micIcon.className = "bi bi-stars fs-3 ai-sparkle-icon text-white";
+        if (micIcon) micIcon.className = "bi bi-stars fs-3 ai-sparkle-icon sparkle-blue text-white";
         if (liveBox && liveText) {
           liveBox.classList.remove('hidden');
-          liveText.innerHTML = `${aiAnimationHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách thẻ...</span>`;
+          liveText.innerHTML = `${aiAnimationBlueHTML} <span class="ms-1 fw-semibold text-primary">AI đang bóc tách thẻ...</span>`;
         }
-        if (statusText) statusText.innerHTML = `<span class="text-primary fw-bold"><i class="bi bi-stars me-1"></i> AI đang suy nghĩ...</span>`;
+        if (statusText) {
+          statusText.innerHTML = `${aiAnimationBlueHTML} <span class="text-primary fw-bold">AI đang suy nghĩ...</span>`;
+        }
       }
     
       // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
@@ -1810,7 +1840,6 @@
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
 
-    // Hàm bổ trợ hiển thị chuẩn ngày dd/MM/yyyy ở Client
     const formatDate = (str) => {
       if (!str) return '';
       const clean = str.toString().replace("'", "").trim();
