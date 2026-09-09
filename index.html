@@ -105,16 +105,36 @@
         <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
         <!-- ========================================================= -->
         <div id="cardAppContainer">
+          <!-- THANH TAB CHÍNH CHỈ GỒM 2 TAB -->
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
               <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu / Chi Thẻ</button></div>
-              <div class="nav-item"><button class="nav-link" id="tab-recommend" onclick="switchForm('recommend')"><i class="bi bi-lightbulb"></i> Gợi Ý Thẻ</button></div>
             </div>
           </div>
 
           <!-- TAB DASHBOARD CARD -->
+<!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
+            <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT ĐẦU DASHBOARD, KHÔNG TỐN DIỆN TÍCH) -->
+            <div class="card p-2 mb-3 border bg-light shadow-sm">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
+                  <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi Ý Thẻ
+                </span>
+                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
+                <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
+                  <i class="bi bi-mic-fill" id="micIconRec"></i>
+                </button>
+                <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
+              </div>
+              <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
+                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
+                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
+              </div>
+            </div>
+
+            <!-- TỔNG QUAN NỢ THẺ TÍN DỤNG -->
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
@@ -170,7 +190,6 @@
               </div>
             </div>
           </div>
-
           <!-- TAB GỢI Ý CHI TIÊU CARD -->
           <div id="recommendBlock" style="display: none;">
             <div class="card p-3 border mb-3 bg-light text-center align-items-center">
@@ -798,10 +817,10 @@
 
     function switchForm(type) {
       document.querySelectorAll('#mainTab .nav-link').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`tab-${type}`).classList.add('active');
+      const activeTab = document.getElementById(`tab-${type}`);
+      if (activeTab) activeTab.classList.add('active');
 
       document.getElementById('dashboardBlock').style.display = (type === 'dashboard') ? 'block' : 'none';
-      document.getElementById('recommendBlock').style.display = (type === 'recommend') ? 'block' : 'none';
       document.getElementById('inputFormFields').style.display = (type === 'spending') ? 'block' : 'none';
 
       if (type === 'spending') {
@@ -1343,31 +1362,39 @@
     async function fetchRecommendation() {
       const kw = document.getElementById('recommendInput').value.trim();
       if (!kw) return;
-      document.getElementById('loadingRec').style.display = 'block';
-      document.getElementById('recResultBlock').style.display = 'none';
+
+      // Khởi tạo và mở Popup Modal
+      const recModalEl = document.getElementById('recommendModal');
+      const recModal = new bootstrap.Modal(recModalEl);
+      
+      document.getElementById('loadingRecModal').style.display = 'block';
+      document.getElementById('cardRecommendList').innerHTML = '';
+      document.getElementById('resMainCat').innerText = '-';
+      document.getElementById('resSubCat').innerText = '-';
+      recModal.show();
 
       const data = await sendRequest("getCardRecommendation", { keyword: kw });
-      document.getElementById('loadingRec').style.display = 'none';
+      document.getElementById('loadingRecModal').style.display = 'none';
+
       if (data) {
-        document.getElementById('recResultBlock').style.display = 'block';
         document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
         document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
 
         const listContainer = document.getElementById('cardRecommendList');
         listContainer.innerHTML = '';
         if (!data.cards || data.cards.length === 0) {
-          listContainer.innerHTML = '<p class="text-center text-muted py-2">Không tìm thấy thẻ phù hợp.</p>';
+          listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
           return;
         }
 
         data.cards.forEach(item => {
           listContainer.innerHTML += `
-            <div class="recommend-card">
+            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="fw-bold text-dark">${item.cardName}</span>
+                <span class="fw-bold text-dark small">${item.cardName}</span>
                 <span class="rate-badge">${item.rate}</span>
               </div>
-              <div class="text-muted small">
+              <div class="text-muted small" style="font-size: 0.75rem;">
                 <div>• <strong>Kiểu áp dụng:</strong> ${item.applyType}</div>
                 <div>• <strong>Hoàn max/danh mục:</strong> ${item.maxCat} | <strong>Max/kỳ:</strong> ${item.maxCycle}</div>
                 ${item.minSpend ? `<div>• <strong>Chi tối thiểu:</strong> ${item.minSpend}</div>` : ''}
@@ -1376,7 +1403,7 @@
         });
       }
     }
-
+    
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
@@ -1550,20 +1577,17 @@
       window.alertTimer = setTimeout(() => { alert.style.display = 'none'; }, 3000);
     }
 
+    let silenceTimer = null;
+
     function startVoiceRecognition(forcedMode = null) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
+      if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ nhận diện giọng nói!"); return; }
 
       if (isProcessingVoice) return;
 
       if (recognitionInstance) {
-        try { 
-          recognitionInstance.onresult = null;
-          recognitionInstance.onerror = null;
-          recognitionInstance.onend = null;
-          recognitionInstance.abort(); 
-        } catch(e){}
-        recognitionInstance = null;
+        resetVoiceUI();
+        return;
       }
 
       const recognition = new SpeechRecognition();
@@ -1587,7 +1611,6 @@
       } else if (isRec) {
         btnVoice = document.getElementById('btnVoiceRec');
         micIcon = document.getElementById('micIconRec');
-        statusText = document.getElementById('voiceStatusTextRec');
         liveBox = document.getElementById('liveSpeechBoxRec');
         liveText = document.getElementById('liveSpeechTextRec');
       } else {
@@ -1598,26 +1621,47 @@
         liveText = document.getElementById('liveSpeechText');
       }
 
-      btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-      micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
-      statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
+      if (isRec) {
+        btnVoice.className = "btn btn-danger py-0 px-2 text-white";
+        micIcon.className = "bi bi-record-circle-fill spinner-grow spinner-grow-sm";
+      } else {
+        btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
+        if (statusText) statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
+      }
 
       liveBox.classList.remove('hidden');
       liveText.innerText = "Đang lắng nghe...";
 
-      let finalTranscript = '';
+      let lastText = '';
 
       recognition.onresult = (event) => {
         let interimTranscript = '';
+        let finalTranscript = '';
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
           else interimTranscript += event.results[i][0].transcript;
         }
 
         const displayText = finalTranscript || interimTranscript;
-        liveText.innerText = displayText;
+        if (displayText) {
+          lastText = displayText;
+          liveText.innerText = displayText;
+        }
+
+        // Tự động ngắt Mic khi dừng nói quá 1.2s
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (recognitionInstance && !isProcessingVoice) {
+            isProcessingVoice = true;
+            try { recognition.stop(); } catch(e){}
+            processParsedVoiceText(lastText || liveText.innerText, currentMode);
+          }
+        }, 1200);
 
         if (event.results[0].isFinal && !isProcessingVoice) {
+          if (silenceTimer) clearTimeout(silenceTimer);
           isProcessingVoice = true;
           try { recognition.stop(); } catch(e){}
           processParsedVoiceText(finalTranscript || displayText, currentMode);
@@ -1625,8 +1669,9 @@
       };
 
       recognition.onspeechend = () => {
+        if (silenceTimer) clearTimeout(silenceTimer);
         if (!isProcessingVoice) {
-          const textToProcess = liveText.innerText;
+          const textToProcess = lastText || liveText.innerText;
           if (textToProcess && textToProcess !== "Đang lắng nghe...") {
             isProcessingVoice = true;
             processParsedVoiceText(textToProcess, currentMode);
@@ -1635,8 +1680,9 @@
       };
 
       recognition.onerror = (event) => {
+        if (silenceTimer) clearTimeout(silenceTimer);
         resetVoiceUI();
-        if (event.error !== 'no-speech') alert("Lỗi nhận diện giọng nói, vui lòng thử lại!");
+        if (event.error !== 'no-speech') alert("Không nhận diện được giọng nói, vui lòng thử lại!");
       };
 
       try { recognition.start(); } catch(err) { resetVoiceUI(); }
@@ -1645,11 +1691,23 @@
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
 
+      // 1. MODE GỢI Ý THẺ
+      if (mode === 'recommend') {
+        const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
+        const finalKw = keywordClean || transcript.trim();
+        
+        document.getElementById('recommendInput').value = finalKw;
+        resetVoiceUI();
+        fetchRecommendation(); // Mở ngay Popup Modal
+        return;
+      }
+
       const isCashMode = (mode === 'cash_spending');
       
       try {
         const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
 
+        // 2. CASH MANAGEMENT
         if (isCashMode) {
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
@@ -1675,21 +1733,12 @@
           return;
         }
 
-        if (mode === 'recommend') {
-          if (res && res.success && res.keyword) {
-            document.getElementById('recommendInput').value = res.keyword;
-            showAlert(`Đã tìm ưu đãi cho: "${res.keyword}"`, "success");
-            fetchRecommendation();
-          } else showAlert((res && res.message) || "Không tìm thấy nơi mua sắm phù hợp!", "warning");
-          return;
-        }
-
+        // 3. CARD MANAGEMENT
         if (!res || res.success === false) {
           showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
           return;
         }
 
-        // TỰ ĐỘNG ĐIỀN DỮ LIỆU TỪ VOICE AI
         document.getElementById('card').value = res.card || "";
         document.getElementById('amount').value = res.amount || "";
         document.getElementById('merchantInput').value = res.merchant || "";
@@ -1708,11 +1757,13 @@
 
     function resetVoiceUI() {
       isProcessingVoice = false;
+      if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+
       if (recognitionInstance) {
         try { 
           recognitionInstance.onresult = null;
           recognitionInstance.onerror = null;
-          recognitionInstance.onend = null;
+          recognitionInstance.onspeechend = null;
           recognitionInstance.abort(); 
         } catch(e){}
         recognitionInstance = null;
@@ -1740,14 +1791,36 @@
 
       const btnVoiceRec = document.getElementById('btnVoiceRec');
       const micIconRec = document.getElementById('micIconRec');
-      const statusTextRec = document.getElementById('voiceStatusTextRec');
       const liveBoxRec = document.getElementById('liveSpeechBoxRec');
 
-      if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
-      if (micIconRec) micIconRec.className = "bi bi-mic-fill fs-3";
-      if (statusTextRec) statusTextRec.innerText = "Bấm nút để tìm ưu đãi thẻ";
+      if (btnVoiceRec) btnVoiceRec.className = "btn btn-outline-primary py-0 px-2";
+      if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
   </script>
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ -->
+    <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header py-2 bg-primary text-white">
+            <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-3">
+            <div class="alert alert-info py-2 px-3 mb-2 small">
+              <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+              <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+            </div>
+            <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
+              <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
+            </div>
+            <div id="cardRecommendList"></div>
+          </div>
+          <div class="modal-footer py-1">
+            <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
