@@ -111,17 +111,37 @@
               <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu Chi & Thanh Toán Thẻ</button></div>
             </div>
           </div>
-        
           <!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
+          
+            <!-- 1. THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT LÊN ĐẦU DASHBOARD, KHÔNG CHỜ LOAD DATA) -->
+            <div class="card p-2 mb-3 border bg-light shadow-sm">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
+                  <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi Ý Thẻ
+                </span>
+                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
+                <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
+                  <i class="bi bi-mic-fill" id="micIconRec"></i>
+                </button>
+                <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
+              </div>
+              <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
+                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
+                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
+              </div>
+            </div>
+          
+            <!-- 2. TỔNG QUAN NỢ THẺ TÍN DỤNG -->
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
             </div>
+          
             <div id="loadingDash" class="text-center py-4 text-muted">
               <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
             </div>
-        
+          
             <div id="dashContent" style="display: none;">
               <!-- KPI CARDS -->
               <div class="row g-1 g-sm-2 mb-2">
@@ -129,25 +149,7 @@
                 <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
               </div>
-        
-              <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (INTEGRATED IN DASHBOARD) -->
-              <div class="card p-2 mb-3 border bg-light shadow-sm">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
-                    <i class="bi bi-lightbulb-fill me-1 text-warning"></i> Gợi Ý
-                  </span>
-                  <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
-                  <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
-                    <i class="bi bi-mic-fill" id="micIconRec"></i>
-                  </button>
-                  <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
-                </div>
-                <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
-                  <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
-                  <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
-                </div>
-              </div>
-        
+          
               <!-- KỲ SAO KÊ THẺ HẠN THỜI -->
               <div class="card bg-light p-2 mb-3 border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -165,7 +167,7 @@
                 </div>
                 <div id="stmtList" class="list-group list-group-flush small" style="max-height: 220px; overflow-y: auto;"></div>
               </div>
-        
+          
               <!-- BẢNG TRA CỨU DANH MỤC -->
               <div class="card p-2 border">
                 <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
@@ -191,6 +193,7 @@
               </div>
             </div>
           </div>
+       
           <!-- FORM CHI TIÊU & THANH TOÁN THẺ TÍCH HỢP -->
           <form id="dataForm" onsubmit="handleFormSubmit(this)">
             <input type="hidden" id="entryType" name="entryType" value="spending">
@@ -1636,12 +1639,25 @@
 
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
-
+    
+      // 1. XỬ LÝ RIÊNG BẰNG JS CHO MODE "RECOMMEND" (MÔ TẢ NGẮN KHÔNG CẦN CHỜ AI LÂU, TỰ NGẮT MIC NGAY)
+      if (mode === 'recommend') {
+        const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
+        const finalKw = keywordClean || transcript.trim();
+        
+        document.getElementById('recommendInput').value = finalKw;
+        resetVoiceUI(); // Dừng ngay Mic
+        
+        fetchRecommendation(); // Mở ngay Popup Modal tìm kiếm
+        return;
+      }
+    
       const isCashMode = (mode === 'cash_spending');
       
       try {
         const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
-
+    
+        // 2. LUỒNG CASH MANAGEMENT
         if (isCashMode) {
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
@@ -1649,55 +1665,46 @@
             
             const targetSelect = document.getElementById('cashTarget');
             targetSelect.value = ""; 
-
+    
             validateKDAmount();
-
+    
             if (res.amount > 0 && res.target) {
               targetSelect.value = res.target;
             }
-
+    
             if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
             else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
             else document.getElementById('mCash').checked = true;
-
+    
             showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
           } else {
             showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
           }
           return;
         }
-
-        if (mode === 'recommend') {
-          if (res && res.success && res.keyword) {
-            document.getElementById('recommendInput').value = res.keyword;
-            showAlert(`Đã tìm ưu đãi cho: "${res.keyword}"`, "success");
-            fetchRecommendation();
-          } else showAlert((res && res.message) || "Không tìm thấy nơi mua sắm phù hợp!", "warning");
-          return;
-        }
-
+    
+        // 3. LUỒNG CARD MANAGEMENT
         if (!res || res.success === false) {
           showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
           return;
         }
-
-        // TỰ ĐỘNG ĐIỀN DỮ LIỆU TỪ VOICE AI
+    
         document.getElementById('card').value = res.card || "";
         document.getElementById('amount').value = res.amount || "";
         document.getElementById('merchantInput').value = res.merchant || "";
         document.getElementById('categoryInput').value = res.category || "";
-
+    
         handleCategoryChange();
-
+    
         showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
-
+    
       } catch (err) {
         alert("Lỗi xử lý kết nối giọng nói!");
       } finally {
         resetVoiceUI();
       }
     }
-
+    
     function resetVoiceUI() {
       isProcessingVoice = false;
       if (recognitionInstance) {
@@ -1709,35 +1716,36 @@
         } catch(e){}
         recognitionInstance = null;
       }
-
+    
+      // RESET MIC THU CHI THẺ
       const btnVoice = document.getElementById('btnVoice');
       const micIcon = document.getElementById('micIcon');
       const statusText = document.getElementById('voiceStatusText');
       const liveBox = document.getElementById('liveSpeechBox');
-
+    
       if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIcon) micIcon.className = "bi bi-mic-fill fs-4";
       if (statusText) statusText.innerText = "Bấm nút để nói thông tin giao dịch / thanh toán";
       if (liveBox) liveBox.classList.add('hidden');
-
+    
+      // RESET MIC CASH
       const btnVoiceCash = document.getElementById('btnVoiceCash');
       const micIconCash = document.getElementById('micIconCash');
       const statusTextCash = document.getElementById('voiceStatusTextCash');
       const liveBoxCash = document.getElementById('liveSpeechBoxCash');
-
+    
       if (btnVoiceCash) btnVoiceCash.className = "btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIconCash) micIconCash.className = "bi bi-mic-fill fs-4";
       if (statusTextCash) statusTextCash.innerText = "Bấm nút để nói thông tin Thu / Chi";
       if (liveBoxCash) liveBoxCash.classList.add('hidden');
-
+    
+      // RESET MIC GỢI Ý THẺ 1 DÒNG (TẮT ĐỎ NGAY LẬP TỨC)
       const btnVoiceRec = document.getElementById('btnVoiceRec');
       const micIconRec = document.getElementById('micIconRec');
-      const statusTextRec = document.getElementById('voiceStatusTextRec');
       const liveBoxRec = document.getElementById('liveSpeechBoxRec');
-
-      if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
-      if (micIconRec) micIconRec.className = "bi bi-mic-fill fs-3";
-      if (statusTextRec) statusTextRec.innerText = "Bấm nút để tìm ưu đãi thẻ";
+    
+      if (btnVoiceRec) btnVoiceRec.className = "btn btn-outline-primary py-0 px-2";
+      if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
   </script>
