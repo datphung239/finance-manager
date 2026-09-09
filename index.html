@@ -1358,35 +1358,41 @@
         }
       }
     }
+
     async function fetchRecommendation() {
-      const kw = document.getElementById('recommendInput').value.trim();
+      const kwInput = document.getElementById('recommendInput');
+      if (!kwInput) return;
+      const kw = kwInput.value.trim();
       if (!kw) return;
     
-      // Khởi tạo Bootstrap Modal
+      // Mở Popup Modal
       const recModalEl = document.getElementById('recommendModal');
-      const recModal = new bootstrap.Modal(recModalEl);
+      const recModal = bootstrap.Modal.getOrCreateInstance(recModalEl);
       
-      // Hiển thị Popup Modal ngay lập tức
       document.getElementById('loadingRecModal').style.display = 'block';
       document.getElementById('cardRecommendList').innerHTML = '';
       document.getElementById('resMainCat').innerText = '-';
       document.getElementById('resSubCat').innerText = '-';
       recModal.show();
     
+      // Gọi API lấy dữ liệu chuẩn code gốc
       const data = await sendRequest("getCardRecommendation", { keyword: kw });
       document.getElementById('loadingRecModal').style.display = 'none';
     
       if (data) {
-        document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
-        document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
+        // Đổ danh mục chính & con
+        document.getElementById('resMainCat').innerText = data.category?.main || "Chưa xác định";
+        document.getElementById('resSubCat').innerText = data.category?.sub || "Chưa xác định";
     
         const listContainer = document.getElementById('cardRecommendList');
         listContainer.innerHTML = '';
+    
         if (!data.cards || data.cards.length === 0) {
           listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
           return;
         }
     
+        // Đổ danh sách thẻ chuẩn logic code gốc
         data.cards.forEach(item => {
           listContainer.innerHTML += `
             <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
@@ -1403,7 +1409,6 @@
         });
       }
     }
-
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
@@ -1798,31 +1803,29 @@
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
   </script>
-  <!-- ========================================================= -->
-  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (BẤM X ĐỂ TẮT) -->
-  <!-- ========================================================= -->
-  <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header py-2 bg-primary text-white">
-          <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-3">
-          <div class="alert alert-info py-2 px-3 mb-2 small">
-            <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
-            <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ -->
+    <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header py-2 bg-primary text-white">
+            <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
-            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
+          <div class="modal-body p-3">
+            <div class="alert alert-info py-2 px-3 mb-2 small">
+              <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+              <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+            </div>
+            <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
+              <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
+            </div>
+            <div id="cardRecommendList"></div>
           </div>
-          <div id="cardRecommendList"></div>
-        </div>
-        <div class="modal-footer py-1">
-          <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
+          <div class="modal-footer py-1">
+            <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 </body>
 </html>
