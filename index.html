@@ -63,6 +63,15 @@
     .tx-item:last-child { border-bottom: none; }
     .hidden { display: none !important; }
     .method-btn { font-size: 0.78rem; padding: 5px 2px; white-space: nowrap; }
+
+    /* NỔI BẬT KHUNG MERCHANT */
+    .merchant-highlight-box {
+      border: 2px solid #0d6efd !important;
+      background-color: #f0f7ff;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(13, 110, 253, 0.12);
+    }
   </style>
 </head>
 <body>
@@ -198,7 +207,7 @@
             </div>
           </div>
 
-          <!-- FORM CHI TIÊU & THANH TOÁN THẺ TÍCH HỢP (4 TRƯỜNG CHUẨN) -->
+          <!-- FORM CHI TIÊU & THANH TOÁN THẺ TÍCH HỢP -->
           <form id="dataForm" onsubmit="handleFormSubmit(this)">
             <input type="hidden" id="entryType" name="entryType" value="spending">
 
@@ -221,7 +230,7 @@
                   </div>
                   <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch / thanh toán</div>
                   <div class="text-muted small mt-1" id="voiceExampleText" style="font-size: 0.75rem;">
-                    <i class="bi bi-lightbulb text-warning"></i> <span id="voiceExampleSpan">VD: "Tôi mua ở shopee 400k dùng thẻ jcb ultimate mb" hoặc "Thanh toán trực tuyến 2 triệu thẻ VIB"</span>
+                    <i class="bi bi-lightbulb text-warning"></i> <span id="voiceExampleSpan">VD: "Tôi mua ở shopee 400k dùng thẻ jcb ultimate mb"</span>
                   </div>
                   <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
                     <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
@@ -232,38 +241,46 @@
 
               <div id="alertMsg" class="alert alert-danger mt-2 py-2 px-3 small fw-bold shadow-sm" style="display: none;" role="alert"></div>
 
-              <!-- 1. CHỌN THẺ (CARDS B2:B) -->
+              <!-- Ô NỔI BẬT: MERCHANT / CỬA HÀNG -->
+              <div class="mb-3 merchant-highlight-box">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label fw-bold text-primary mb-0 small">
+                    <i class="bi bi-shop me-1 fs-6"></i> Merchant / Cửa Hàng
+                  </label>
+                  <span class="badge bg-success" style="font-size: 0.65rem;">AI Tự Động Gợi Ý</span>
+                </div>
+                <input type="text" class="form-control form-control-sm fw-bold border-primary shadow-sm" id="merchantInput" name="merchant" list="merchantOptions" placeholder="Gõ tên cửa hàng (VD: Shopee, Agoda, Petrolimex...)" oninput="autoMatchCategoryFromMerchant(this.value)">
+                <datalist id="merchantOptions"></datalist>
+                <div class="form-text text-primary small" style="font-size:0.72rem;">
+                  <i class="bi bi-magic"></i> Chỉ cần nhập tên cửa hàng, hệ thống sẽ tự động điền <strong>Danh Mục Con</strong> tương ứng!
+                </div>
+              </div>
+
+              <!-- 1. CHỌN THẺ -->
               <div class="mb-3">
-                <label class="form-label fw-bold small">1. Chọn Thẻ <span class="text-danger">*</span></label>
+                <label class="form-label fw-bold small">Chọn Thẻ <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" id="card" name="card" required></select>
               </div>
 
-              <!-- 2. DANH MỤC CON (CATEGORIES B2:B) -->
+              <!-- 2. DANH MỤC CON -->
               <div class="mb-3">
-                <label class="form-label fw-bold small">2. Danh Mục Con <span class="text-danger">*</span></label>
+                <label class="form-label fw-bold small">Danh Mục Con <span class="text-danger">*</span></label>
                 <input type="text" class="form-control form-control-sm" id="categoryInput" name="category" list="categoryOptions" placeholder="Chọn hoặc nhập danh mục (TTT_ cho thanh toán)" required onchange="handleCategoryChange()">
                 <datalist id="categoryOptions"></datalist>
                 <div id="cardCategoryHelp" class="form-text small"></div>
               </div>
 
-              <!-- 3. SỐ TIỀN (SPENDING_PAYMENTS C:C) -->
+              <!-- 3. SỐ TIỀN -->
               <div class="mb-3">
-                <label class="form-label fw-bold small">3. Số Tiền (VNĐ) <span class="text-danger">*</span></label>
+                <label class="form-label fw-bold small">Số Tiền (VNĐ) <span class="text-danger">*</span></label>
                 <input type="text" class="form-control form-control-sm" id="amount" name="amount" placeholder="Ví dụ: 400000 hoặc -1000000" required oninput="cleanAmountInput(this)">
               </div>
 
-              <!-- 4. MERCHANT / CỬA HÀNG (CATEGORIES C2:C) -->
-              <div class="mb-3">
-                <label class="form-label fw-bold small">4. Merchant / Cửa Hàng</label>
-                <input type="text" class="form-control form-control-sm" id="merchantInput" name="merchant" list="merchantOptions" placeholder="Ví dụ: Shopee, Agoda, Petrolimex...">
-                <datalist id="merchantOptions"></datalist>
-              </div>
-
-              <button type="submit" class="btn btn-primary w-100 mb-4 fw-bold" id="btnSubmit">Lưu Dữ Liệu SPENDING_PAYMENTS</button>
+              <button type="submit" class="btn btn-primary w-100 mb-4 fw-bold" id="btnSubmit">Lưu Giao Dịch SPENDING_PAYMENTS</button>
 
               <div class="card p-2 bg-light border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY</span>
+                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY (`SPENDING_PAYMENTS`)</span>
                   <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
                 </div>
                 <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
@@ -555,6 +572,7 @@
     let currentStatementsData = [];
     let recognitionInstance = null;
     let isProcessingVoice = false;
+    let merchantMapData = {}; // Bản đồ lưu Merchant -> Category
 
     let chartTrendsInstance = null;
     let chartPaymentInstance = null;
@@ -710,6 +728,10 @@
         });
       }
 
+      if (data.merchantCategoryMap) {
+        merchantMapData = data.merchantCategoryMap;
+      }
+
       const cashCatOpt = document.getElementById('cashCategoryOptions');
       if (cashCatOpt && data.cashCategories) {
         cashCatOpt.innerHTML = '';
@@ -724,6 +746,20 @@
       if (!sel) return;
       sel.innerHTML = `<option value="">${defaultText}</option>`;
       list.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    // TỰ ĐỘNG KHỚP CATEGORY KHI TÊN MERCHANT ĐƯỢC NHẬP
+    function autoMatchCategoryFromMerchant(val) {
+      if (!val) return;
+      const cleanVal = val.trim().toLowerCase();
+      
+      for (const [merch, cat] of Object.entries(merchantMapData)) {
+        if (merch.toLowerCase() === cleanVal || cleanVal.includes(merch.toLowerCase())) {
+          document.getElementById('categoryInput').value = cat;
+          handleCategoryChange();
+          break;
+        }
+      }
     }
 
     function switchMainMode(mode) {
@@ -1237,6 +1273,7 @@
       return dStr;
     }
 
+    // TẢI GIAO DỊCH THẺ TỪ TRANG TÍNH SPENDING_PAYMENTS
     function loadRecentTransactions(forceFetch = false) {
       const cacheKey = "app_tx_spending";
       const cached = localStorage.getItem(cacheKey);
@@ -1261,7 +1298,7 @@
     function renderTxList(list) {
       const txList = document.getElementById('txList');
       if (!list || list.length === 0) {
-        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Không có giao dịch thẻ gần đây.</p>';
+        txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Chưa có dữ liệu giao dịch trong bảng SPENDING_PAYMENTS.</p>';
         return;
       }
       
@@ -1273,11 +1310,14 @@
         const colorClass = isPayment ? 'text-success fw-bold' : 'amount-text';
         const sign = isPayment ? '-' : '';
 
+        const merchantInfo = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
+
         html += `
           <div class="tx-item d-flex justify-content-between align-items-center">
             <div>
-              <div class="fw-bold small">${item.date} - ${item.card}</div>
-              <div class="text-muted small">${item.category} ${item.merchant ? '| ' + item.merchant : ''} | <span class="${colorClass}">${sign}${amountFormatted} đ</span></div>
+              <div class="fw-bold small">${item.date} - <span class="text-primary">${item.card}</span></div>
+              <div class="text-dark small">${item.category || 'Chưa phân loại'} ${merchantInfo}</div>
+              <div class="${colorClass} small">${sign}${amountFormatted} đ</div>
             </div>
             <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDelete('${item.type || 'spending'}', ${item.rowIndex}, '${item.date}', '${item.card}', '${amountFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
           </div>`;
@@ -1471,7 +1511,7 @@
       }
 
       const msg = await sendRequest("submitData", { formObject });
-      btn.disabled = false; btn.innerText = 'Lưu Dữ Liệu SPENDING_PAYMENTS';
+      btn.disabled = false; btn.innerText = 'Lưu Giao Dịch SPENDING_PAYMENTS';
 
       if (msg) {
         showAlert(msg, 'success');
@@ -1636,15 +1676,15 @@
           return;
         }
 
-        // TỰ ĐỘNG ĐIỀN 4 TRƯỜNG CHO THẺ (CARDS MANAGEMENT)
+        // TỰ ĐỘNG ĐIỀN DỮ LIỆU TỪ VOICE AI
         document.getElementById('card').value = res.card || "";
         document.getElementById('amount').value = res.amount || "";
-        document.getElementById('categoryInput').value = res.category || "";
         document.getElementById('merchantInput').value = res.merchant || "";
+        document.getElementById('categoryInput').value = res.category || "";
 
         handleCategoryChange();
 
-        showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | DM "${res.category}" | Merchant "${res.merchant}"`, "success");
+        showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
 
       } catch (err) {
         alert("Lỗi xử lý kết nối giọng nói!");
