@@ -71,6 +71,21 @@
       padding: 12px;
       box-shadow: 0 2px 6px rgba(13, 110, 253, 0.12);
     }
+    /* Khung chứa danh sách Log giao dịch dạng cuộn */
+    #txList, #txListCash {
+      max-height: 480px; /* Chiều cao tương đương hiển thị ~10 giao dịch */
+      overflow-y: auto;  /* Bật thanh cuộn dọc khi danh sách dài hơn */
+      padding-right: 4px;
+    }
+    
+    /* Tùy chỉnh thanh cuộn nhỏ gọn (tùy chọn) */
+    #txList::-webkit-scrollbar, #txListCash::-webkit-scrollbar {
+      width: 5px;
+    }
+    #txList::-webkit-scrollbar-thumb, #txListCash::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
