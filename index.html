@@ -64,7 +64,6 @@
     .hidden { display: none !important; }
     .method-btn { font-size: 0.78rem; padding: 5px 2px; white-space: nowrap; }
 
-    /* NỔI BẬT KHUNG MERCHANT */
     .merchant-highlight-box {
       border: 2px solid #0d6efd !important;
       background-color: #f0f7ff;
@@ -101,20 +100,20 @@
           </button>
         </div>
 
+        <!-- ========================================================= -->
         <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
-        <!-- 1. LUỒNG THẺ TÍN DỤNG (CHỈ GỒM 2 TAB: DASHBOARD & THU CHI) -->
+        <!-- ========================================================= -->
         <div id="cardAppContainer">
-          <!-- CHỈ GIỮ 2 TAB CHÍNH -->
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
               <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu Chi & Thanh Toán Thẻ</button></div>
             </div>
           </div>
+
           <!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
-          
-            <!-- 1. THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT LÊN ĐẦU DASHBOARD, KHÔNG CHỜ LOAD DATA) -->
+            <!-- 1. THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT ĐẦU DASHBOARD, DÙNG ĐƯỢC NGAY) -->
             <div class="card p-2 mb-3 border bg-light shadow-sm">
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
@@ -131,17 +130,17 @@
                 <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
               </div>
             </div>
-          
+
             <!-- 2. TỔNG QUAN NỢ THẺ TÍN DỤNG -->
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
             </div>
-          
+
             <div id="loadingDash" class="text-center py-4 text-muted">
               <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
             </div>
-          
+
             <div id="dashContent" style="display: none;">
               <!-- KPI CARDS -->
               <div class="row g-1 g-sm-2 mb-2">
@@ -149,7 +148,7 @@
                 <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
               </div>
-          
+
               <!-- KỲ SAO KÊ THẺ HẠN THỜI -->
               <div class="card bg-light p-2 mb-3 border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -167,7 +166,7 @@
                 </div>
                 <div id="stmtList" class="list-group list-group-flush small" style="max-height: 220px; overflow-y: auto;"></div>
               </div>
-          
+
               <!-- BẢNG TRA CỨU DANH MỤC -->
               <div class="card p-2 border">
                 <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
@@ -193,8 +192,8 @@
               </div>
             </div>
           </div>
-       
-          <!-- FORM CHI TIÊU & THANH TOÁN THẺ TÍCH HỢP -->
+
+          <!-- TAB THU CHI & THANH TOÁN THẺ -->
           <form id="dataForm" onsubmit="handleFormSubmit(this)">
             <input type="hidden" id="entryType" name="entryType" value="spending">
 
@@ -267,7 +266,7 @@
 
               <div class="card p-2 bg-light border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY </span>
+                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY (`SPENDING_PAYMENTS`)</span>
                   <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
                 </div>
                 <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
@@ -299,7 +298,7 @@
             </div>
           </div>
 
-          <!-- DASHBOARD CASH VIRTUALIZATION -->
+          <!-- DASHBOARD CASH -->
           <div id="cashDashboardBlock">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <span class="fw-bold text-success fit-title"><i class="bi bi-graph-up-arrow"></i> DASHBOARD TÀI CHÍNH DÒNG TIỀN</span>
@@ -477,7 +476,7 @@
                     </div>
                     <div class="fw-bold text-dark small" id="voiceStatusTextCash">Bấm nút để nói thông tin Thu / Chi</div>
                     <div class="text-muted small mt-1" style="font-size: 0.75rem;">
-                      <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản" hoặc "Khách trả tiền phòng 500k"
+                      <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản"
                     </div>
                     <div id="liveSpeechBoxCash" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
                       <span class="spinner-grow spinner-grow-sm text-danger me-1"></span>
@@ -550,6 +549,31 @@
     </div>
   </div>
 
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ -->
+  <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2 bg-primary text-white">
+          <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-3">
+          <div class="alert alert-info py-2 px-3 mb-2 small">
+            <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+            <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+          </div>
+          <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
+          </div>
+          <div id="cardRecommendList"></div>
+        </div>
+        <div class="modal-footer py-1">
+          <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4XMEITG97lOrdS7VjXi6J-NOtWih021nolsVzQFozI0k4Rdw/exec";
@@ -559,7 +583,8 @@
     let currentStatementsData = [];
     let recognitionInstance = null;
     let isProcessingVoice = false;
-    let merchantMapData = {}; // Bản đồ lưu Merchant -> Category
+    let silenceTimer = null;
+    let merchantMapData = {};
 
     let chartTrendsInstance = null;
     let chartPaymentInstance = null;
@@ -695,7 +720,7 @@
     }
 
     function applyInitialData(data) {
-      populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
+      populateDropdown('card', data.cards || [], '-- Chọn thẻ (CARDS B2:B) --');
       populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
       populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
       
@@ -735,7 +760,6 @@
       list.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
     }
 
-    // TỰ ĐỘNG KHỚP CATEGORY KHI TÊN MERCHANT ĐƯỢC NHẬP
     function autoMatchCategoryFromMerchant(val) {
       if (!val) return;
       const cleanVal = val.trim().toLowerCase();
@@ -759,11 +783,8 @@
 
       if (!isCard) {
         const isDashActive = document.getElementById('tab-cash-dash').classList.contains('active');
-        if (isDashActive) {
-          loadCashDashboard(false);
-        } else {
-          loadRecentCashTransactions(false);
-        }
+        if (isDashActive) loadCashDashboard(false);
+        else loadRecentCashTransactions(false);
       }
     }
 
@@ -775,23 +796,19 @@
       document.getElementById('cashDashboardBlock').style.display = isDash ? 'block' : 'none';
       document.getElementById('cashInputBlock').style.display = !isDash ? 'block' : 'none';
 
-      if (isDash) {
-        loadCashDashboard(false);
-      } else {
-        setTodayDefaultDates();
-        loadRecentCashTransactions(false);
-      }
+      if (isDash) loadCashDashboard(false);
+      else { setTodayDefaultDates(); loadRecentCashTransactions(false); }
     }
 
     function switchForm(type) {
-      document.querySelectorAll('#mainTab .nav-link').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`tab-${type}`).classList.add('active');
+      const isDash = (type === 'dashboard');
+      document.getElementById('tab-dashboard').classList.toggle('active', isDash);
+      document.getElementById('tab-spending').classList.toggle('active', !isDash);
 
-      document.getElementById('dashboardBlock').style.display = (type === 'dashboard') ? 'block' : 'none';
-      document.getElementById('recommendBlock').style.display = (type === 'recommend') ? 'block' : 'none';
-      document.getElementById('inputFormFields').style.display = (type === 'spending') ? 'block' : 'none';
+      document.getElementById('dashboardBlock').style.display = isDash ? 'block' : 'none';
+      document.getElementById('inputFormFields').style.display = !isDash ? 'block' : 'none';
 
-      if (type === 'spending') {
+      if (!isDash) {
         document.getElementById('entryType').value = 'spending';
         resetVoiceUI();
         loadRecentTransactions(false);
@@ -820,14 +837,13 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // TỰ ĐỘNG BẮT ĐIỀU KIỆN KHI THAY ĐỔI DANH MỤC
     function handleCategoryChange() {
       const catVal = document.getElementById('categoryInput').value.trim();
       const amtInput = document.getElementById('amount');
       const help = document.getElementById('cardCategoryHelp');
       
       let rawVal = amtInput.value.replace(/[^0-9-]/g, '');
-    
+
       if (catVal.toUpperCase().startsWith("TTT_")) {
         if (rawVal && !rawVal.startsWith("-")) {
           amtInput.value = "-" + rawVal.replace(/-/g, '');
@@ -840,6 +856,22 @@
         }
         help.className = "form-text small text-muted";
         help.innerText = "Chi tiêu thẻ -> Số Tiền DƯƠNG (+)";
+      }
+    }
+
+    function cleanAmountInput(input) {
+      const catVal = document.getElementById('categoryInput').value.trim();
+      let raw = input.value.replace(/[^0-9]/g, '');
+      
+      if (!raw) {
+        input.value = '';
+        return;
+      }
+
+      if (catVal.toUpperCase().startsWith("TTT_")) {
+        input.value = '-' + raw;
+      } else {
+        input.value = raw;
       }
     }
 
@@ -900,8 +932,7 @@
     
       if (cached && !forceFetch) {
         try {
-          const list = JSON.parse(cached);
-          renderRecentCashListUI(list);
+          renderRecentCashListUI(JSON.parse(cached));
           return;
         } catch (e) {}
       }
@@ -1261,7 +1292,6 @@
       return dStr;
     }
 
-    // TẢI GIAO DỊCH THẺ TỪ TRANG TÍNH SPENDING_PAYMENTS
     function loadRecentTransactions(forceFetch = false) {
       const cacheKey = "app_tx_spending";
       const cached = localStorage.getItem(cacheKey);
@@ -1330,32 +1360,30 @@
     async function fetchRecommendation() {
       const kw = document.getElementById('recommendInput').value.trim();
       if (!kw) return;
-    
-      // Khởi tạo Bootstrap Modal
+
       const recModalEl = document.getElementById('recommendModal');
       const recModal = new bootstrap.Modal(recModalEl);
       
-      // Hiển thị Popup Modal ngay lập tức
       document.getElementById('loadingRecModal').style.display = 'block';
       document.getElementById('cardRecommendList').innerHTML = '';
       document.getElementById('resMainCat').innerText = '-';
       document.getElementById('resSubCat').innerText = '-';
       recModal.show();
-    
+
       const data = await sendRequest("getCardRecommendation", { keyword: kw });
       document.getElementById('loadingRecModal').style.display = 'none';
-    
+
       if (data) {
         document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
         document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
-    
+
         const listContainer = document.getElementById('cardRecommendList');
         listContainer.innerHTML = '';
         if (!data.cards || data.cards.length === 0) {
           listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
           return;
         }
-    
+
         data.cards.forEach(item => {
           listContainer.innerHTML += `
             <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
@@ -1372,6 +1400,7 @@
         });
       }
     }
+
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
@@ -1480,23 +1509,11 @@
       }
     }
 
-    // XỬ LÝ SỐ TIỀN KHI NHẬP, PASTE HOẶC XÓA
-    function cleanAmountInput(input) {
-      const catVal = document.getElementById('categoryInput').value.trim();
+    const cleanAmountInput = (input) => {
+      let isNegative = input.value.startsWith('-');
       let raw = input.value.replace(/[^0-9]/g, '');
-      
-      if (!raw) {
-        input.value = '';
-        return;
-      }
-    
-      // Nếu Danh mục bắt đầu bằng TTT_ -> Luôn giữ dấu ÂM (-) dù paste hay xóa
-      if (catVal.toUpperCase().startsWith("TTT_")) {
-        input.value = '-' + raw;
-      } else {
-        input.value = raw;
-      }
-    }
+      input.value = (isNegative ? '-' : '') + raw;
+    };
     const formatVND = (val) => typeof val === 'number' ? val.toLocaleString('vi-VN') + ' đ' : val;
 
     async function handleFormSubmit(form) {
@@ -1531,8 +1548,7 @@
     }
 
     function showAlert(msg, type) {
-      const isRecTab = (document.getElementById('recommendBlock').style.display !== 'none');
-      const alert = isRecTab ? document.getElementById('alertMsgRec') : document.getElementById('alertMsg');
+      const alert = document.getElementById('alertMsg');
       if (!alert) return;
 
       alert.className = `alert alert-${type} mb-3 py-2 px-3 small fw-bold shadow-sm border`;
@@ -1545,20 +1561,19 @@
       window.alertTimer = setTimeout(() => { alert.style.display = 'none'; }, 3000);
     }
 
+    // ============================================================================
+    // BỘ XỬ LÝ NHẬN DIỆN GIỌNG NÓI - TỰ ĐỘNG TẮT MIC KHI NGỪNG NÓI
+    // ============================================================================
     function startVoiceRecognition(forcedMode = null) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ giọng nói!"); return; }
+      if (!SpeechRecognition) { alert("Trình duyệt không hỗ trợ nhận diện giọng nói!"); return; }
 
       if (isProcessingVoice) return;
 
+      // Nếu đang bật Mic thì nhấn lần 2 để tắt ngay lập tức
       if (recognitionInstance) {
-        try { 
-          recognitionInstance.onresult = null;
-          recognitionInstance.onerror = null;
-          recognitionInstance.onend = null;
-          recognitionInstance.abort(); 
-        } catch(e){}
-        recognitionInstance = null;
+        resetVoiceUI();
+        return;
       }
 
       const recognition = new SpeechRecognition();
@@ -1582,7 +1597,6 @@
       } else if (isRec) {
         btnVoice = document.getElementById('btnVoiceRec');
         micIcon = document.getElementById('micIconRec');
-        statusText = document.getElementById('voiceStatusTextRec');
         liveBox = document.getElementById('liveSpeechBoxRec');
         liveText = document.getElementById('liveSpeechTextRec');
       } else {
@@ -1593,26 +1607,49 @@
         liveText = document.getElementById('liveSpeechText');
       }
 
-      btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
-      micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
-      statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang nghe...</span>`;
+      // Đổi màu Mic sang Đỏ để báo đang ghi âm
+      if (isRec) {
+        btnVoice.className = "btn btn-danger py-0 px-2 text-white";
+        micIcon.className = "bi bi-record-circle-fill spinner-grow spinner-grow-sm";
+      } else {
+        btnVoice.className = "btn btn-danger rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        micIcon.className = "bi bi-record-circle-fill fs-3 spinner-grow spinner-grow-sm";
+        if (statusText) statusText.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-broadcast"></i> Đang lắng nghe...</span>`;
+      }
 
       liveBox.classList.remove('hidden');
       liveText.innerText = "Đang lắng nghe...";
 
-      let finalTranscript = '';
+      let lastRecognizedText = '';
 
       recognition.onresult = (event) => {
         let interimTranscript = '';
+        let finalTranscript = '';
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
           else interimTranscript += event.results[i][0].transcript;
         }
 
         const displayText = finalTranscript || interimTranscript;
-        liveText.innerText = displayText;
+        if (displayText) {
+          lastRecognizedText = displayText;
+          liveText.innerText = displayText;
+        }
 
+        // Tự động ngắt Mic nếu người dùng im lặng quá 1.2 giây
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (recognitionInstance && !isProcessingVoice) {
+            isProcessingVoice = true;
+            try { recognition.stop(); } catch(e){}
+            processParsedVoiceText(lastRecognizedText || liveText.innerText, currentMode);
+          }
+        }, 1200);
+
+        // Ngắt ngay nếu phát hiện kết quả chính thức (isFinal)
         if (event.results[0].isFinal && !isProcessingVoice) {
+          if (silenceTimer) clearTimeout(silenceTimer);
           isProcessingVoice = true;
           try { recognition.stop(); } catch(e){}
           processParsedVoiceText(finalTranscript || displayText, currentMode);
@@ -1620,8 +1657,9 @@
       };
 
       recognition.onspeechend = () => {
+        if (silenceTimer) clearTimeout(silenceTimer);
         if (!isProcessingVoice) {
-          const textToProcess = liveText.innerText;
+          const textToProcess = lastRecognizedText || liveText.innerText;
           if (textToProcess && textToProcess !== "Đang lắng nghe...") {
             isProcessingVoice = true;
             processParsedVoiceText(textToProcess, currentMode);
@@ -1630,34 +1668,34 @@
       };
 
       recognition.onerror = (event) => {
+        if (silenceTimer) clearTimeout(silenceTimer);
         resetVoiceUI();
-        if (event.error !== 'no-speech') alert("Lỗi nhận diện giọng nói, vui lòng thử lại!");
+        if (event.error !== 'no-speech') alert("Không nhận diện được giọng nói, vui lòng thử lại!");
       };
 
-      try { recognition.start(); } catch(err) { resetVoiceUI(); }
+      try { recognition.start(); } catch (err) { resetVoiceUI(); }
     }
 
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
-    
-      // 1. XỬ LÝ RIÊNG BẰNG JS CHO MODE "RECOMMEND" (MÔ TẢ NGẮN KHÔNG CẦN CHỜ AI LÂU, TỰ NGẮT MIC NGAY)
+
+      // 1. XỬ LÝ NHANH CHO MODE GỢI Ý THẺ
       if (mode === 'recommend') {
         const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
         const finalKw = keywordClean || transcript.trim();
         
         document.getElementById('recommendInput').value = finalKw;
-        resetVoiceUI(); // Dừng ngay Mic
-        
-        fetchRecommendation(); // Mở ngay Popup Modal tìm kiếm
+        resetVoiceUI();
+        fetchRecommendation();
         return;
       }
-    
+
       const isCashMode = (mode === 'cash_spending');
       
       try {
         const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
-    
-        // 2. LUỒNG CASH MANAGEMENT
+
+        // 2. CASH MANAGEMENT
         if (isCashMode) {
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
@@ -1665,115 +1703,91 @@
             
             const targetSelect = document.getElementById('cashTarget');
             targetSelect.value = ""; 
-    
+
             validateKDAmount();
-    
+
             if (res.amount > 0 && res.target) {
               targetSelect.value = res.target;
             }
-    
+
             if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
             else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
             else document.getElementById('mCash').checked = true;
-    
+
             showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
           } else {
             showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
           }
           return;
         }
-    
-        // 3. LUỒNG CARD MANAGEMENT
+
+        // 3. CARD MANAGEMENT
         if (!res || res.success === false) {
           showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
           return;
         }
-    
+
         document.getElementById('card').value = res.card || "";
         document.getElementById('amount').value = res.amount || "";
         document.getElementById('merchantInput').value = res.merchant || "";
         document.getElementById('categoryInput').value = res.category || "";
-    
+
         handleCategoryChange();
-    
+
         showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
-    
+
       } catch (err) {
         alert("Lỗi xử lý kết nối giọng nói!");
       } finally {
         resetVoiceUI();
       }
     }
-    
+
     function resetVoiceUI() {
       isProcessingVoice = false;
+      if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+      
       if (recognitionInstance) {
         try { 
           recognitionInstance.onresult = null;
           recognitionInstance.onerror = null;
-          recognitionInstance.onend = null;
+          recognitionInstance.onspeechend = null;
           recognitionInstance.abort(); 
         } catch(e){}
         recognitionInstance = null;
       }
-    
-      // RESET MIC THU CHI THẺ
+
+      // RESET MIC THỦ CHI THẺ
       const btnVoice = document.getElementById('btnVoice');
       const micIcon = document.getElementById('micIcon');
       const statusText = document.getElementById('voiceStatusText');
       const liveBox = document.getElementById('liveSpeechBox');
-    
+
       if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIcon) micIcon.className = "bi bi-mic-fill fs-4";
       if (statusText) statusText.innerText = "Bấm nút để nói thông tin giao dịch / thanh toán";
       if (liveBox) liveBox.classList.add('hidden');
-    
+
       // RESET MIC CASH
       const btnVoiceCash = document.getElementById('btnVoiceCash');
       const micIconCash = document.getElementById('micIconCash');
       const statusTextCash = document.getElementById('voiceStatusTextCash');
       const liveBoxCash = document.getElementById('liveSpeechBoxCash');
-    
+
       if (btnVoiceCash) btnVoiceCash.className = "btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIconCash) micIconCash.className = "bi bi-mic-fill fs-4";
       if (statusTextCash) statusTextCash.innerText = "Bấm nút để nói thông tin Thu / Chi";
       if (liveBoxCash) liveBoxCash.classList.add('hidden');
-    
-      // RESET MIC GỢI Ý THẺ 1 DÒNG (TẮT ĐỎ NGAY LẬP TỨC)
+
+      // RESET MIC GỢI Ý THẺ
       const btnVoiceRec = document.getElementById('btnVoiceRec');
       const micIconRec = document.getElementById('micIconRec');
       const liveBoxRec = document.getElementById('liveSpeechBoxRec');
-    
+
       if (btnVoiceRec) btnVoiceRec.className = "btn btn-outline-primary py-0 px-2";
       if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
   </script>
-  <!-- ========================================================= -->
-  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (BẤM X ĐỂ TẮT) -->
-  <!-- ========================================================= -->
-  <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header py-2 bg-primary text-white">
-          <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-3">
-          <div class="alert alert-info py-2 px-3 mb-2 small">
-            <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
-            <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
-          </div>
-          <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
-            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
-          </div>
-          <div id="cardRecommendList"></div>
-        </div>
-        <div class="modal-footer py-1">
-          <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
-        </div>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
