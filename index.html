@@ -1360,50 +1360,66 @@
     }
 
     async function fetchRecommendation() {
-      const kw = document.getElementById('recommendInput').value.trim();
-      if (!kw) return;
-
-      // Khởi tạo và mở Popup Modal
-      const recModalEl = document.getElementById('recommendModal');
-      const recModal = new bootstrap.Modal(recModalEl);
+      const inputEl = document.getElementById('recommendInput');
+      if (!inputEl) return;
       
-      document.getElementById('loadingRecModal').style.display = 'block';
-      document.getElementById('cardRecommendList').innerHTML = '';
-      document.getElementById('resMainCat').innerText = '-';
-      document.getElementById('resSubCat').innerText = '-';
+      const kw = inputEl.value.trim();
+      if (!kw) return;
+    
+      // 1. Khởi tạo và hiển thị Modal Popup
+      const recModalEl = document.getElementById('recommendModal');
+      if (!recModalEl) return;
+      
+      const recModal = bootstrap.Modal.getOrCreateInstance(recModalEl);
+      
+      // 2. Reset trạng thái hiển thị trong Modal
+      const loadingEl = document.getElementById('loadingRecModal');
+      const listContainer = document.getElementById('cardRecommendList');
+      const mainCatEl = document.getElementById('resMainCat');
+      const subCatEl = document.getElementById('resSubCat');
+    
+      if (loadingEl) loadingEl.style.display = 'block';
+      if (listContainer) listContainer.innerHTML = '';
+      if (mainCatEl) mainCatEl.innerText = '-';
+      if (subCatEl) subCatEl.innerText = '-';
+    
       recModal.show();
-
+    
+      // 3. Gửi yêu cầu lấy dữ liệu từ Server
       const data = await sendRequest("getCardRecommendation", { keyword: kw });
-      document.getElementById('loadingRecModal').style.display = 'none';
-
+    
+      if (loadingEl) loadingEl.style.display = 'none';
+    
       if (data) {
-        document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
-        document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
-
-        const listContainer = document.getElementById('cardRecommendList');
-        listContainer.innerHTML = '';
-        if (!data.cards || data.cards.length === 0) {
-          listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
-          return;
+        if (mainCatEl) mainCatEl.innerText = data.category?.main || "Chưa xác định";
+        if (subCatEl) subCatEl.innerText = data.category?.sub || "Chưa xác định";
+    
+        if (listContainer) {
+          listContainer.innerHTML = '';
+    
+          if (!data.cards || data.cards.length === 0) {
+            listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
+            return;
+          }
+    
+          // 4. Render danh sách thẻ đề xuất vào Modal
+          data.cards.forEach(item => {
+            listContainer.innerHTML += `
+              <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-bold text-dark small">${item.cardName}</span>
+                  <span class="rate-badge">${item.rate}</span>
+                </div>
+                <div class="text-muted small" style="font-size: 0.75rem;">
+                  <div>• <strong>Kiểu áp dụng:</strong> ${item.applyType}</div>
+                  <div>• <strong>Hoàn max/danh mục:</strong> ${item.maxCat} | <strong>Max/kỳ:</strong> ${item.maxCycle}</div>
+                  ${item.minSpend ? `<div>• <strong>Chi tối thiểu:</strong> ${item.minSpend}</div>` : ''}
+                </div>
+              </div>`;
+          });
         }
-
-        data.cards.forEach(item => {
-          listContainer.innerHTML += `
-            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="fw-bold text-dark small">${item.cardName}</span>
-                <span class="rate-badge">${item.rate}</span>
-              </div>
-              <div class="text-muted small" style="font-size: 0.75rem;">
-                <div>• <strong>Kiểu áp dụng:</strong> ${item.applyType}</div>
-                <div>• <strong>Hoàn max/danh mục:</strong> ${item.maxCat} | <strong>Max/kỳ:</strong> ${item.maxCycle}</div>
-                ${item.minSpend ? `<div>• <strong>Chi tối thiểu:</strong> ${item.minSpend}</div>` : ''}
-              </div>
-            </div>`;
-        });
       }
     }
-    
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
