@@ -1362,6 +1362,7 @@
         }
       }
     }
+    
     async function fetchRecommendation() {
       const kwInput = document.getElementById('recommendInput');
       if (!kwInput) return;
@@ -1699,42 +1700,56 @@
 
       try { recognition.start(); } catch(err) { resetVoiceUI(); }
     }
-    
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
     
       const isCashMode = (mode === 'cash_spending');
       const isRec = (mode === 'recommend');
     
-      // 1. CẬP NHẬT UI THÔNG BÁO AI ĐANG XỬ LÝ DỮ LIỆU
+      // 1. ĐỔI ICON VÀ MÀU MIC SANG TRẠNG THÁI "AI ĐANG XỬ LÝ"
       if (isRec) {
+        const btnVoiceRec = document.getElementById('btnVoiceRec');
+        const micIconRec = document.getElementById('micIconRec');
         const liveBoxRec = document.getElementById('liveSpeechBoxRec');
         const liveTextRec = document.getElementById('liveSpeechTextRec');
+    
+        if (btnVoiceRec) btnVoiceRec.className = "btn btn-primary py-0 px-2";
+        if (micIconRec) micIconRec.className = "bi bi-arrow-repeat spinner-border spinner-border-sm";
         if (liveBoxRec && liveTextRec) {
           liveBoxRec.classList.remove('hidden');
           liveTextRec.innerHTML = `<span class="spinner-border spinner-border-sm text-primary me-1"></span> AI đang phân tích từ khóa...`;
         }
       } else if (isCashMode) {
+        const btnVoiceCash = document.getElementById('btnVoiceCash');
+        const micIconCash = document.getElementById('micIconCash');
         const liveBoxCash = document.getElementById('liveSpeechBoxCash');
         const liveTextCash = document.getElementById('liveSpeechTextCash');
         const statusTextCash = document.getElementById('voiceStatusTextCash');
+    
+        if (btnVoiceCash) btnVoiceCash.className = "btn btn-info rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        if (micIconCash) micIconCash.className = "bi bi-arrow-repeat fs-3 spinner-border spinner-border-sm";
         if (liveBoxCash && liveTextCash) {
           liveBoxCash.classList.remove('hidden');
           liveTextCash.innerHTML = `<span class="spinner-border spinner-border-sm text-success me-1"></span> AI đang bóc tách giao dịch Cash...`;
         }
-        if (statusTextCash) statusTextCash.innerHTML = `<span class="text-success fw-bold">⏳ Đang xử lý...</span>`;
+        if (statusTextCash) statusTextCash.innerHTML = `<span class="text-info fw-bold">⏳ AI đang xử lý...</span>`;
       } else {
+        const btnVoice = document.getElementById('btnVoice');
+        const micIcon = document.getElementById('micIcon');
         const liveBox = document.getElementById('liveSpeechBox');
         const liveText = document.getElementById('liveSpeechText');
         const statusText = document.getElementById('voiceStatusText');
+    
+        if (btnVoice) btnVoice.className = "btn btn-info rounded-circle p-3 shadow mb-2 text-white d-flex align-items-center justify-content-center";
+        if (micIcon) micIcon.className = "bi bi-arrow-repeat fs-3 spinner-border spinner-border-sm";
         if (liveBox && liveText) {
           liveBox.classList.remove('hidden');
           liveText.innerHTML = `<span class="spinner-border spinner-border-sm text-primary me-1"></span> AI đang bóc tách thông tin thẻ...`;
         }
-        if (statusText) statusText.innerHTML = `<span class="text-primary fw-bold">⏳ Đang xử lý...</span>`;
+        if (statusText) statusText.innerHTML = `<span class="text-info fw-bold">⏳ AI đang xử lý...</span>`;
       }
     
-      // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
+      // 2. XỬ LÝ DỮ LIỆU VỚI BACKEND
       if (isRec) {
         const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
         const finalKw = keywordClean || transcript.trim();
@@ -1748,7 +1763,7 @@
       try {
         const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
     
-        // CASH MANAGEMENT
+        // CẬP NHẬT DỮ LIỆU CASH
         if (isCashMode) {
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
@@ -1774,7 +1789,7 @@
           return;
         }
     
-        // CARD MANAGEMENT
+        // CẬP NHẬT DỮ LIỆU SPENDING (THẺ)
         if (!res || res.success === false) {
           showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
           return;
@@ -1795,11 +1810,10 @@
         resetVoiceUI();
       }
     }
-
     function resetVoiceUI() {
       isProcessingVoice = false;
-      if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
-
+      if (typeof silenceTimer !== 'undefined' && silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+    
       if (recognitionInstance) {
         try { 
           recognitionInstance.onresult = null;
@@ -1809,31 +1823,34 @@
         } catch(e){}
         recognitionInstance = null;
       }
-
+    
+      // Khôi phục nút Mic Thẻ Tín Dụng
       const btnVoice = document.getElementById('btnVoice');
       const micIcon = document.getElementById('micIcon');
       const statusText = document.getElementById('voiceStatusText');
       const liveBox = document.getElementById('liveSpeechBox');
-
+    
       if (btnVoice) btnVoice.className = "btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIcon) micIcon.className = "bi bi-mic-fill fs-4";
       if (statusText) statusText.innerText = "Bấm nút để nói thông tin giao dịch / thanh toán";
       if (liveBox) liveBox.classList.add('hidden');
-
+    
+      // Khôi phục nút Mic Dòng Tiền / Cash
       const btnVoiceCash = document.getElementById('btnVoiceCash');
       const micIconCash = document.getElementById('micIconCash');
       const statusTextCash = document.getElementById('voiceStatusTextCash');
       const liveBoxCash = document.getElementById('liveSpeechBoxCash');
-
+    
       if (btnVoiceCash) btnVoiceCash.className = "btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center";
       if (micIconCash) micIconCash.className = "bi bi-mic-fill fs-4";
       if (statusTextCash) statusTextCash.innerText = "Bấm nút để nói thông tin Thu / Chi";
       if (liveBoxCash) liveBoxCash.classList.add('hidden');
-
+    
+      // Khôi phục nút Mic Gợi Ý Thẻ (Ô 1 dòng)
       const btnVoiceRec = document.getElementById('btnVoiceRec');
       const micIconRec = document.getElementById('micIconRec');
       const liveBoxRec = document.getElementById('liveSpeechBoxRec');
-
+    
       if (btnVoiceRec) btnVoiceRec.className = "btn btn-outline-primary py-0 px-2";
       if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
