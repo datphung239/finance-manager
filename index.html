@@ -1227,13 +1227,20 @@
         const amountFormatted = Math.abs(amt).toLocaleString('vi-VN');
         const colorClass = isPayment ? 'text-success fw-bold' : 'amount-text';
         const sign = isPayment ? '-' : '';
+        
+        // Hiển thị Badge Merchant
         const merchantInfo = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
-
+        
+        // Hiển thị Badge Đối Tượng Chi Tiêu (Cột F)
+        const targetInfo = (item.target && item.target !== 'undefined' && item.target.trim() !== '') 
+          ? `<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1">${item.target}</span>` 
+          : '';
+    
         html += `
           <div class="tx-item d-flex justify-content-between align-items-center">
             <div>
               <div class="fw-bold small">${item.date} - <span class="text-primary">${item.card}</span></div>
-              <div class="text-dark small">${item.category || 'Chưa phân loại'} ${merchantInfo}</div>
+              <div class="text-dark small">${item.category || 'Chưa phân loại'} ${merchantInfo} ${targetInfo}</div>
               <div class="${colorClass} small">${sign}${amountFormatted} đ</div>
             </div>
             <button class="btn btn-outline-danger btn-sm py-0 px-2" type="button" onclick="confirmDelete('${item.type || 'spending'}', ${item.rowIndex}, '${item.date}', '${item.card}', '${amountFormatted}')"><i class="bi bi-trash"></i> Xóa</button>
