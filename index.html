@@ -105,44 +105,23 @@
         <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
         <!-- ========================================================= -->
         <div id="cardAppContainer">
-          <!-- THANH TAB CHÍNH CHỈ GỒM 2 TAB -->
+          <!-- CHỈ GIỮ 2 TAB CHÍNH -->
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
-              <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu / Chi Thẻ</button></div>
+              <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu Chi & Thanh Toán Thẻ</button></div>
             </div>
           </div>
-
-          <!-- TAB DASHBOARD CARD -->
+        <!-- TAB DASHBOARD CARD -->
           <div id="dashboardBlock">
-          
-            <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (ĐẶT NGOÀI DASHCONTENT ĐỂ LUÔN HOẠT ĐỘNG TỨC THÌ) -->
-            <div class="card p-2 mb-3 border bg-light shadow-sm">
-              <div class="input-group input-group-sm">
-                <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
-                  <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi Ý Thẻ
-                </span>
-                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onkeyup="if(event.key==='Enter') fetchRecommendation()">
-                <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
-                  <i class="bi bi-mic-fill" id="micIconRec"></i>
-                </button>
-                <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
-              </div>
-              <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
-                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
-                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
-              </div>
-            </div>
-          
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
               <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
             </div>
-          
             <div id="loadingDash" class="text-center py-4 text-muted">
               <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
             </div>
-          
+        
             <div id="dashContent" style="display: none;">
               <!-- KPI CARDS -->
               <div class="row g-1 g-sm-2 mb-2">
@@ -150,7 +129,25 @@
                 <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
                 <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
               </div>
-          
+        
+              <!-- THANH GỢI Ý THẺ TỐI GIẢN 1 DÒNG (INTEGRATED IN DASHBOARD) -->
+              <div class="card p-2 mb-3 border bg-light shadow-sm">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
+                    <i class="bi bi-lightbulb-fill me-1 text-warning"></i> Gợi Ý
+                  </span>
+                  <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onchange="fetchRecommendation()">
+                  <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
+                    <i class="bi bi-mic-fill" id="micIconRec"></i>
+                  </button>
+                  <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
+                </div>
+                <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
+                  <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 0.6rem; height: 0.6rem;"></span>
+                  <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
+                </div>
+              </div>
+        
               <!-- KỲ SAO KÊ THẺ HẠN THỜI -->
               <div class="card bg-light p-2 mb-3 border">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -168,7 +165,7 @@
                 </div>
                 <div id="stmtList" class="list-group list-group-flush small" style="max-height: 220px; overflow-y: auto;"></div>
               </div>
-          
+        
               <!-- BẢNG TRA CỨU DANH MỤC -->
               <div class="card p-2 border">
                 <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
@@ -1362,246 +1359,52 @@
         }
       }
     }
+
     async function fetchRecommendation() {
-
-  const kwInput = document.getElementById('recommendInput');
-
-  if (!kwInput) return;
-
-  const kw = kwInput.value.trim();
-
-  if (!kw) return;
-
-  // Bỏ focus khỏi input
-  if (document.activeElement) {
-    document.activeElement.blur();
-  }
-
-  const recModalEl = document.getElementById('recommendModal');
-
-  if (!recModalEl) return;
-
-  const recModal =
-    bootstrap.Modal.getOrCreateInstance(recModalEl);
-
-  // =====================================================
-  // RESET MODAL
-  // =====================================================
-
-  document.getElementById('loadingRecModal').style.display = 'block';
-
-  document.getElementById('cardRecommendList').innerHTML = '';
-
-  document.getElementById('resMainCat').innerText =
-    'Đang tra cứu...';
-
-  document.getElementById('resSubCat').innerText =
-    'Đang tra cứu...';
-
-  recModal.show();
-
-  try {
-
-    // =====================================================
-    // GỌI GAS
-    // =====================================================
-
-    const response = await sendRequest(
-      "getCardRecommendation",
-      {
-        keyword: kw
+      const kw = document.getElementById('recommendInput').value.trim();
+      if (!kw) return;
+    
+      // Khởi tạo Bootstrap Modal
+      const recModalEl = document.getElementById('recommendModal');
+      const recModal = new bootstrap.Modal(recModalEl);
+      
+      // Hiển thị Popup Modal ngay lập tức
+      document.getElementById('loadingRecModal').style.display = 'block';
+      document.getElementById('cardRecommendList').innerHTML = '';
+      document.getElementById('resMainCat').innerText = '-';
+      document.getElementById('resSubCat').innerText = '-';
+      recModal.show();
+    
+      const data = await sendRequest("getCardRecommendation", { keyword: kw });
+      document.getElementById('loadingRecModal').style.display = 'none';
+    
+      if (data) {
+        document.getElementById('resMainCat').innerText = data.category.main || "Chưa xác định";
+        document.getElementById('resSubCat').innerText = data.category.sub || "Chưa xác định";
+    
+        const listContainer = document.getElementById('cardRecommendList');
+        listContainer.innerHTML = '';
+        if (!data.cards || data.cards.length === 0) {
+          listContainer.innerHTML = '<p class="text-center text-muted py-2 small">Không tìm thấy thẻ có ưu đãi phù hợp.</p>';
+          return;
+        }
+    
+        data.cards.forEach(item => {
+          listContainer.innerHTML += `
+            <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-dark small">${item.cardName}</span>
+                <span class="rate-badge">${item.rate}</span>
+              </div>
+              <div class="text-muted small" style="font-size: 0.75rem;">
+                <div>• <strong>Kiểu áp dụng:</strong> ${item.applyType}</div>
+                <div>• <strong>Hoàn max/danh mục:</strong> ${item.maxCat} | <strong>Max/kỳ:</strong> ${item.maxCycle}</div>
+                ${item.minSpend ? `<div>• <strong>Chi tối thiểu:</strong> ${item.minSpend}</div>` : ''}
+              </div>
+            </div>`;
+        });
       }
-    );
-
-    console.log("Recommendation RAW:", response);
-
-    // =====================================================
-    // HỖ TRỢ NHIỀU KIỂU RESPONSE
-    // =====================================================
-
-    let res = response;
-
-    // Trường hợp:
-    // { success:true, data:{...} }
-    if (
-      response &&
-      response.data &&
-      typeof response.data === 'object'
-    ) {
-      res = response.data;
-    }
-
-    // Trường hợp:
-    // { success:true, result:{...} }
-    else if (
-      response &&
-      response.result &&
-      typeof response.result === 'object'
-    ) {
-      res = response.result;
-    }
-
-    console.log("Recommendation DATA:", res);
-
-    // =====================================================
-    // TẮT LOADING
-    // =====================================================
-
-    document.getElementById('loadingRecModal').style.display = 'none';
-
-    // =====================================================
-    // KIỂM TRA RESPONSE
-    // =====================================================
-
-    if (!res) {
-
-      document.getElementById('resMainCat').innerText =
-        'Chưa xác định';
-
-      document.getElementById('resSubCat').innerText =
-        'Chưa xác định';
-
-      document.getElementById('cardRecommendList').innerHTML =
-        '<p class="text-center text-danger py-3 small m-0">' +
-        'Không nhận được dữ liệu từ máy chủ.' +
-        '</p>';
-
-      return;
-    }
-
-    // =====================================================
-    // LẤY CATEGORY
-    // =====================================================
-
-    const category = res.category || {};
-
-    const mainText =
-      category.main ||
-      "Chưa xác định";
-
-    const subText =
-      category.sub ||
-      "Chưa xác định";
-
-    document.getElementById('resMainCat').innerText =
-      mainText;
-
-    document.getElementById('resSubCat').innerText =
-      subText;
-
-    // =====================================================
-    // LẤY DANH SÁCH THẺ
-    // =====================================================
-
-    const cards = Array.isArray(res.cards)
-      ? res.cards
-      : [];
-
-    const listContainer =
-      document.getElementById('cardRecommendList');
-
-    listContainer.innerHTML = '';
-
-    // Không có thẻ
-    if (cards.length === 0) {
-
-      listContainer.innerHTML =
-        '<p class="text-center text-muted py-3 small m-0">' +
-        'Không tìm thấy thẻ có ưu đãi phù hợp.' +
-        '</p>';
-
-      return;
-    }
-
-    // =====================================================
-    // HIỂN THỊ THẺ
-    // =====================================================
-
-    cards.forEach(item => {
-
-      const cardName = item.cardName || '';
-
-      const rate = item.rate || '';
-
-      const applyType = item.applyType || '';
-
-      const maxCat = item.maxCat || '';
-
-      const maxCycle = item.maxCycle || '';
-
-      const minSpend = item.minSpend || '';
-
-      listContainer.innerHTML += `
-        <div class="recommend-card mb-2 p-2 border-start border-4 border-primary bg-light rounded shadow-sm">
-
-          <div class="d-flex justify-content-between align-items-center mb-1">
-
-            <span class="fw-bold text-dark small">
-              ${escapeHtml(cardName)}
-            </span>
-
-            <span class="rate-badge">
-              ${escapeHtml(rate)}
-            </span>
-
-          </div>
-
-          <div class="text-muted small" style="font-size:0.75rem;">
-
-            <div>
-              • <strong>Kiểu áp dụng:</strong>
-              ${escapeHtml(applyType)}
-            </div>
-
-            <div>
-              • <strong>Hoàn max/danh mục:</strong>
-              ${escapeHtml(maxCat)}
-              |
-              <strong>Max/kỳ:</strong>
-              ${escapeHtml(maxCycle)}
-            </div>
-
-            ${
-              minSpend
-              ? `
-                <div>
-                  • <strong>Chi tối thiểu:</strong>
-                  ${escapeHtml(minSpend)}
-                </div>
-              `
-              : ''
-            }
-
-          </div>
-
-        </div>
-      `;
-    });
-
-  } catch (error) {
-
-    console.error(
-      "Lỗi fetchRecommendation:",
-      error
-    );
-
-    document.getElementById('loadingRecModal').style.display = 'none';
-
-    document.getElementById('resMainCat').innerText =
-      'Lỗi';
-
-    document.getElementById('resSubCat').innerText =
-      'Không thể lấy dữ liệu';
-
-    document.getElementById('cardRecommendList').innerHTML =
-      `
-      <p class="text-center text-danger py-3 small m-0">
-        ${escapeHtml(error.message || 'Có lỗi xảy ra.')}
-      </p>
-      `;
-
-  }
-}
+    }    
     async function loadDashboard(fetchServer = false) {
       if (fetchServer) {
         const data = await sendRequest("getDashboardData");
@@ -2041,7 +1844,9 @@
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
   </script>
-  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (ĐÃ SỬA LỖI FOCUS & ARIA) -->
+  <!-- ========================================================= -->
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ (BẤM X ĐỂ TẮT) -->
+  <!-- ========================================================= -->
   <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
