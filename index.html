@@ -922,7 +922,7 @@
         }
       });
     }
-    
+        // 2. Render Log Cash
     function renderRecentCashListUI(list) {
       const txList = document.getElementById('txListCash');
       if (!txList) return;
@@ -1202,6 +1202,7 @@
       });
     }
 
+    // 1. Render Log Thẻ
     function renderTxList(list) {
       const txList = document.getElementById('txList');
       if (!txList) return;
@@ -1229,7 +1230,6 @@
           </div>`;
       }).join('') + '</div>';
     }
-
     async function confirmDelete(type, rowIndex, date, card, amount) {
       if (confirm(`Bạn có chắc chắn muốn XÓA giao dịch này?\n\n- Ngày: ${date}\n- Thẻ: ${card}\n- Số tiền: ${amount} đ`)) {
         document.getElementById('loadingTx').style.display = 'block';
@@ -1723,15 +1723,13 @@
       if (micIconRec) micIconRec.className = "bi bi-mic-fill";
       if (liveBoxRec) liveBoxRec.classList.add('hidden');
     }
-    // Hàm bổ trợ ép chuẩn ngày dd/MM/yyyy
+    // Hàm bổ trợ hiển thị chuẩn ngày dd/MM/yyyy ở Client
     const formatDate = (str) => {
       if (!str) return '';
       const clean = str.toString().replace("'", "").trim();
       const p = clean.includes('/') ? clean.split('/') : clean.split('-');
       if (p.length !== 3) return clean;
-      // Nếu là YYYY-MM-DD
       if (clean.includes('-')) return `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
-      // Nếu là D/M/YYYY hoặc DD/MM/YYYY
       return `${p[0].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[2]}`;
     };
   </script>
