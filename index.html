@@ -289,6 +289,7 @@
               </div>
 
               <!-- VOICE AI THẺ (TONE XANH DƯƠNG) -->
+              <!-- VOICE AI THẺ (TONE XANH DƯƠNG) -->
               <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
                 <div class="card-body p-2 text-center">
                   <div class="d-flex justify-content-center w-100 mb-2">
@@ -297,9 +298,13 @@
                     </button>
                   </div>
                   <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch / thanh toán</div>
-                  <div class="text-muted small mt-1" id="voiceExampleText" style="font-size: 0.75rem;">
-                    <i class="bi bi-lightbulb text-warning"></i> <span id="voiceExampleSpan">VD: "Tôi mua ở shopee 400k dùng thẻ jcb ultimate mb"</span>
+                  
+                  <!-- CẬP NHẬT CÂU VÍ DỤ RÕ RÀNG HƠN -->
+                  <div class="text-muted small mt-1 text-start px-2" id="voiceExampleText" style="font-size: 0.72rem; line-height: 1.4;">
+                    <div><i class="bi bi-lightbulb text-warning"></i> <strong>Chi:</strong> "Tôi mua ở Shopee 400k dùng thẻ JCB Ultimate MB"</div>
+                    <div><i class="bi bi-lightbulb text-warning"></i> <strong>TT thẻ:</strong> "Chuyển khoản trả dư nợ thẻ JCB MB 1 triệu"</div>
                   </div>
+              
                   <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
                     <span id="liveSpeechText" class="fst-italic text-dark">Đang lắng nghe...</span>
                   </div>
@@ -314,7 +319,7 @@
                   <label class="form-label fw-bold text-primary mb-0 small">
                     <i class="bi bi-shop me-1 fs-6"></i> Merchant / Cửa Hàng
                   </label>
-                  <span class="badge bg-success" style="font-size: 0.65rem;">AI Tự Động Gợi Ý</span>
+                  <span class="badge bg-primary" style="font-size: 0.65rem;">AI Tự Động Gợi Ý</span>
                 </div>
                 <input type="text" class="form-control form-control-sm fw-bold border-primary shadow-sm" id="merchantInput" name="merchant" list="merchantOptions" placeholder="Gõ tên cửa hàng (VD: Shopee, Agoda, Petrolimex...)" oninput="autoMatchCategoryFromMerchant(this.value)">
                 <datalist id="merchantOptions"></datalist>
@@ -558,6 +563,7 @@
                 </div>
 
                 <!-- Voice AI Cash (TONE XANH LÁ) -->
+                <!-- Voice AI Cash (TONE XANH LÁ) -->
                 <div class="card mb-3 border-success bg-light">
                   <div class="card-body p-2 text-center">
                     <div class="d-flex justify-content-center w-100 mb-2">
@@ -566,9 +572,13 @@
                       </button>
                     </div>
                     <div class="fw-bold text-dark small" id="voiceStatusTextCash">Bấm nút để nói thông tin Thu / Chi</div>
-                    <div class="text-muted small mt-1" style="font-size: 0.75rem;">
-                      <i class="bi bi-lightbulb text-warning"></i> VD: "Ăn tối với người yêu 420k chuyển khoản"
+                    
+                    <!-- CẬP NHẬT CÂU VÍ DỤ RÕ RÀNG HƠN CHO CASH -->
+                    <div class="text-muted small mt-1 text-start px-2" style="font-size: 0.72rem; line-height: 1.4;">
+                      <div><i class="bi bi-lightbulb text-warning"></i> <strong>Chi sinh hoạt:</strong> "Ăn tối với người yêu 420k chuyển khoản"</div>
+                      <div><i class="bi bi-lightbulb text-warning"></i> <strong>Thu KD:</strong> "Thu tiền cà phê kinh doanh 5 triệu tiền mặt"</div>
                     </div>
+                
                     <div id="liveSpeechBoxCash" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
                       <span id="liveSpeechTextCash" class="fst-italic text-dark">Đang lắng nghe...</span>
                     </div>
