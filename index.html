@@ -1699,27 +1699,56 @@
 
       try { recognition.start(); } catch(err) { resetVoiceUI(); }
     }
-
+    
     async function processParsedVoiceText(transcript, mode) {
       if (!transcript || transcript === "Đang lắng nghe...") { resetVoiceUI(); return; }
-
-      // 1. MODE GỢI Ý THẺ
-      if (mode === 'recommend') {
+    
+      const isCashMode = (mode === 'cash_spending');
+      const isRec = (mode === 'recommend');
+    
+      // 1. CẬP NHẬT UI THÔNG BÁO AI ĐANG XỬ LÝ DỮ LIỆU
+      if (isRec) {
+        const liveBoxRec = document.getElementById('liveSpeechBoxRec');
+        const liveTextRec = document.getElementById('liveSpeechTextRec');
+        if (liveBoxRec && liveTextRec) {
+          liveBoxRec.classList.remove('hidden');
+          liveTextRec.innerHTML = `<span class="spinner-border spinner-border-sm text-primary me-1"></span> AI đang phân tích từ khóa...`;
+        }
+      } else if (isCashMode) {
+        const liveBoxCash = document.getElementById('liveSpeechBoxCash');
+        const liveTextCash = document.getElementById('liveSpeechTextCash');
+        const statusTextCash = document.getElementById('voiceStatusTextCash');
+        if (liveBoxCash && liveTextCash) {
+          liveBoxCash.classList.remove('hidden');
+          liveTextCash.innerHTML = `<span class="spinner-border spinner-border-sm text-success me-1"></span> AI đang bóc tách giao dịch Cash...`;
+        }
+        if (statusTextCash) statusTextCash.innerHTML = `<span class="text-success fw-bold">⏳ Đang xử lý...</span>`;
+      } else {
+        const liveBox = document.getElementById('liveSpeechBox');
+        const liveText = document.getElementById('liveSpeechText');
+        const statusText = document.getElementById('voiceStatusText');
+        if (liveBox && liveText) {
+          liveBox.classList.remove('hidden');
+          liveText.innerHTML = `<span class="spinner-border spinner-border-sm text-primary me-1"></span> AI đang bóc tách thông tin thẻ...`;
+        }
+        if (statusText) statusText.innerHTML = `<span class="text-primary fw-bold">⏳ Đang xử lý...</span>`;
+      }
+    
+      // 2. XỬ LÝ DỮ LIỆU TỪ VOICETEXT
+      if (isRec) {
         const keywordClean = transcript.replace(/(hôm nay|mua|sắm|ở|tại|bằng|dùng|thẻ|cho|tôi|tìm)/gi, '').trim();
         const finalKw = keywordClean || transcript.trim();
         
         document.getElementById('recommendInput').value = finalKw;
         resetVoiceUI();
-        fetchRecommendation(); // Mở ngay Popup Modal
+        fetchRecommendation();
         return;
       }
-
-      const isCashMode = (mode === 'cash_spending');
-      
+    
       try {
         const res = await sendRequest("parseVoiceInput", { text: transcript, mode });
-
-        // 2. CASH MANAGEMENT
+    
+        // CASH MANAGEMENT
         if (isCashMode) {
           if (res && res.success) {
             document.getElementById('cashAmount').value = res.amount;
@@ -1727,39 +1756,39 @@
             
             const targetSelect = document.getElementById('cashTarget');
             targetSelect.value = ""; 
-
+    
             validateKDAmount();
-
+    
             if (res.amount > 0 && res.target) {
               targetSelect.value = res.target;
             }
-
+    
             if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
             else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
             else document.getElementById('mCash').checked = true;
-
+    
             showAlertCash(`AI đã điền: "${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
           } else {
             showAlertCash(`⚠️ ${(res && res.message) || 'Không bóc tách được dữ liệu!'}`, "danger");
           }
           return;
         }
-
-        // 3. CARD MANAGEMENT
+    
+        // CARD MANAGEMENT
         if (!res || res.success === false) {
           showAlert(`⚠️ ${(res && res.message) || 'Không thể bóc tách dữ liệu!'}`, "danger");
           return;
         }
-
+    
         document.getElementById('card').value = res.card || "";
         document.getElementById('amount').value = res.amount || "";
         document.getElementById('merchantInput').value = res.merchant || "";
         document.getElementById('categoryInput').value = res.category || "";
-
+    
         handleCategoryChange();
-
+    
         showAlert(`AI đã tự động phân tích: Thẻ "${res.card}" | Merchant "${res.merchant}" | DM "${res.category}"`, "success");
-
+    
       } catch (err) {
         alert("Lỗi xử lý kết nối giọng nói!");
       } finally {
