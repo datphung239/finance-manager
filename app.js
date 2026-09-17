@@ -142,8 +142,8 @@ async function fetchInitialAppDataServer() {
   sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
   sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => list && localStorage.setItem("app_tx_cash", JSON.stringify(list)));
 }
-
 function applyInitialData(data) {
+  // Populate dropdowns cho Thẻ
   populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
   populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
   populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
@@ -168,14 +168,13 @@ function applyInitialData(data) {
   // 2. Datalist Danh mục & Merchant cho Dòng Tiền Mặt / Bank (CASH MANAGEMENT)
   const cashCatOpt = document.getElementById('cashCategoryOptions');
   if (cashCatOpt && data.cashCategories) {
-    cashCatOpt.innerHTML = '';
-    // Đảm bảo chỉ lặp danh mục thuộc CASH MANAGEMENT B2:B
+    cashCatOpt.innerHTML = ''; // Xóa sạch dữ liệu cũ
+    // Đảm bảo chỉ lặp qua danh mục thuộc CASH MANAGEMENT B2:B
     data.cashCategories.forEach(item => { cashCatOpt.innerHTML += `<option value="${item}">`; });
   }
 
   const cashMerchOpt = document.getElementById('cashMerchantOptions');
   if (cashMerchOpt && data.cashMerchants) {
-    cashMerchOpt.innerHTML = '';
     cashMerchOpt.innerHTML = '';
     data.cashMerchants.forEach(item => { cashMerchOpt.innerHTML += `<option value="${item}">`; });
   }
