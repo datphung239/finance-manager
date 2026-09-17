@@ -147,7 +147,21 @@ function applyInitialData(data) {
   populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
   populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
   populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
-
+  // RENDER LINH HOẠT ĐỐI TƯỢNG CHI TIÊU CHO CARD
+  const cardTargetSelect = document.getElementById('cardTarget');
+  if (cardTargetSelect) {
+    cardTargetSelect.innerHTML = '<option value="">Bản thân (Mặc định)</option>' +
+      '<option value="Bạn Bè">Bạn Bè</option>' +
+      '<option value="Gia Đình">Gia Đình</option>' +
+      '<option value="Người Yêu">Người Yêu</option>';
+    
+    // Đổ danh sách CP- từ sheet Cash sang
+    if (data.cashCPCategories && data.cashCPCategories.length > 0) {
+      data.cashCPCategories.forEach(cpItem => {
+        cardTargetSelect.innerHTML += `<option value="${cpItem}">${cpItem}</option>`;
+      });
+    }
+  }
   // 1. Datalist Danh mục & Merchant cho Thẻ Tín Dụng (CARDS MANAGEMENT)
   const catOpt = document.getElementById('categoryOptions');
   if (catOpt && data.categories) {
