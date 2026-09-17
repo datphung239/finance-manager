@@ -197,7 +197,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4X
       for (const [merch, cat] of Object.entries(map)) {
         if (merch.toLowerCase() === cleanVal || cleanVal.includes(merch.toLowerCase())) {
           document.getElementById(catFieldId).value = cat;
-          if (type === 'cash') validateKDAmount();
+          if (type === 'cash') validateDTAmount();
           else handleCategoryChange();
           break;
         }
@@ -288,20 +288,20 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4X
       }
     }
 
-    function validateKDAmount() {
+    function validateDTAmount() {
       const catInput = document.getElementById('cashCategory').value.trim();
       const amtInput = document.getElementById('cashAmount');
       const targetSelect = document.getElementById('cashTarget');
       const help = document.getElementById('amountHelp');
 
       let val = amtInput.value.replace(/[^0-9-]/g, '');
-      const isKD = catInput.toUpperCase().startsWith("KD-");
+      const isDT = catInput.toUpperCase().startsWith("DT-");
 
-      if (isKD || (val && val.startsWith("-"))) {
+    if (isDT || (val && val.startsWith("-"))) {
         if (val && !val.startsWith("-")) {
           amtInput.value = "-" + val;
         }
-        targetSelect.value = "";
+        targetSelect.value = "Kinh Doanh"; // Mặc định Kinh Doanh theo Yêu cầu 3
         targetSelect.disabled = true;
         help.className = "form-text small text-success fw-bold";
         help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Khóa Đối tượng chi";
@@ -1087,7 +1087,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4X
 
             const targetSelect = document.getElementById('cashTarget');
             targetSelect.value = ""; 
-            validateKDAmount();
+            validateDTAmount();
 
             if (res.amount > 0 && res.target) {
               targetSelect.value = res.target;
