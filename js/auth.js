@@ -1,3 +1,5 @@
+// js/auth.js - Quản lý xác thực Google ID Token
+
 function initAuth() {
   const savedToken = localStorage.getItem("google_id_token");
   if (savedToken) {
@@ -11,50 +13,84 @@ function initAuth() {
 function showLoginPrompt() {
   updateUI("", false);
   if (window.google?.accounts?.id) {
+    // Hủy các instance cũ đang treo để tránh bị khựng popup
+    google.accounts.id.cancel();
+
     google.accounts.id.initialize({
       client_id: CLIENT_ID,
-      callback: handleCredentialResponse
+      callback: handleCredentialResponse,
+      auto_select: false // Tránh tự động chọn làm treo phiên
     });
-    google.accounts.id.renderButton(
-      document.getElementById("google-btn-container"),
-      { theme: "outline", size: "medium", text: "signin_with" }
-    );
+
+    const btnContainer = document.getElementById("google-btn-container");
+    if (btnContainer) {
+      btnContainer.innerHTML = ''; // Làm sạch container trước khi render nút mới
+      google.accounts.id.renderButton(
+        btnContainer,
+        { theme: "outline", size: "large", text: "signin_with" }
+      );
+    }
   }
 }
 
-function handleCredentialResponse(response) {
-  if (response.credential) {
+async function handleCredentialResponse(response) {
+  if (response && response.credential) {
     googleToken = response.credential;
     localStorage.setItem("google_id_token", googleToken);
-    verifyAndProceed();
+    
+    // Hiển thị trạng thái đang xử lý để không bị cảm giác khựng
+    const userEmailEl = document.getElementById("user-email");
+    if (userEmailEl) userEmailEl.textContent = "Đang xác thực...";
+    
+    await verifyAndProceed();
   }
 }
 
 async function verifyAndProceed() {
+  if (!googleToken) {
+    showLoginPrompt();
+    return;
+  }
+
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       body: JSON.stringify({ action: "verifyAuth", token: googleToken })
     });
+    
     const data = await res.json();
+    
     if (!data.success) {
       alert(`Lỗi truy cập: ${data.message || 'Tài khoản không có quyền!'}`);
-      logout(); return;
+      logout();
+      return;
     }
+
+    // Xác thực thành công -> Cập nhật UI & Tải dữ liệu App
     updateUI(data.email || 'User', true);
     await fetchInitialAppDataServer();
+
   } catch (err) {
-    alert("Lỗi xác thực quyền với Server!");
+    console.error("Lỗi xác thực Server:", err);
+    // Nếu token hết hạn hoặc lỗi mạng, xóa token cũ và cho đăng nhập lại
     logout();
   }
 }
 
 function updateUI(email, isLoggedIn) {
-  document.getElementById("user-email").textContent = email;
-  document.getElementById("google-btn-container").classList.toggle("hidden", isLoggedIn);
-  document.getElementById("user-info").classList.toggle("hidden", !isLoggedIn);
-  document.getElementById("app-container").classList.toggle("hidden", !isLoggedIn);
-  if (isLoggedIn && window.google?.accounts?.id) google.accounts.id.cancel();
+  const emailEl = document.getElementById("user-email");
+  const btnContainer = document.getElementById("google-btn-container");
+  const userInfo = document.getElementById("user-info");
+  const appContainer = document.getElementById("app-container");
+
+  if (emailEl) emailEl.textContent = email;
+  if (btnContainer) btnContainer.classList.toggle("hidden", isLoggedIn);
+  if (userInfo) userInfo.classList.toggle("hidden", !isLoggedIn);
+  if (appContainer) appContainer.classList.toggle("hidden", !isLoggedIn);
+
+  if (isLoggedIn && window.google?.accounts?.id) {
+    google.accounts.id.cancel(); // Đóng hẳn prompt nếu đã vào app
+  }
 }
 
 function logout() {
