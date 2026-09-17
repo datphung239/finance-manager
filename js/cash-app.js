@@ -125,55 +125,88 @@ async function loadCashDashboard(fetchServer = false) {
     renderCashDashboard(data);
   }
 }
-
 function renderCashDashboard(d) {
+  // 1. Hiển thị container lên trước để Canvas có kích thước thật
+  document.getElementById('loadingCashDash').style.display = 'none';
+  document.getElementById('cashDashContent').style.display = 'block';
+
+  // 2. Điền thông số KPI & Bảng biểu
   document.getElementById('cashTotalRev').innerText = formatVND(d.period.totalRevenue);
   document.getElementById('cashTotalExp').innerText = formatVND(d.period.totalExpense);
+  
+  // ... (Gắn các dữ liệu text khác) ...
 
-  const filterStart = document.getElementById('cashFilterStart');
-  const filterEnd = document.getElementById('cashFilterEnd');
-  if (filterStart && d.period.startDate) filterStart.value = convertDisplayToInputDate(d.period.startDate);
-  if (filterEnd && d.period.endDate) filterEnd.value = convertDisplayToInputDate(d.period.endDate);
+  // 3. VẼ CHART 1: Biến Động Chi Tiêu 4 Tháng (Line/Bar Chart)
+  if (chartTrendsInstance) chartTrendsInstance.destroy();
+  const ctxTrends = document.getElementById('chartMonthTrends')?.getContext('2d');
+  if (ctxTrends && d.monthTrends) {
+    chartTrendsInstance = new Chart(ctxTrends, {
+      type: 'bar',
+      data: {
+        labels: d.monthTrends.map(m => m.month),
+        datasets: [{
+          label: 'Chi tiêu (đ)',
+          data: d.monthTrends.map(m => m.amount),
+          backgroundColor: '#198754',
+          borderRadius: 4
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
 
-  const payMonthInput = document.getElementById('cashPaymentMonth');
-  if (payMonthInput && d.paymentData.filterMonth) payMonthInput.value = convertDisplayToInputDate(d.paymentData.filterMonth);
+  // 4. VẼ CHART 2: Tỷ Lệ Hình Thức TT (Doughnut Chart)
+  if (chartPaymentInstance) chartPaymentInstance.destroy();
+  const ctxPayment = document.getElementById('chartPaymentMethods')?.getContext('2d');
+  if (ctxPayment && d.paymentData?.list) {
+    chartPaymentInstance = new Chart(ctxPayment, {
+      type: 'doughnut',
+      data: {
+        labels: d.paymentData.list.map(p => p.method),
+        datasets: [{
+          data: d.paymentData.list.map(p => p.amount),
+          backgroundColor: ['#198754', '#0dcaf0', '#ffc107', '#6c757d']
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
 
-  const ratioMonthInput = document.getElementById('cashRatioMonth');
-  if (ratioMonthInput && d.ratioTableData.filterMonth) ratioMonthInput.value = convertDisplayToInputDate(d.ratioTableData.filterMonth);
+  // 5. VẼ CHART 3: Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng
+  if (chartTargetInstance) chartTargetInstance.destroy();
+  const ctxTarget = document.getElementById('chartTargetData')?.getContext('2d');
+  if (ctxTarget && d.targetData?.list) {
+    chartTargetInstance = new Chart(ctxTarget, {
+      type: 'bar',
+      data: {
+        labels: d.targetData.list.map(t => t.target),
+        datasets: [
+          { label: d.targetData.months[0] || 'Tháng này', data: d.targetData.list.map(t => t.m1Amt), backgroundColor: '#198754' },
+          { label: d.targetData.months[1] || 'Tháng trước', data: d.targetData.list.map(t => t.m2Amt), backgroundColor: '#20c997' },
+          { label: d.targetData.months[2] || 'Tháng cũ', data: d.targetData.list.map(t => t.m3Amt), backgroundColor: '#0dcaf0' }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
 
-  document.getElementById('thRatioM1').innerText = d.ratioTableData.months[0] || '-';
-  document.getElementById('thRatioM2').innerText = d.ratioTableData.months[1] || '-';
-  document.getElementById('thRatioM3').innerText = d.ratioTableData.months[2] || '-';
-
-  document.getElementById('tdRevM1').innerText = formatVND(d.ratioTableData.revenue[0]);
-  document.getElementById('tdRevM2').innerText = formatVND(d.ratioTableData.revenue[1]);
-  document.getElementById('tdRevM3').innerText = formatVND(d.ratioTableData.revenue[2]);
-
-  document.getElementById('tdExpM1').innerText = formatVND(d.ratioTableData.expense[0]);
-  document.getElementById('tdExpM2').innerText = formatVND(d.ratioTableData.expense[1]);
-  document.getElementById('tdExpM3').innerText = formatVND(d.ratioTableData.expense[2]);
-
-  document.getElementById('tdPctM1').innerText = d.ratioTableData.ratio[0];
-  document.getElementById('tdPctM2').innerText = d.ratioTableData.ratio[1];
-  document.getElementById('tdPctM3').innerText = d.ratioTableData.ratio[2];
-
-  document.getElementById('cashTxCount').innerText = d.frequencyData.txCount + " lần";
-  document.getElementById('cashAvgAmt').innerText = formatVND(d.frequencyData.avgAmt);
-  document.getElementById('cashMaxAmt').innerText = formatVND(d.frequencyData.maxAmt);
-}
-
-async function applyCashFilters() {
-  const filterStart = document.getElementById('cashFilterStart').value;
-  const filterEnd = document.getElementById('cashFilterEnd').value;
-  const payMonth = document.getElementById('cashPaymentMonth').value;
-  const ratioMonth = document.getElementById('cashRatioMonth').value;
-
-  const data = await sendRequest("updateCashDashboardFilters", {
-    filterStart, filterEnd, payMonth, ratioMonth
-  });
-
-  if (data) {
-    localStorage.setItem("app_cash_dash_data", JSON.stringify(data));
-    renderCashDashboard(data);
+  // 6. VẼ CHART 4: Chi Tiêu Hằng Ngày
+  if (chartDailyInstance) chartDailyInstance.destroy();
+  const ctxDaily = document.getElementById('chartDailyList')?.getContext('2d');
+  if (ctxDaily && d.dailyData?.list) {
+    chartDailyInstance = new Chart(ctxDaily, {
+      type: 'line',
+      data: {
+        labels: d.dailyData.list.map(i => i.date),
+        datasets: [{
+          label: 'Số tiền chi',
+          data: d.dailyData.list.map(i => i.amount),
+          borderColor: '#198754',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
   }
 }
