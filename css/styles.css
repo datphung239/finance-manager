@@ -1,0 +1,103 @@
+#cardAppContainer .nav-pills .nav-link {
+  font-size: 0.82rem; font-weight: 600; padding: 8px 4px; border-radius: 8px;
+  color: #0d6efd; background-color: #f8f9fa; border: 1px solid #0d6efd;
+  display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%;
+}
+#cardAppContainer .nav-pills .nav-link.active { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+
+#cashAppContainer .nav-pills .nav-link {
+  font-size: 0.82rem; font-weight: 600; padding: 8px 4px; border-radius: 8px;
+  color: #198754; background-color: #f8f9fa; border: 1px solid #198754;
+  display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%;
+}
+#cashAppContainer .nav-pills .nav-link.active { background-color: #198754; color: #fff; border-color: #198754; }
+
+.btn-main-mode { white-space: nowrap !important; font-size: 0.85rem; padding: 8px 4px; }
+.bg-purple { background-color: #6f42c1 !important; color: #fff; }
+.btn-check:checked + .btn-outline-purple { background-color: #6f42c1 !important; color: #fff !important; border-color: #6f42c1 !important; }
+.btn-outline-purple { color: #6f42c1; border-color: #6f42c1; }
+.btn-outline-purple:hover { background-color: #6f42c1; color: #fff; }
+
+.kpi-card { border-radius: 10px; padding: 10px 6px; color: #fff; text-align: center; }
+.kpi-blue { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
+.kpi-orange { background: linear-gradient(135deg, #fd7e14, #e06804); }
+.kpi-purple { background: linear-gradient(135deg, #6f42c1, #59319c); }
+.kpi-title { font-size: 0.68rem; opacity: 0.95; text-transform: uppercase; font-weight: 600; white-space: nowrap; }
+.kpi-value { font-size: calc(0.7rem + 0.6vw); font-weight: 700; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.nowrap-text { white-space: nowrap !important; }
+.fit-title { font-size: clamp(0.75rem, 3vw, 0.95rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fit-val { font-size: clamp(0.7rem, 2.8vw, 0.85rem); white-space: nowrap; }
+
+.stmt-badge { font-size: 0.68rem; padding: 3px 6px; border-radius: 5px; white-space: nowrap; }
+.btn-pay-now { cursor: pointer; transition: all 0.2s ease; border: none; }
+.btn-pay-now:active { transform: scale(0.92); opacity: 0.8; }
+.amount-text { font-weight: 700; color: #d63384; white-space: nowrap; margin-left: 8px; font-size: 0.88rem; }
+.card-title-box { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
+.card-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 0.85rem; }
+.summary-row { background-color: #e9ecef; font-weight: bold; }
+.highlight-row { background-color: #fff3cd; }
+.recommend-card { border-left: 4px solid #0d6efd; background-color: #f8f9fa; margin-bottom: 10px; padding: 10px; border-radius: 8px; }
+.rate-badge { font-size: 0.9rem; font-weight: 700; color: #0d6efd; background-color: #cff4fc; padding: 3px 8px; border-radius: 6px; }
+.tx-item { border-bottom: 1px solid #eee; padding: 8px 0; }
+.tx-item:last-child { border-bottom: none; }
+.hidden { display: none !important; }
+.method-btn { font-size: 0.78rem; padding: 5px 2px; white-space: nowrap; }
+
+/* BOX HIGHLIGHT MERCHANT CHO THẺ & CASH */
+.merchant-highlight-box {
+  border: 2px solid #0d6efd !important;
+  background-color: #f0f7ff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.12);
+}
+.merchant-cash-highlight-box {
+  border: 2px solid #198754 !important;
+  background-color: #f0fdf4;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(25, 135, 84, 0.12);
+}
+
+#txList, #txListCash {
+  max-height: 480px;
+  overflow-y: auto; 
+  padding-right: 4px;
+}
+#txList::-webkit-scrollbar, #txListCash::-webkit-scrollbar { width: 5px; }
+#txList::-webkit-scrollbar-thumb, #txListCash::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+/* CSS MIC & AI LOADING */
+.btn-mic-listening {
+  background-color: #ffab00 !important;
+  border-color: #ff8f00 !important;
+  color: #212529 !important;
+  box-shadow: 0 0 15px rgba(255, 171, 0, 0.7) !important;
+}
+.mic-pulse-icon { display: inline-block; animation: micPulseAnim 1.2s infinite ease-in-out; }
+@keyframes micPulseAnim {
+  0% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.85; }
+}
+.ai-wave-container { display: inline-flex; align-items: center; justify-content: center; gap: 3px; height: 20px; vertical-align: middle; }
+.ai-wave-bar { width: 3px; height: 6px; border-radius: 3px; animation: aiWaveAnim 1.2s ease-in-out infinite alternate; }
+.wave-blue .ai-wave-bar { background: linear-gradient(180deg, #0d6efd, #0dcaf0); }
+.wave-green .ai-wave-bar { background: linear-gradient(180deg, #198754, #20c997); }
+.ai-wave-bar:nth-child(1) { animation-delay: 0.0s; }
+.ai-wave-bar:nth-child(2) { animation-delay: 0.2s; }
+.ai-wave-bar:nth-child(3) { animation-delay: 0.4s; }
+.ai-wave-bar:nth-child(4) { animation-delay: 0.2s; }
+.ai-wave-bar:nth-child(5) { animation-delay: 0.0s; }
+@keyframes aiWaveAnim {
+  0% { height: 4px; opacity: 0.4; }
+  100% { height: 18px; opacity: 1; transform: scaleY(1.1); }
+}
+.ai-sparkle-icon { font-size: 1.1rem; display: inline-block; vertical-align: middle; animation: aiGlow 1.5s infinite alternate ease-in-out; }
+.ai-sparkle-icon.sparkle-blue { color: #0d6efd; }
+.ai-sparkle-icon.sparkle-green { color: #198754; }
+@keyframes aiGlow {
+  0% { transform: scale(0.9) rotate(-10deg); opacity: 0.6; }
+  100% { transform: scale(1.2) rotate(10deg); opacity: 1; filter: drop-shadow(0 0 6px rgba(13,202,240,0.8)); }
+}
