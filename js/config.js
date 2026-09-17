@@ -1,5 +1,5 @@
 // URL Deployment của Google Apps Script[cite: 5]
-const API_URL = "https://script.google.com/macros/s/AKfycbx.../exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4XMEITG97lOrdS7VjXi6J-NOtWih021nolsVzQFozI0k4Rdw/exec"; 
 
 // Google Client ID[cite: 5]
 const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
