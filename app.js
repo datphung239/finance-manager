@@ -126,8 +126,10 @@ async function sendRequest(action, payload = {}) {
     showAlert("Lỗi kết nối Server: " + err.toString(), "danger"); return null;
   }
 }
-
 async function fetchInitialAppDataServer() {
+  // Xóa Cache dữ liệu cũ để luôn cập nhật danh mục mới nhất từ Sheet
+  localStorage.removeItem("app_init_data");
+
   const data = await sendRequest("getInitialData");
   if (data) {
     localStorage.setItem("app_init_data", JSON.stringify(data));
@@ -146,7 +148,7 @@ function applyInitialData(data) {
   populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
   populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
 
-  // Card Datalists
+  // 1. Datalist Danh mục & Merchant cho Thẻ Tín Dụng (CARDS MANAGEMENT)
   const catOpt = document.getElementById('categoryOptions');
   if (catOpt && data.categories) {
     catOpt.innerHTML = '';
@@ -163,15 +165,17 @@ function applyInitialData(data) {
     merchantMapData = data.merchantCategoryMap;
   }
 
-  // Cash Datalists
+  // 2. Datalist Danh mục & Merchant cho Dòng Tiền Mặt / Bank (CASH MANAGEMENT)
   const cashCatOpt = document.getElementById('cashCategoryOptions');
   if (cashCatOpt && data.cashCategories) {
     cashCatOpt.innerHTML = '';
+    // Đảm bảo chỉ lặp danh mục thuộc CASH MANAGEMENT B2:B
     data.cashCategories.forEach(item => { cashCatOpt.innerHTML += `<option value="${item}">`; });
   }
 
   const cashMerchOpt = document.getElementById('cashMerchantOptions');
   if (cashMerchOpt && data.cashMerchants) {
+    cashMerchOpt.innerHTML = '';
     cashMerchOpt.innerHTML = '';
     data.cashMerchants.forEach(item => { cashMerchOpt.innerHTML += `<option value="${item}">`; });
   }
