@@ -68,7 +68,7 @@ async function verifyAndProceed(email) {
   updateUI(email, true);
   clearAppCache();
 
-  // Bật màn hình chờ tải hệ thống
+  // Hiển thị Overlay Loading
   const initOverlay = document.getElementById('appInitOverlay');
   if (initOverlay) initOverlay.style.display = 'flex';
 
@@ -81,14 +81,20 @@ async function verifyAndProceed(email) {
       body: JSON.stringify({ action: "verifyAuth", token: googleToken })
     });
     const data = await res.json();
+
     if (!data.success) {
+      if (initOverlay) initOverlay.style.display = 'none'; // Ẩn overlay nếu không có quyền
       alert(`Lỗi truy cập: ${data.message || 'Tài khoản không có quyền!'}`);
       logout();
       return;
     }
+    
+    // Tải dữ liệu ban đầu
     await fetchInitialAppDataServer();
+
   } catch (err) {
-    alert("Lỗi xác thực quyền với Server!");
+    if (initOverlay) initOverlay.style.display = 'none'; // Ẩn overlay nếu đứt mạng/lỗi
+    alert("Lỗi kết nối tới Server: " + err.toString());
     logout();
   }
 }
@@ -131,20 +137,22 @@ async function sendRequest(action, payload = {}) {
     showAlert("Lỗi kết nối Server: " + err.toString(), "danger"); return null;
   }
 }
-
 async function fetchInitialAppDataServer() {
   localStorage.removeItem("app_init_data");
 
   const data = await sendRequest("getInitialData");
+  const initOverlay = document.getElementById('appInitOverlay');
+
   if (data) {
     localStorage.setItem("app_init_data", JSON.stringify(data));
-    applyInitialData(data); // Đã render xong danh mục, thẻ, merchant
-
-    // TẮT OVERLAY LOADING SAU KHI DATA ĐÃ ĐƯỢC RENDER XONG VÀO UI
-    const initOverlay = document.getElementById('appInitOverlay');
+    applyInitialData(data);
+    
+    // 🟢 TẮT OVERLAY KHI ĐÃ CÓ DATA DỰ DỰ
     if (initOverlay) initOverlay.style.display = 'none';
   } else {
-    alert("Không thể tải danh mục dữ liệu ban đầu! Vui lòng làm mới lại trang.");
+    // 🔴 TẮT OVERLAY NẾU LẤY DATA THẤT BẠI ĐỂ NGƯỜI DÙNG CÒN THAO TÁC
+    if (initOverlay) initOverlay.style.display = 'none';
+    alert("Không thể tải danh mục dữ liệu ban đầu! Vui lòng thử lại.");
     return;
   }
 
