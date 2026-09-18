@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbyUMT-Rq85WCqBVwLsfNu4XMEITG97lOrdS7VjXi6J-NOtWih021nolsVzQFozI0k4Rdw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwvVhOuRtGTNi9fR5IIEOtRPMkmtLZHW9n2r0YzkcnU5MGFpyEGYgJ6HxjmkoHdaR8L/exec";
 const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
 
 // The two public endpoint identifiers are prepended by the build script.
