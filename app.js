@@ -832,33 +832,39 @@ function renderCashDashboard(d) {
     document.getElementById('kpiBankBalance').innerText = formatVND(d.cashBalances.bank);
     document.getElementById('kpiTotalBalance').innerText = formatVND(d.cashBalances.total);
   }
-
-  // 🟢 2. Hiển thị Danh Mục Đầu Tư & Biến Động Giá Trị
+  // 🟢 2. Hiển thị Danh Mục Đầu Tư & Biến Động Giá Trị (ĐÃ FIX: LỌC BỎ DÒNG TRỐNG & CHỐNG RỚT CHỮ 'đ')
   const investBody = document.getElementById('investmentTableBody');
   if (investBody && Array.isArray(d.investmentData)) {
     let totalCap = 0;
     let totalVal = 0;
   
-    investBody.innerHTML = d.investmentData.map(item => {
-      totalCap += item.capital || 0;
-      totalVal += item.currentValue || 0;
+    // 1. Lọc bỏ hoàn toàn danh mục không có vốn / không có giá trị
+    const validInvestments = d.investmentData.filter(item => (Number(item.capital) || 0) > 0 || (Number(item.currentValue) || 0) > 0);
   
-      const isPositive = (item.changePct || 0) > 0;
-      const isZero = (item.changePct || 0) === 0;
-      const badgeCls = isZero ? 'bg-secondary-subtle text-secondary' : isPositive ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
+    if (validInvestments.length === 0) {
+      investBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-2" style="font-size:0.7rem;">Chưa có dữ liệu đầu tư</td></tr>';
+    } else {
+      investBody.innerHTML = validInvestments.map(item => {
+        totalCap += item.capital || 0;
+        totalVal += item.currentValue || 0;
   
-      return `
-        <tr>
-          <td class="fw-bold text-dark nowrap-text px-1">${escapeHTML(item.name)}</td>
-          <td class="text-end text-muted nowrap-text px-1">${item.capital ? formatVND(item.capital) : '-'}</td>
-          <td class="text-end fw-semibold nowrap-text px-1">${item.currentValue ? formatVND(item.currentValue) : '-'}</td>
-          <td class="text-end nowrap-text px-1">
-            <span class="badge ${badgeCls}" style="font-size: 0.68rem;">${escapeHTML(item.changeStr)}</span>
-          </td>
-        </tr>`;
-    }).join('');
+        const isPositive = (item.changePct || 0) > 0;
+        const isZero = (item.changePct || 0) === 0;
+        const badgeCls = isZero ? 'bg-secondary-subtle text-secondary' : isPositive ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
   
-    // Tính tổng hiệu suất toàn bộ danh mục
+        return `
+          <tr>
+            <td class="fw-bold text-dark px-1" style="white-space: nowrap;">${escapeHTML(item.name)}</td>
+            <td class="text-end text-muted px-1" style="white-space: nowrap;">${item.capital ? formatVND(item.capital) : '-'}</td>
+            <td class="text-end fw-semibold px-1" style="white-space: nowrap;">${item.currentValue ? formatVND(item.currentValue) : '-'}</td>
+            <td class="text-end px-1" style="white-space: nowrap;">
+              <span class="badge ${badgeCls}" style="font-size: 0.65rem;">${escapeHTML(item.changeStr)}</span>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+  
+    // 2. Tính tổng hiệu suất toàn bộ danh mục
     const totalDiff = totalVal - totalCap;
     const totalPct = totalCap > 0 ? (totalDiff / totalCap) * 100 : 0;
     const totalGainEl = document.getElementById('kpiInvestTotalGain');
