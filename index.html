@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://script.googleusercontent.com">
   <link rel="preconnect" href="https://accounts.google.com">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="style.css?v=fm2">
+  <link rel="stylesheet" href="style.css?v=fm3">
 </head>
 <body>
   <div class="container px-2 px-sm-3" style="max-width: 550px;">
@@ -32,10 +32,10 @@
         <div id="syncStatus" class="sync-status mb-2" role="status" aria-live="polite"></div>
         <!-- CỤM NÚT CHUYỂN LUỒNG QUẢN LÝ CHÍNH -->
         <div class="btn-group w-100 mb-3" role="group">
-          <button type="button" class="btn btn-primary fw-bold btn-main-mode active" id="btnModeCard" onclick="switchMainMode('card')">
+          <button type="button" class="btn btn-outline-primary fw-bold btn-main-mode" id="btnModeCard" onclick="switchMainMode('card')">
             <i class="bi bi-credit-card-2-front"></i> THẺ TÍN DỤNG
           </button>
-          <button type="button" class="btn btn-outline-success fw-bold btn-main-mode" id="btnModeCash" onclick="switchMainMode('cash')">
+          <button type="button" class="btn btn-success fw-bold btn-main-mode active" id="btnModeCash" onclick="switchMainMode('cash')">
             <i class="bi bi-cash-coin"></i> DÒNG TIỀN MẶT / BANK
           </button>
         </div>
@@ -43,7 +43,7 @@
         <!-- ========================================================= -->
         <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
         <!-- ========================================================= -->
-        <div id="cardAppContainer">
+        <div id="cardAppContainer" class="hidden">
           <div class="nav-grid-container nav-pills mb-3" id="mainTab">
             <div class="nav-row-1">
               <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
@@ -229,7 +229,7 @@
         <!-- ========================================================= -->
         <!-- 2. LUỒNG DÒNG TIỀN MẶT / BANK (GREEN THEME) -->
         <!-- ========================================================= -->
-        <div id="cashAppContainer" class="hidden">
+        <div id="cashAppContainer">
           <div class="nav-grid-container nav-pills mb-3">
             <div class="nav-row-1">
               <div class="nav-item">
@@ -343,6 +343,27 @@
                   </div>
                 </div>
               </div>
+
+              <!-- PHÂN TÍCH KINH DOANH: DASHBOARD!M12:Q VÀ S12:U -->
+              <section class="cash-business-section card p-3 mb-3 border-success-subtle shadow-sm" aria-labelledby="cashBusinessTitle">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                  <span id="cashBusinessTitle" class="fw-bold text-dark fit-title"><i class="bi bi-briefcase-fill text-success"></i> Phân Tích Kinh Doanh Theo Tháng</span>
+                  <div class="d-flex align-items-center gap-1 bg-white border border-success-subtle rounded px-2 py-1 shadow-sm ms-auto">
+                    <label for="cashBusinessMonth" class="small text-muted fw-bold nowrap-text" style="font-size:0.72rem;">Tháng:</label>
+                    <input type="date" id="cashBusinessMonth" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" style="width: 106px; font-size: 0.72rem; background: transparent;">
+                    <button id="btnApplyBusinessMonth" type="button" class="btn btn-sm btn-success py-0 px-2" onclick="applyBusinessMonthFilter()">Lọc</button>
+                  </div>
+                </div>
+                <div class="small text-muted mb-2">Bộ lọc tháng cập nhật đồng thời cả hai biểu đồ theo các công thức trên <strong>DASHBOARD</strong>.</div>
+                <div class="cash-business-chart mb-3">
+                  <div class="fw-bold small text-dark mb-1"><i class="bi bi-bar-chart-fill text-success"></i> Biến Động Kết Quả Kinh Doanh Theo Tháng</div>
+                  <canvas id="chartBusinessResult"></canvas>
+                </div>
+                <div class="cash-business-chart">
+                  <div class="fw-bold small text-dark mb-1"><i class="bi bi-bar-chart-steps text-danger"></i> Doanh Thu &amp; Chi Phí Kinh Doanh Theo Tháng</div>
+                  <canvas id="chartBusinessRevenueExpense"></canvas>
+                </div>
+              </section>
 
               <!-- BIẾN ĐỘNG CHI TIÊU 4 THÁNG -->
               <div class="card p-3 mb-3 border shadow-sm">
@@ -539,6 +560,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=fm2" defer></script>
+  <script src="app.js?v=fm3" defer></script>
 </body>
 </html>
