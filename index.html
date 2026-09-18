@@ -257,29 +257,28 @@
             </div>
 
             <div id="cashDashContent" style="display: none;">
-              <!-- 🟢 SỐ DƯ TIỀN HIỆN CÓ (VIỀN XANH BAO QUANH 4 BÊN + TỰ ĐỘNG THU NHỎ CHỮ KHÔNG BỊ TRÀN BÊN PHẢI) -->
+              <!-- 🟢 SỐ DƯ TIỀN HIỆN CÓ (ĐÃ FIX: TIÊU ĐỀ & SỐ TIỀN TO HƠN, IN ĐẬM BẢO ĐẢM KHÔNG TRÀN) -->
               <div class="card p-2 p-sm-3 mb-3 bg-white shadow-sm" style="border: 1.5px solid #198754 !important; border-radius: 12px; overflow: hidden;">
                 <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
                   <span class="fw-bold text-success fs-6 text-uppercase tracking-wide"><i class="bi bi-wallet2 me-1"></i> Số Dư Tiền Hiện Có</span>
-                  <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;">Cập nhật real-time</span>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.72rem;">Cập nhật real-time</span>
                 </div>
                 
                 <div class="row g-1 text-center align-items-center">
                   <div class="col-4 border-end px-1">
-                    <div class="small text-muted fw-bold mb-1" style="font-size: 0.65rem;">💵 TIỀN MẶT</div>
-                    <div class="fw-bold text-dark fit-val" id="kpiCashBalance" style="font-size: clamp(0.68rem, 2.3vw, 0.85rem);">0 đ</div>
+                    <div class="text-muted fw-bold mb-1 nowrap-text" style="font-size: clamp(0.68rem, 2.1vw, 0.78rem);">💵 TIỀN MẶT</div>
+                    <div class="fw-bolder text-dark fit-val nowrap-text" id="kpiCashBalance" style="font-size: clamp(0.78rem, 2.7vw, 0.98rem);">0 đ</div>
                   </div>
                   <div class="col-4 border-end px-1">
-                    <div class="small text-muted fw-bold mb-1" style="font-size: 0.65rem;">🏦 TIỀN TÀI KHOẢN</div>
-                    <div class="fw-bold text-dark fit-val" id="kpiBankBalance" style="font-size: clamp(0.68rem, 2.3vw, 0.85rem);">0 đ</div>
+                    <div class="text-muted fw-bold mb-1 nowrap-text" style="font-size: clamp(0.68rem, 2.1vw, 0.78rem);">🏦 TIỀN TÀI KHOẢN</div>
+                    <div class="fw-bolder text-dark fit-val nowrap-text" id="kpiBankBalance" style="font-size: clamp(0.78rem, 2.7vw, 0.98rem);">0 đ</div>
                   </div>
                   <div class="col-4 px-1">
-                    <div class="small text-success fw-bold mb-1" style="font-size: 0.65rem;">💰 TỔNG TIỀN</div>
-                    <div class="fw-bold text-success fit-val" id="kpiTotalBalance" style="font-size: clamp(0.7rem, 2.4vw, 0.88rem);">0 đ</div>
+                    <div class="text-success fw-bold mb-1 nowrap-text" style="font-size: clamp(0.68rem, 2.1vw, 0.78rem);">💰 TỔNG TIỀN HIỆN CÓ</div>
+                    <div class="fw-bolder text-success fit-val nowrap-text" id="kpiTotalBalance" style="font-size: clamp(0.82rem, 3.0vw, 1.05rem);">0 đ</div>
                   </div>
                 </div>
               </div>
-              
               <!-- 🟢 DANH MỤC ĐẦU TƯ & BIẾN ĐỘNG GIÁ TRỊ (GỌN GÀNG, TỰ ĐỘNG LỌC DÒNG RỖNG & KHÔNG RỚT DÒNG) -->
               <div class="card p-2 p-sm-3 mb-3 border-0 shadow-sm bg-white" style="border-radius: 12px;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
