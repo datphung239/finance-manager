@@ -257,25 +257,25 @@
             </div>
 
             <div id="cashDashContent" style="display: none;">
-            <!-- 🟢 2.2 TỔNG TIỀN MẶT & TÀI KHOẢN HIỆN CÓ (ĐẶT Ở ĐẦU ĐỂ THEO DÕI NGÀY) -->
-              <div class="card p-3 mb-3 border-0 bg-gradient text-white shadow" style="background: linear-gradient(135deg, #13795b 0%, #0d523e 100%); border-radius: 12px;">
-                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-white-50 pb-2">
-                  <span class="fw-bold fs-6 text-uppercase tracking-wide"><i class="bi bi-wallet2 me-1"></i> Số Dư Tiền Hiện Có</span>
-                  <span class="badge bg-light text-success fw-bold" style="font-size: 0.72rem;">Cập nhật real-time</span>
+            <!-- 🟢 SỐ DƯ TIỀN HIỆN CÓ (Hiển thị rõ nét nhãn & số tiền) -->
+              <div class="card p-3 mb-3 border-0 shadow-sm bg-white" style="border-radius: 12px; border-left: 5px solid #198754 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                  <span class="fw-bold text-success fs-6 text-uppercase tracking-wide"><i class="bi bi-wallet2 me-1"></i> Số Dư Tiền Hiện Có</span>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">Cập nhật real-time</span>
                 </div>
                 
                 <div class="row g-2 text-center align-items-center">
-                  <div class="col-4 border-end border-white-50">
-                    <div class="small opacity-75 fw-semibold" style="font-size: 0.68rem;">💵 TIỀN MẶT</div>
-                    <div class="fw-bold fit-val" id="kpiCashBalance" style="font-size: calc(0.75rem + 0.4vw);">0 đ</div>
+                  <div class="col-4 border-end">
+                    <div class="small text-muted fw-bold mb-1" style="font-size: 0.7rem;">💵 TIỀN MẶT</div>
+                    <div class="fw-bold text-dark fit-val" id="kpiCashBalance" style="font-size: calc(0.75rem + 0.4vw);">0 đ</div>
                   </div>
-                  <div class="col-4 border-end border-white-50">
-                    <div class="small opacity-75 fw-semibold" style="font-size: 0.68rem;">🏦 TIỀN TÀI KHOẢN</div>
-                    <div class="fw-bold fit-val" id="kpiBankBalance" style="font-size: calc(0.75rem + 0.4vw);">0 đ</div>
+                  <div class="col-4 border-end">
+                    <div class="small text-muted fw-bold mb-1" style="font-size: 0.7rem;">🏦 TIỀN TÀI KHOẢN</div>
+                    <div class="fw-bold text-dark fit-val" id="kpiBankBalance" style="font-size: calc(0.75rem + 0.4vw);">0 đ</div>
                   </div>
                   <div class="col-4">
-                    <div class="small opacity-75 fw-semibold text-warning" style="font-size: 0.68rem;">💰 TỔNG TIỀN HIỆN CÓ</div>
-                    <div class="fw-bold text-warning fit-val" id="kpiTotalBalance" style="font-size: calc(0.8rem + 0.5vw);">0 đ</div>
+                    <div class="small text-success fw-bold mb-1" style="font-size: 0.7rem;">💰 TỔNG TIỀN HIỆN CÓ</div>
+                    <div class="fw-bold text-success fit-val" id="kpiTotalBalance" style="font-size: calc(0.8rem + 0.5vw);">0 đ</div>
                   </div>
                 </div>
               </div>
@@ -390,22 +390,21 @@
                 </div>
               </div>
 
-            <!-- 🟢 1. PHẦN BẢNG PHÂN TÍCH KINH DOANH THÁNG (ĐÃ BỎ CÂU CHÚ THÍCH & ĐẶT NÚT LỌC SÁT TIÊU ĐỀ) -->
-              <section class="cash-business-section card p-3 mb-3 border-success-subtle shadow-sm" aria-labelledby="cashBusinessTitle">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                  <span id="cashBusinessTitle" class="fw-bold text-dark fit-title me-auto">
+            <!-- 🟢 PHẦN PHÂN TÍCH KINH DOANH THÁNG (CỐ ĐỊNH FILTER TRÊN 1 HÀNG KHÔNG XUỐNG DÒNG) -->
+              <section class="cash-business-section card p-3 mb-3 border-success-subtle shadow-sm">
+                <!-- Sử dụng flex-nowrap để bắt buộc cùng 1 hàng -->
+                <div class="d-flex justify-content-between align-items-center flex-nowrap gap-2 mb-3">
+                  <span class="fw-bold text-dark fit-title text-truncate me-2">
                     <i class="bi bi-briefcase-fill text-success"></i> Phân Tích Kinh Doanh Theo Tháng
                   </span>
                   
-                  <!-- Ô chọn tháng đặt ngay cạnh tiêu đề -->
-                  <div class="d-flex align-items-center gap-1 bg-white border border-success-subtle rounded px-2 py-1 shadow-sm">
-                    <label for="cashBusinessMonth" class="small text-muted fw-bold nowrap-text" style="font-size:0.72rem;">Tháng:</label>
-                    <input type="date" id="cashBusinessMonth" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" style="width: 106px; font-size: 0.72rem; background: transparent;">
-                    <button id="btnApplyBusinessMonth" type="button" class="btn btn-sm btn-success py-0 px-2" onclick="applyBusinessMonthFilter()">Lọc</button>
+                  <!-- Container ô lọc: flex-shrink-0 để không bị co hay rớt dòng -->
+                  <div class="d-flex align-items-center gap-1 bg-white border border-success-subtle rounded px-2 py-1 shadow-sm flex-shrink-0 ms-auto">
+                    <label for="cashBusinessMonth" class="small text-muted fw-bold nowrap-text m-0" style="font-size:0.72rem;">Tháng:</label>
+                    <input type="date" id="cashBusinessMonth" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" style="width: 105px; font-size: 0.72rem; background: transparent;">
+                    <button id="btnApplyBusinessMonth" type="button" class="btn btn-sm btn-success py-0 px-2 nowrap-text" onclick="applyBusinessMonthFilter()">Lọc</button>
                   </div>
                 </div>
-                
-                <!-- Đã bỏ dòng thông báo "Bộ lọc tháng cập nhật đồng thời..." -->
             
                 <div class="cash-business-chart mb-3">
                   <div class="fw-bold small text-dark mb-1"><i class="bi bi-bar-chart-fill text-success"></i> Biến Động Kết Quả Kinh Doanh Theo Tháng</div>
