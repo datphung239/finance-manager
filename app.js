@@ -315,23 +315,29 @@ function validateDTAmount() {
   const isDT = catUpper.startsWith("DT-");
   const isCP = catUpper.startsWith("CP-");
 
-  // 1. Nếu là Doanh Thu Kinh Doanh (bắt đầu bằng DT-)
+  // 1. Doanh Thu Kinh Doanh (bắt đầu bằng DT-)
   if (isDT) {
     if (val && !val.startsWith("-")) {
-      amtInput.value = "-" + val; // Tự động đổi thành số ÂM (-)
+      amtInput.value = "-" + val; // Tự động ghi ÂM (-)
     }
-    targetSelect.value = "Kinh doanh"; // Gán Đối Tượng là Kinh Doanh
-    targetSelect.disabled = false;       // Khóa không cho sửa
+    targetSelect.value = "Kinh Doanh";
+    targetSelect.disabled = false; // Bắt buộc giữ false để FormData vẫn thu thập được dữ liệu
+    targetSelect.style.pointerEvents = "none"; // Khóa không cho click đổi giá trị
+    targetSelect.classList.add("bg-light");
+
     help.className = "form-text small text-success fw-bold";
     help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Đối tượng: Kinh Doanh";
   } 
-  // 2. Nếu là Chi Phí Kinh Doanh (bắt đầu bằng CP-)
+  // 2. Chi Phí Kinh Doanh (bắt đầu bằng CP-)
   else if (isCP) {
     if (val.startsWith("-")) {
-      amtInput.value = val.replace("-", ""); // CP giữ số DƯƠNG (+)
+      amtInput.value = val.replace("-", ""); // Giữ số DƯƠNG (+)
     }
-    targetSelect.value = "Kinh doanh"; // Gán Đối Tượng là Kinh Doanh
-    targetSelect.disabled = false;       // Khóa không cho sửa
+    targetSelect.value = "Kinh Doanh";
+    targetSelect.disabled = false; // Bắt buộc giữ false
+    targetSelect.style.pointerEvents = "none"; // Khóa không cho click đổi giá trị
+    targetSelect.classList.add("bg-light");
+
     help.className = "form-text small text-primary fw-bold";
     help.innerText = "✓ Chi Phí Kinh Doanh -> Số DƯƠNG (+) & Đối tượng: Kinh Doanh";
   } 
@@ -340,9 +346,11 @@ function validateDTAmount() {
     if (val.startsWith("-")) {
       amtInput.value = val.replace("-", ""); // Giữ số DƯƠNG (+)
     }
-    // Mở khóa lựa chọn đối tượng & nếu đang là Kinh Doanh thì reset về mặc định
     targetSelect.disabled = false;
-    if (targetSelect.value === "Kinh doanh") {
+    targetSelect.style.pointerEvents = "auto"; // Mở khóa thao tác
+    targetSelect.classList.remove("bg-light");
+
+    if (targetSelect.value === "Kinh Doanh") {
       targetSelect.value = "";
     }
     help.className = "form-text small text-danger";
@@ -352,20 +360,32 @@ function validateDTAmount() {
 async function handleCashFormSubmit(form) {
   event.preventDefault();
   const btn = document.getElementById('btnSubmitCash');
-  btn.disabled = true; btn.innerText = 'Đang lưu...';
+  btn.disabled = true;
+  btn.innerText = 'Đang lưu...';
+
+  // Đảm bảo mở disabled để FormData lấy đủ dữ liệu
+  const targetSelect = document.getElementById('cashTarget');
+  if (targetSelect) targetSelect.disabled = false;
 
   const formObject = Object.fromEntries(new FormData(form).entries());
+
+  // Kiểm tra dự phòng lần cuối nếu là CP- hoặc DT- thì gán thẳng Kinh Doanh
+  const catUpper = (formObject.category || '').trim().toUpperCase();
+  if (catUpper.startsWith("CP-") || catUpper.startsWith("DT-")) {
+    formObject.target = "Kinh Doanh";
+  }
+
   const msg = await sendRequest("submitData", { formObject });
-  btn.disabled = false; btn.innerText = 'Lưu Giao Dịch Cash';
+  btn.disabled = false;
+  btn.innerText = 'Lưu Giao Dịch Cash';
 
   if (msg) {
     showAlertCash(msg, 'success');
     form.reset();
     setTodayDefaultDates();
-    document.getElementById('mCash').checked = true;
-    document.getElementById('cashTarget').disabled = false;
+    validateDTAmount(); // Reset lại các trạng thái giao diện
     loadRecentCashTransactions(true);
-    await loadCashDashboard(true);
+    loadCashDashboard(true);
   }
 }
 
