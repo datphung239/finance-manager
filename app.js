@@ -318,39 +318,31 @@ function validateDTAmount() {
   // 1. Doanh Thu Kinh Doanh (bắt đầu bằng DT-)
   if (isDT) {
     if (val && !val.startsWith("-")) {
-      amtInput.value = "-" + val; // Tự động ghi ÂM (-)
+      amtInput.value = "-" + val;
     }
-    targetSelect.value = "Kinh Doanh";
-    targetSelect.disabled = false; // Bắt buộc giữ false để FormData vẫn thu thập được dữ liệu
-    targetSelect.style.pointerEvents = "none"; // Khóa không cho click đổi giá trị
-    targetSelect.classList.add("bg-light");
-
+    targetSelect.value = "Kinh doanh"; // 👈 Đổi thành chữ d thường
+    
     help.className = "form-text small text-success fw-bold";
-    help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Đối tượng: Kinh Doanh";
+    help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Đối tượng: Kinh doanh";
   } 
   // 2. Chi Phí Kinh Doanh (bắt đầu bằng CP-)
   else if (isCP) {
     if (val.startsWith("-")) {
-      amtInput.value = val.replace("-", ""); // Giữ số DƯƠNG (+)
+      amtInput.value = val.replace("-", "");
     }
-    targetSelect.value = "Kinh Doanh";
-    targetSelect.disabled = false; // Bắt buộc giữ false
-    targetSelect.style.pointerEvents = "none"; // Khóa không cho click đổi giá trị
-    targetSelect.classList.add("bg-light");
+    targetSelect.value = "Kinh doanh"; // 👈 Đổi thành chữ d thường
 
     help.className = "form-text small text-primary fw-bold";
-    help.innerText = "✓ Chi Phí Kinh Doanh -> Số DƯƠNG (+) & Đối tượng: Kinh Doanh";
+    help.innerText = "✓ Chi Phí Kinh Doanh -> Số DƯƠNG (+) & Đối tượng: Kinh doanh";
   } 
   // 3. Chi tiêu sinh hoạt cá nhân thông thường
   else {
     if (val.startsWith("-")) {
-      amtInput.value = val.replace("-", ""); // Giữ số DƯƠNG (+)
+      amtInput.value = val.replace("-", "");
     }
     targetSelect.disabled = false;
-    targetSelect.style.pointerEvents = "auto"; // Mở khóa thao tác
-    targetSelect.classList.remove("bg-light");
-
-    if (targetSelect.value === "Kinh Doanh") {
+    // Kiểm tra và reset nếu trước đó đang là Kinh doanh
+    if (targetSelect.value === "Kinh doanh" || targetSelect.value === "Kinh Doanh") {
       targetSelect.value = "";
     }
     help.className = "form-text small text-danger";
@@ -363,18 +355,20 @@ async function handleCashFormSubmit(form) {
   btn.disabled = true;
   btn.innerText = 'Đang lưu...';
 
-  // Đảm bảo mở disabled để FormData lấy đủ dữ liệu
-  const targetSelect = document.getElementById('cashTarget');
-  if (targetSelect) targetSelect.disabled = false;
-
+  // 1. Thu thập dữ liệu từ Form
   const formObject = Object.fromEntries(new FormData(form).entries());
 
-  // Kiểm tra dự phòng lần cuối nếu là CP- hoặc DT- thì gán thẳng Kinh Doanh
-  const catUpper = (formObject.category || '').trim().toUpperCase();
-  if (catUpper.startsWith("CP-") || catUpper.startsWith("DT-")) {
-    formObject.target = "Kinh Doanh";
+  // 2. Ép trực tiếp giá trị "Kinh doanh" nếu thuộc CP- hoặc DT-
+  const category = (document.getElementById('cashCategory').value || '').trim().toUpperCase();
+  const targetSelect = document.getElementById('cashTarget');
+
+  if (category.startsWith("CP-") || category.startsWith("DT-")) {
+    formObject.target = "Kinh doanh"; // 👈 Gửi chữ "Kinh doanh" (d thường) về Google Sheet
+  } else if (!formObject.target && targetSelect) {
+    formObject.target = targetSelect.value;
   }
 
+  // 3. Gửi request
   const msg = await sendRequest("submitData", { formObject });
   btn.disabled = false;
   btn.innerText = 'Lưu Giao Dịch Cash';
@@ -383,7 +377,7 @@ async function handleCashFormSubmit(form) {
     showAlertCash(msg, 'success');
     form.reset();
     setTodayDefaultDates();
-    validateDTAmount(); // Reset lại các trạng thái giao diện
+    validateDTAmount();
     loadRecentCashTransactions(true);
     loadCashDashboard(true);
   }
