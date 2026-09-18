@@ -1,6 +1,5 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwvVhOuRtGTNi9fR5IIEOtRPMkmtLZHW9n2r0YzkcnU5MGFpyEGYgJ6HxjmkoHdaR8L/exec";
 const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
-
 // The two public endpoint identifiers are prepended by the build script.
 let googleToken = null;
 let currentStatementsData = [];
@@ -18,6 +17,7 @@ let dataEpoch = 0;
 let cardFilterSeq = 0;
 let cashFilterSeq = 0;
 let bootstrapPromise = null;
+let initialDataPromise = null;
 let authInitialized = false;
 let pendingCashChartData = null;
 let chartLibrariesPromise = null;
@@ -38,12 +38,33 @@ function storageGet(key) { try { return localStorage.getItem(key); } catch (_) {
 function storageSet(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
 function storageRemove(key) { try { localStorage.removeItem(key); } catch (_) {} }
 function cachePrefix() { return `fm:v2:${endpointHash}:${activeEmail}:`; }
-function cacheRead(name) {
+function pendingMutationKey() { return cachePrefix() + 'pendingMutation'; }
+function savePendingMutation(item) {
+  if (!activeEmail || !item) return;
+  storageSet(pendingMutationKey(), JSON.stringify({...item, savedAt: Date.now()}));
+}
+function readPendingMutation() {
+  try {
+    const item = JSON.parse(storageGet(pendingMutationKey()) || 'null');
+    if (!item || !item.requestId || !item.type || !Number.isFinite(item.savedAt)) return null;
+    if (Date.now() - item.savedAt > 48 * 60 * 60 * 1000) { storageRemove(pendingMutationKey()); return null; }
+    return item;
+  } catch (_) { return null; }
+}
+function clearPendingMutation(requestId) {
+  const item = readPendingMutation();
+  if (!requestId || !item || item.requestId === requestId) storageRemove(pendingMutationKey());
+}
+function cacheRead(name, validator = null) {
   if (!activeEmail) return null;
   const key = cachePrefix() + name;
   try {
     const item = memoryCache.get(key) || JSON.parse(storageGet(key) || 'null');
     if (!item || !Number.isFinite(item.savedAt) || Date.now() - item.savedAt > CACHE_MAX_AGE) return null;
+    if (validator && !validator(item.data)) {
+      cacheRemove(name);
+      return null;
+    }
     return item;
   } catch (_) { return null; }
 }
@@ -128,7 +149,11 @@ async function verifyAndProceed(email) {
   authEpoch++;
   updateUI(email, true);
   // Bootstrap performs authorization and returns the first screen in ONE request.
-  return fetchInitialAppDataServer();
+  const result = await fetchInitialAppDataServer();
+  // A response can be lost after Apps Script commits the write. Reconcile a
+  // durable request id after a reload so pressing F5 cannot create a duplicate.
+  recoverPendingMutation();
+  return result;
 }
 function updateUI(email, isLoggedIn) {
   document.getElementById('user-email').textContent = email;
@@ -147,6 +172,7 @@ function logout() {
   requestControllers.forEach(controller => controller.abort());
   inFlight.clear();
   bootstrapPromise = null;
+  initialDataPromise = null;
   currentStatementsData = [];
   recentCardData = [];
   recentCashData = [];
@@ -159,6 +185,15 @@ function logout() {
   showLoginPrompt();
 }
 
+function isTransientRequestError(error) {
+  if (!error || error.retryable === false) return false;
+  if (error.name === 'AbortError' || error.name === 'TypeError') return true;
+  const status = Number(error.status || String(error.message || '').match(/^HTTP (\d+)/)?.[1]);
+  return status === 404 || status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+function retryDelay(attempt) { return 250 * Math.pow(2, Math.max(0, attempt - 1)); }
+
 function sendRequest(action, payload = {}, options = {}) {
   if (!googleToken) return Promise.resolve(null);
   const epoch = authEpoch;
@@ -167,40 +202,65 @@ function sendRequest(action, payload = {}, options = {}) {
   const key = `${epoch}:${dataEpoch}:${action}:${JSON.stringify(payload)}`;
   if (!mutation && inFlight.has(key)) return inFlight.get(key);
   const task = (async () => {
-    const controller = new AbortController();
-    requestControllers.add(controller);
-    const timeout = setTimeout(() => controller.abort(), mutation ? 60000 : 45000);
     const started = performance.now();
     let serverMs;
+    let lastError = null;
+    const maxRetries = Number.isInteger(options.retries) ? options.retries : (mutation ? 2 : 1);
+    const timeoutMs = options.timeoutMs || (mutation ? 20000 : 15000);
     try {
-      const response = await fetch(API_URL, {method:'POST', signal:controller.signal,
-        body:JSON.stringify({action, ...payload, token})});
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const result = await response.json();
-      serverMs = result.meta?.serverMs;
-      if (epoch !== authEpoch || token !== googleToken) return null;
-      if (!result.success) {
-        const message = String(result.message || result.error || 'Yêu cầu thất bại.');
-        if (result.code === 'AUTH' || message === 'EXPIRED_TOKEN' || /không có quyền|Token không đúng định dạng|Thiếu Token/.test(message)) {
-          logout();
-          alert(message === 'EXPIRED_TOKEN' ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : message);
-          return null;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        let controller = null;
+        let timeout = null;
+        try {
+          controller = new AbortController();
+          requestControllers.add(controller);
+          timeout = setTimeout(() => controller.abort(), timeoutMs);
+          const response = await fetch(API_URL, {method:'POST', signal:controller.signal,
+            cache:'no-store', redirect:'follow',
+            body:JSON.stringify({action, ...payload, token})});
+          if (!response || !response.ok) {
+            const error = new Error(`HTTP ${response?.status || 0}`);
+            error.status = Number(response?.status || 0);
+            throw error;
+          }
+          const result = await response.json();
+          serverMs = result?.meta?.serverMs;
+          if (epoch !== authEpoch || token !== googleToken) return null;
+          if (!result || result.success !== true) {
+            const message = String(result?.message || result?.error || 'Yêu cầu thất bại.');
+            if (result?.code === 'AUTH' || message === 'EXPIRED_TOKEN' || /không có quyền|Token không đúng định dạng|Thiếu Token/.test(message)) {
+              logout();
+              alert(message === 'EXPIRED_TOKEN' ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : message);
+              return null;
+            }
+            const error = new Error(message);
+            error.retryable = false;
+            throw error;
+          }
+          return result.data !== undefined ? result.data : result.message;
+        } catch (error) {
+          lastError = error;
+          if (epoch !== authEpoch) return null;
+          if (!isTransientRequestError(error) || attempt >= maxRetries) throw error;
+          setSyncStatus(`Đang thử kết nối lại… (${attempt + 1}/${maxRetries})`, 'loading');
+          await new Promise(resolve => setTimeout(resolve, retryDelay(attempt + 1)));
+          if (epoch !== authEpoch || token !== googleToken) return null;
+        } finally {
+          if (timeout) clearTimeout(timeout);
+          if (controller) requestControllers.delete(controller);
         }
-        throw new Error(message);
       }
-      return result.data !== undefined ? result.data : result.message;
+      throw lastError || new Error('Không nhận được phản hồi từ máy chủ.');
     } catch (err) {
       if (epoch !== authEpoch) return null;
       const message = err.name === 'AbortError'
-        ? (mutation ? 'Chưa nhận được xác nhận lưu/xóa. Hãy làm mới lịch sử để kiểm tra trước khi thử lại.' : 'Máy chủ phản hồi quá lâu. Bạn có thể bấm Làm mới để thử lại.')
-        : 'Lỗi: ' + err.message;
+        ? (mutation ? 'Chưa nhận được xác nhận lưu/xóa sau khi thử lại. Hãy bấm Lưu lại; hệ thống sẽ kiểm tra request cũ để tránh ghi trùng.' : 'Máy chủ phản hồi quá lâu. Bạn có thể bấm Làm mới để thử lại.')
+        : 'Lỗi: ' + (err.message || 'Không nhận được phản hồi từ máy chủ.');
       setSyncStatus(message, 'error');
       if (options.errorTarget === 'cash' || currentCashMode()) showAlertCash(message, 'danger');
       else showAlert(message, 'danger');
       return null;
     } finally {
-      clearTimeout(timeout);
-      requestControllers.delete(controller);
       window.fmPerformance.requests.push({action, durationMs:Math.round(performance.now()-started), serverMs});
       if (window.fmPerformance.requests.length > 100) window.fmPerformance.requests.shift();
     }
@@ -212,44 +272,145 @@ function sendRequest(action, payload = {}, options = {}) {
   return task;
 }
 
+async function reconcileMutation(requestId, errorTarget) {
+  if (!requestId || !googleToken) return null;
+  const status = await sendRequest('getMutationStatus', {requestId}, {retries: 1, errorTarget});
+  if (status && status.found && status.type) {
+    return {message: status.message || 'Đã lưu giao dịch thành công!', type: status.type,
+      transactions: null, refreshError: 'reconciled', updatedAt: status.updatedAt || Date.now()};
+  }
+  return null;
+}
+
+async function recoverPendingMutation() {
+  const pending = readPendingMutation();
+  if (!pending || !googleToken) return;
+  const result = await reconcileMutation(pending.requestId, pending.type === 'cash_spending' ? 'cash' : undefined);
+  if (result) {
+    clearPendingMutation(pending.requestId);
+    acceptMutation(result);
+    if (pending.type === 'cash_spending') showAlertCash('Đã xác nhận giao dịch trước đó đã lưu thành công.', 'success');
+    else showAlert('Đã xác nhận giao dịch trước đó đã lưu thành công.', 'success');
+    return;
+  }
+  setSyncStatus('Có giao dịch trước đó chưa nhận xác nhận. Hãy kiểm tra lịch sử trước khi lưu lại.', 'error');
+}
+
 function renderCategoryReport(reportData) {
   const body = document.getElementById('categoryReportTable');
-  if (!reportData.length) { body.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Không có dữ liệu.</td></tr>'; return; }
-  body.innerHTML = reportData.map((row, idx) => {
+  const rows = Array.isArray(reportData) ? reportData : [];
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Không có dữ liệu.</td></tr>'; return; }
+  body.innerHTML = rows.map((row, idx) => {
     const isTotal = ['TỔNG','CÒN LẠI','ĐÃ THANH TOÁN','TRỪ VÀO SAO KÊ'].some(k => String(row.label).toUpperCase().includes(k));
     const cls = idx === 0 ? 'table-primary fw-bold' : isTotal ? 'summary-row' : '';
     return `<tr class="${cls}"><td>${escapeHTML(row.label)}</td><td class="text-end">${escapeHTML(typeof row.amount === 'number' ? formatVND(row.amount) : row.amount)}</td></tr>`;
   }).join('');
 }
 function renderCardView(view) {
+  if (!isCardViewShape(view)) return false;
   renderDashboard(view.dashboard);
-  renderCategoryReport(view.categoryReport || []);
+  renderCategoryReport(view.categoryReport);
   document.getElementById('dashContent').style.display = 'block';
+  return true;
 }
+
+function isInitialDataShape(data) {
+  return !!data && typeof data === 'object' &&
+    Array.isArray(data.cards) && Array.isArray(data.categories) &&
+    Array.isArray(data.merchants) && Array.isArray(data.cashCategories) &&
+    Array.isArray(data.cashCPCategories) && Array.isArray(data.cashMerchants);
+}
+
+function isCardViewShape(view) {
+  const dashboard = view && view.dashboard;
+  return !!view && typeof view === 'object' && !!dashboard &&
+    typeof dashboard === 'object' && !!dashboard.kpi &&
+    typeof dashboard.kpi === 'object' && Array.isArray(dashboard.statements) &&
+    !!dashboard.filters && typeof dashboard.filters === 'object' &&
+    Array.isArray(view.categoryReport);
+}
+
+function isBootstrapShape(data) {
+  return !!data && isInitialDataShape(data.initialData) && isCardViewShape(data.cardView);
+}
+
+function isTransactionListShape(list) {
+  return Array.isArray(list) && list.every(item => item && typeof item === 'object');
+}
+
+function fetchInitialDataOnly(force = true) {
+  const cached = cacheRead('initial', isInitialDataShape);
+  if (cached) {
+    applyInitialData(cached.data);
+    return Promise.resolve(cached.data);
+  }
+  if (initialDataPromise) return initialDataPromise;
+  const epoch = authEpoch;
+  const task = (async () => {
+    const data = await sendRequest('getInitialData', {force: force === true}, {retries: 2});
+    if (epoch !== authEpoch) return null;
+    if (!isInitialDataShape(data)) {
+      cacheRemove('initial');
+      return null;
+    }
+    cacheWrite('initial', data);
+    applyInitialData(data);
+    return data;
+  })();
+  initialDataPromise = task;
+  task.finally(() => { if (initialDataPromise === task) initialDataPromise = null; });
+  return task;
+}
+
+function ensureInitialData(force = false) {
+  const cached = cacheRead('initial', isInitialDataShape);
+  if (cached) {
+    applyInitialData(cached.data);
+    return Promise.resolve(cached.data);
+  }
+  return fetchInitialDataOnly(force);
+}
+
 function fetchInitialAppDataServer() {
   if (bootstrapPromise) return bootstrapPromise;
-  const initial = cacheRead('initial');
+  const initial = cacheRead('initial', isInitialDataShape);
   if (initial) applyInitialData(initial.data);
-  const cached = cacheRead('cardView');
-  if (cached) { renderCardView(cached.data); setSyncStatus(cachedStatus(cached.savedAt)); }
+  const cached = cacheRead('cardView', isCardViewShape);
+  if (cached && renderCardView(cached.data)) setSyncStatus(cachedStatus(cached.savedAt));
   else setSyncStatus('Đang tải dữ liệu…');
   document.getElementById('loadingDash').style.display = cached ? 'none' : 'block';
   const epoch = authEpoch, revision = dataEpoch, filterSeq = cardFilterSeq;
   const task = (async () => {
-    const data = await sendRequest('getBootstrap', {force:true});
+    let data = await sendRequest('getBootstrap', {force:true}, {retries: 2});
     if (epoch !== authEpoch) return;
     document.getElementById('loadingDash').style.display = 'none';
-    if (!data) return;
-    cacheWrite('initial', data.initialData);
-    applyInitialData(data.initialData);
+    if (!isBootstrapShape(data)) {
+      // A temporary Apps Script 404 must not leave the card select empty until F5.
+      const initialData = await fetchInitialDataOnly(true);
+      const cachedView = cacheRead('cardView', isCardViewShape);
+      const cardView = cachedView?.data || await sendRequest('getCardView', {force:true}, {retries: 2});
+      if (isInitialDataShape(initialData)) {
+        cacheWrite('initial', initialData);
+        applyInitialData(initialData);
+      }
+      if (isCardViewShape(cardView)) {
+        data = {initialData: initialData || (isInitialDataShape(data?.initialData) ? data.initialData : null), cardView};
+      } else {
+        setSyncStatus('Không tải được dữ liệu thẻ. Hãy bấm lại tab hoặc Làm mới.', 'error');
+        return;
+      }
+    }
+    if (isInitialDataShape(data.initialData)) {
+      cacheWrite('initial', data.initialData);
+      applyInitialData(data.initialData);
+    }
     if (revision !== dataEpoch) {
       setTimeout(() => { if (googleToken && !currentCashMode() && document.getElementById('dashboardBlock').style.display !== 'none') loadDashboard(true); }, 0);
       return;
     }
     if (filterSeq === cardFilterSeq) {
       cacheWrite('cardView', data.cardView, data.cardView.updatedAt);
-      renderCardView(data.cardView);
-      freshStatus(data.cardView.updatedAt);
+      if (renderCardView(data.cardView)) freshStatus(data.cardView.updatedAt);
     }
   })();
   bootstrapPromise = task;
@@ -295,6 +456,7 @@ function refreshVisibleScreen() {
 
 
 function applyInitialData(data) {
+  if (!isInitialDataShape(data)) return false;
   const ids = ['card', 'cardTarget', 'dashFilterCard', 'dashFilterCategory'];
   const values = ids.map(id => document.getElementById(id)?.value);
   applyInitialDataContent(data);
@@ -302,40 +464,38 @@ function applyInitialData(data) {
     const select = document.getElementById(id);
     if (select && Array.from(select.options).some(option => option.value === values[index])) select.value = values[index];
   });
+  return true;
 }
 
 function applyInitialDataContent(data) {
+  if (!isInitialDataShape(data)) return false;
   // Populate dropdowns cho Thẻ
-  populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
-  populateDropdown('dashFilterCard', data.cards || [], '-- Tất cả Thẻ --');
-  populateDropdown('dashFilterCategory', data.categories || [], '-- Tất cả Danh Mục --');
+  populateDropdown('card', data.cards, '-- Chọn thẻ --');
+  populateDropdown('dashFilterCard', data.cards, '-- Tất cả Thẻ --');
+  populateDropdown('dashFilterCategory', data.categories, '-- Tất cả Danh Mục --');
   // RENDER LINH HOẠT ĐỐI TƯỢNG CHI TIÊU CHO CARD
   const cardTargetSelect = document.getElementById('cardTarget');
   if (cardTargetSelect) {
-    cardTargetSelect.innerHTML = '<option value="">Bản thân (Mặc định)</option>' +
-      '<option value="Bạn Bè">Bạn Bè</option>' +
-      '<option value="Gia Đình">Gia Đình</option>' +
-      '<option value="Người Yêu">Người Yêu</option>';
-    
-    // Đổ danh sách CP- từ sheet Cash sang
-    if (data.cashCPCategories && data.cashCPCategories.length > 0) {
-      data.cashCPCategories.forEach(cpItem => {
-        cardTargetSelect.innerHTML += `<option value="${escapeHTML(cpItem)}">${escapeHTML(cpItem)}</option>`;
-      });
+    const selectedTarget = cardTargetSelect.value;
+    const targets = ['', 'Bạn Bè', 'Gia Đình', 'Người Yêu', ...data.cashCPCategories]
+      .map(value => String(value ?? '').trim())
+      .filter((value, index, all) => all.indexOf(value) === index);
+    const targetSignature = targets.join('\u001f');
+    if (cardTargetSelect.dataset.optionsSignature !== targetSignature) {
+      cardTargetSelect.innerHTML = targets.map((value, index) => {
+        const label = index === 0 ? 'Bản thân (Mặc định)' : value;
+        return `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`;
+      }).join('');
+      cardTargetSelect.dataset.optionsSignature = targetSignature;
     }
+    if (targets.includes(selectedTarget)) cardTargetSelect.value = selectedTarget;
   }
   // 1. Datalist Danh mục & Merchant cho Thẻ Tín Dụng (CARDS MANAGEMENT)
   const catOpt = document.getElementById('categoryOptions');
-  if (catOpt && data.categories) {
-    catOpt.innerHTML = '';
-    catOpt.innerHTML = data.categories.map(item => `<option value="${escapeHTML(item)}">`).join('');
-  }
+  if (catOpt) setDatalistOptions(catOpt, data.categories);
 
   const merchOpt = document.getElementById('merchantOptions');
-  if (merchOpt && data.merchants) {
-    merchOpt.innerHTML = '';
-    merchOpt.innerHTML = data.merchants.map(item => `<option value="${escapeHTML(item)}">`).join('');
-  }
+  if (merchOpt) setDatalistOptions(merchOpt, data.merchants);
 
   if (data.merchantCategoryMap) {
     merchantMapData = data.merchantCategoryMap;
@@ -343,28 +503,40 @@ function applyInitialDataContent(data) {
 
   // 2. Datalist Danh mục & Merchant cho Dòng Tiền Mặt / Bank (CASH MANAGEMENT)
   const cashCatOpt = document.getElementById('cashCategoryOptions');
-  if (cashCatOpt && data.cashCategories) {
-    cashCatOpt.innerHTML = ''; // Xóa sạch dữ liệu cũ
-    // Đảm bảo chỉ lặp qua danh mục thuộc CASH MANAGEMENT B2:B
-    cashCatOpt.innerHTML = data.cashCategories.map(item => `<option value="${escapeHTML(item)}">`).join('');
-  }
+  if (cashCatOpt) setDatalistOptions(cashCatOpt, data.cashCategories);
 
   const cashMerchOpt = document.getElementById('cashMerchantOptions');
-  if (cashMerchOpt && data.cashMerchants) {
-    cashMerchOpt.innerHTML = '';
-    cashMerchOpt.innerHTML = data.cashMerchants.map(item => `<option value="${escapeHTML(item)}">`).join('');
-  }
+  if (cashMerchOpt) setDatalistOptions(cashMerchOpt, data.cashMerchants);
 
   if (data.cashMerchantCategoryMap) {
     cashMerchantMapData = data.cashMerchantCategoryMap;
   }
+  return true;
 }
 
 function populateDropdown(elemId, list, defaultText) {
   const sel = document.getElementById(elemId);
   if (!sel) return;
-  sel.innerHTML = `<option value="">${defaultText}</option>`;
-  list.forEach(c => sel.innerHTML += `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`);
+  const values = Array.isArray(list) ? list.map(value => String(value ?? '').trim()).filter(Boolean)
+    .filter((value, index, all) => all.indexOf(value) === index) : [];
+  const signature = defaultText + '\u001f' + values.join('\u001f');
+  const selected = sel.value;
+  if (sel.dataset.optionsSignature !== signature) {
+    sel.innerHTML = `<option value="">${escapeHTML(defaultText)}</option>` +
+      values.map(value => `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`).join('');
+    sel.dataset.optionsSignature = signature;
+  }
+  if (values.includes(selected)) sel.value = selected;
+}
+
+function setDatalistOptions(elem, list) {
+  if (!elem) return;
+  const values = Array.isArray(list) ? list.map(value => String(value ?? '').trim()).filter(Boolean)
+    .filter((value, index, all) => all.indexOf(value) === index) : [];
+  const signature = values.join('\u001f');
+  if (elem.dataset.optionsSignature === signature) return;
+  elem.innerHTML = values.map(value => `<option value="${escapeHTML(value)}">`).join('');
+  elem.dataset.optionsSignature = signature;
 }
 
 function autoMatchCategoryFromMerchant(val, type = 'card') {
@@ -392,8 +564,11 @@ function switchMainMode(mode) {
   if (!isCard) {
     if (document.getElementById('tab-cash-dash').classList.contains('active')) loadCashDashboard();
     else loadRecentCashTransactions();
-  } else if (document.getElementById('dashboardBlock').style.display !== 'none') loadDashboard();
-  else loadRecentTransactions();
+  } else {
+    ensureInitialData();
+    if (document.getElementById('dashboardBlock').style.display !== 'none') loadDashboard();
+    else loadRecentTransactions();
+  }
 }
 
 function switchCashTab(type) {
@@ -424,6 +599,7 @@ function switchForm(type) {
   if (type === 'spending') {
     document.getElementById('entryType').value = 'spending';
     resetVoiceUI();
+    ensureInitialData();
     loadRecentTransactions(false);
   }
 }
@@ -521,11 +697,14 @@ async function handleCashFormSubmit(event, form) {
     form.dataset.pendingPayload = payloadKey;
     form.dataset.requestId = makeRequestId();
   }
+  savePendingMutation({requestId:form.dataset.requestId, type:'cash_spending', operation:'save', formObject});
   btn.disabled = true;
   btn.innerText = 'Đang lưu…';
   try {
-    const result = await sendRequest('mutateTransaction', {operation:'save', formObject, requestId:form.dataset.requestId}, {errorTarget:'cash'});
+    let result = await sendRequest('mutateTransaction', {operation:'save', formObject, requestId:form.dataset.requestId, includeTransactions:false}, {errorTarget:'cash'});
+    if (!result) result = await reconcileMutation(form.dataset.requestId, 'cash');
     if (!result) return;
+    clearPendingMutation(form.dataset.requestId);
     acceptMutation(result);
     showAlertCash(result.message, 'success');
     form.reset();
@@ -541,7 +720,11 @@ function loadRecentCashTransactions(forceFetch = false) { return loadRecentFor('
 function renderRecentCashListUI(list) {
   const txList = document.getElementById('txListCash');
   if (!txList) return;
-  if (!list || list.length === 0) {
+  if (!Array.isArray(list)) {
+    txList.innerHTML = '<p class="text-center text-danger m-0 py-2 small">Không tải được lịch sử giao dịch. Hãy bấm Làm mới.</p>';
+    return;
+  }
+  if (list.length === 0) {
     txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Chưa có giao dịch Cash.</p>';
     return;
   }
@@ -796,7 +979,11 @@ function loadRecentTransactions(forceFetch = false) { return loadRecentFor('spen
 function renderTxList(list) {
   const txList = document.getElementById('txList');
   if (!txList) return;
-  if (!list || list.length === 0) {
+  if (!Array.isArray(list)) {
+    txList.innerHTML = '<p class="text-center text-danger m-0 py-2 small">Không tải được lịch sử giao dịch. Hãy bấm Làm mới.</p>';
+    return;
+  }
+  if (list.length === 0) {
     txList.innerHTML = '<p class="text-center text-muted m-0 py-2 small">Chưa có giao dịch thẻ.</p>';
     return;
   }
@@ -883,7 +1070,7 @@ async function fetchRecommendation() {
 
 async function loadDashboard(fetchServer = false) {
   if (bootstrapPromise) return bootstrapPromise;
-  const cached = cacheRead('cardView');
+  const cached = cacheRead('cardView', isCardViewShape);
   if (cached) {
     renderCardView(cached.data);
     if (!fetchServer && Date.now()-cached.savedAt < CACHE_TTL) {
@@ -896,12 +1083,20 @@ async function loadDashboard(fetchServer = false) {
   document.getElementById('loadingDash').style.display = cached ? 'none' : 'block';
   const epoch = authEpoch, revision = dataEpoch, seq = cardFilterSeq;
   const result = await sendRequest(fetchServer ? 'getBootstrap' : 'getCardView',
-    fetchServer ? {force:true, refreshInitial:true} : {});
+    fetchServer ? {force:true, refreshInitial:true} : {}, {retries: 2});
   if (epoch !== authEpoch || revision !== dataEpoch || seq !== cardFilterSeq) return;
   document.getElementById('loadingDash').style.display = 'none';
   if (!result) return;
   const view = fetchServer ? result.cardView : result;
-  if (result.initialData) { cacheWrite('initial', result.initialData); applyInitialData(result.initialData); }
+  if (result.initialData && isInitialDataShape(result.initialData)) {
+    cacheWrite('initial', result.initialData);
+    applyInitialData(result.initialData);
+  }
+  if (!isCardViewShape(view)) {
+    cacheRemove('cardView');
+    setSyncStatus('Phản hồi dashboard không hợp lệ. Hãy bấm Làm mới.', 'error');
+    return;
+  }
   cacheWrite('cardView', view, view.updatedAt);
   renderCardView(view);
   freshStatus(view.updatedAt);
@@ -993,11 +1188,14 @@ async function handleFormSubmit(event, form) {
     form.dataset.pendingPayload = payloadKey;
     form.dataset.requestId = makeRequestId();
   }
+  savePendingMutation({requestId:form.dataset.requestId, type:'spending', operation:'save', formObject});
   btn.disabled = true;
   btn.innerText = 'Đang lưu…';
   try {
-    const result = await sendRequest('mutateTransaction', {operation:'save', formObject, requestId:form.dataset.requestId});
+    let result = await sendRequest('mutateTransaction', {operation:'save', formObject, requestId:form.dataset.requestId, includeTransactions:false});
+    if (!result) result = await reconcileMutation(form.dataset.requestId);
     if (!result) return;
+    clearPendingMutation(form.dataset.requestId);
     acceptMutation(result);
     showAlert(result.message, 'success');
     form.reset();
@@ -1320,7 +1518,7 @@ async function loadRecentFor(type, force) {
     if (cash) { recentCashData = list; renderRecentCashListUI(list); }
     else { recentCardData = list; renderTxList(list); }
   };
-  const cached = cacheRead(key);
+  const cached = cacheRead(key, isTransactionListShape);
   if (cached) {
     render(cached.data);
     if (!force && Date.now()-cached.savedAt < CACHE_TTL) { spinner.style.display = 'none'; freshStatus(cached.savedAt); return; }
@@ -1328,19 +1526,32 @@ async function loadRecentFor(type, force) {
   } else setSyncStatus('Đang tải lịch sử giao dịch…');
   spinner.style.display = cached ? 'none' : 'block';
   const epoch = authEpoch, revision = dataEpoch;
-  const list = await sendRequest('getRecentTransactions', {type, force:force === true});
+  let list = await sendRequest('getRecentTransactions', {type, force:force === true});
   if (epoch !== authEpoch || revision !== dataEpoch) return;
   spinner.style.display = 'none';
-  if (!list) return;
+  if (!isTransactionListShape(list)) {
+    // Do not let an error envelope or a redirect body reach renderTxList().
+    cacheRemove(key);
+    list = await sendRequest('getRecentTransactions', {type, force:true, repair:makeRequestId()}, {retries: 1});
+  }
+  if (epoch !== authEpoch || revision !== dataEpoch) return;
+  if (!isTransactionListShape(list)) {
+    setSyncStatus('Không tải được lịch sử giao dịch. Hãy bấm Làm mới.', 'error');
+    return;
+  }
   cacheWrite(key, list);
   render(list);
   freshStatus();
 }
 
 function acceptMutation(result) {
+  if (!result || typeof result !== 'object' || !result.type) {
+    setSyncStatus('Đã ghi thay đổi nhưng phản hồi không đầy đủ. Hãy bấm Làm mới.', 'error');
+    return;
+  }
   invalidateFinancialCaches();
   const cash = result.type === 'cash_spending';
-  if (Array.isArray(result.transactions)) {
+  if (isTransactionListShape(result.transactions)) {
     cacheWrite(cash ? 'cashTransactions' : 'cardTransactions', result.transactions);
     if (cash) { recentCashData = result.transactions; renderRecentCashListUI(result.transactions); }
     else { recentCardData = result.transactions; renderTxList(result.transactions); }
@@ -1352,6 +1563,8 @@ function acceptMutation(result) {
   // A user may have switched screens while the write was pending.
   if (cashDashboardVisible()) loadCashDashboard(true);
   else if (!currentCashMode() && document.getElementById('dashboardBlock').style.display !== 'none') loadDashboard(true);
+  else if (cash) loadRecentCashTransactions(true);
+  else loadRecentTransactions(true);
 }
 
 async function deleteRowFromUI(type, rowIndex, detail) {
@@ -1364,12 +1577,16 @@ async function deleteRowFromUI(type, rowIndex, detail) {
   deletingRows.add(key);
   const spinner = document.getElementById(type === 'cash_spending' ? 'loadingTxCash' : 'loadingTx');
   spinner.style.display = 'block';
+  const requestId = makeRequestId();
+  savePendingMutation({requestId, type, operation:'delete', rowIndex, fingerprint:item.fingerprint});
   try {
     const result = await sendRequest('mutateTransaction', {operation:'delete', type, rowIndex,
-      fingerprint:item.fingerprint, requestId:makeRequestId()});
-    if (result) {
-      acceptMutation(result);
-      (type === 'cash_spending' ? showAlertCash : showAlert)(result.message, 'success');
+      fingerprint:item.fingerprint, requestId, includeTransactions:false});
+    const confirmed = result || await reconcileMutation(requestId, type === 'cash_spending' ? 'cash' : undefined);
+    if (confirmed) {
+      clearPendingMutation(requestId);
+      acceptMutation(confirmed);
+      (type === 'cash_spending' ? showAlertCash : showAlert)(confirmed.message, 'success');
     }
   } finally { deletingRows.delete(key); spinner.style.display = 'none'; }
 }
