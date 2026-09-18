@@ -68,10 +68,6 @@ async function verifyAndProceed(email) {
   updateUI(email, true);
   clearAppCache();
 
-  // Hiển thị Overlay Loading
-  const initOverlay = document.getElementById('appInitOverlay');
-  if (initOverlay) initOverlay.style.display = 'flex';
-
   document.getElementById('loadingDash').style.display = 'block';
   document.getElementById('dashContent').style.display = 'none';
 
@@ -81,20 +77,13 @@ async function verifyAndProceed(email) {
       body: JSON.stringify({ action: "verifyAuth", token: googleToken })
     });
     const data = await res.json();
-
     if (!data.success) {
-      if (initOverlay) initOverlay.style.display = 'none'; // Ẩn overlay nếu không có quyền
       alert(`Lỗi truy cập: ${data.message || 'Tài khoản không có quyền!'}`);
-      logout();
-      return;
+      logout(); return;
     }
-    
-    // Tải dữ liệu ban đầu
     await fetchInitialAppDataServer();
-
   } catch (err) {
-    if (initOverlay) initOverlay.style.display = 'none'; // Ẩn overlay nếu đứt mạng/lỗi
-    alert("Lỗi kết nối tới Server: " + err.toString());
+    alert("Lỗi xác thực quyền với Server!");
     logout();
   }
 }
@@ -138,22 +127,13 @@ async function sendRequest(action, payload = {}) {
   }
 }
 async function fetchInitialAppDataServer() {
+  // Xóa Cache dữ liệu cũ để luôn cập nhật danh mục mới nhất từ Sheet
   localStorage.removeItem("app_init_data");
 
   const data = await sendRequest("getInitialData");
-  const initOverlay = document.getElementById('appInitOverlay');
-
   if (data) {
     localStorage.setItem("app_init_data", JSON.stringify(data));
     applyInitialData(data);
-    
-    // 🟢 TẮT OVERLAY KHI ĐÃ CÓ DATA DỰ DỰ
-    if (initOverlay) initOverlay.style.display = 'none';
-  } else {
-    // 🔴 TẮT OVERLAY NẾU LẤY DATA THẤT BẠI ĐỂ NGƯỜI DÙNG CÒN THAO TÁC
-    if (initOverlay) initOverlay.style.display = 'none';
-    alert("Không thể tải danh mục dữ liệu ban đầu! Vui lòng thử lại.");
-    return;
   }
 
   await loadDashboard(true);
@@ -162,7 +142,6 @@ async function fetchInitialAppDataServer() {
   sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
   sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => list && localStorage.setItem("app_tx_cash", JSON.stringify(list)));
 }
-
 function applyInitialData(data) {
   // Populate dropdowns cho Thẻ
   populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
