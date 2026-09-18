@@ -826,6 +826,47 @@ async function loadCashDashboard(fetchServer = false) {
 }
 
 function renderCashDashboard(d) {
+// 1. Hiển thị 2.2: Tiền Mặt & Tài Khoản Hiện Có
+  if (d.cashBalances) {
+    document.getElementById('kpiCashBalance').innerText = formatVND(d.cashBalances.cash);
+    document.getElementById('kpiBankBalance').innerText = formatVND(d.cashBalances.bank);
+    document.getElementById('kpiTotalBalance').innerText = formatVND(d.cashBalances.total);
+  }
+
+  // 2. Hiển thị 2.1: Danh Mục Đầu Tư & Biến Động Giá Trị
+  const investBody = document.getElementById('investmentTableBody');
+  if (investBody && Array.isArray(d.investmentData)) {
+    let totalCap = 0;
+    let totalVal = 0;
+
+    investBody.innerHTML = d.investmentData.map(item => {
+      totalCap += item.capital || 0;
+      totalVal += item.currentValue || 0;
+
+      const isPositive = (item.changePct || 0) > 0;
+      const isZero = (item.changePct || 0) === 0;
+      const badgeCls = isZero ? 'bg-secondary-subtle text-secondary' : isPositive ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
+
+      return `
+        <tr>
+          <td class="fw-bold text-dark">${escapeHTML(item.name)}</td>
+          <td class="text-end text-muted">${item.capital ? formatVND(item.capital) : '-'}</td>
+          <td class="text-end fw-semibold">${item.currentValue ? formatVND(item.currentValue) : '-'}</td>
+          <td class="text-end">
+            <span class="badge ${badgeCls}">${escapeHTML(item.changeStr)}</span>
+          </td>
+        </tr>`;
+    }).join('');
+
+    // Tính tổng hiệu suất toàn bộ danh mục
+    const totalDiff = totalVal - totalCap;
+    const totalPct = totalCap > 0 ? (totalDiff / totalCap) * 100 : 0;
+    const totalGainEl = document.getElementById('kpiInvestTotalGain');
+    if (totalGainEl) {
+      totalGainEl.innerText = (totalPct >= 0 ? '+' : '') + totalPct.toFixed(2) + '%';
+      totalGainEl.className = `badge ${totalPct >= 0 ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle'} border`;
+    }
+  }
   document.getElementById('cashTotalRev').innerText = formatVND(d.period.totalRevenue);
   document.getElementById('cashTotalExp').innerText = formatVND(d.period.totalExpense);
 
