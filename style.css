@@ -36,6 +36,9 @@ body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont
     .nowrap-text { white-space: nowrap !important; }
     .fit-title { font-size: clamp(0.75rem, 3vw, 0.95rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .fit-val { font-size: clamp(0.7rem, 2.8vw, 0.85rem); white-space: nowrap; }
+    .cash-business-section { background: linear-gradient(180deg, #fbfffc 0%, #fff 100%); }
+    .cash-business-chart { position: relative; min-height: 285px; }
+    .cash-business-chart canvas { display: block; width: 100% !important; height: 250px !important; }
 
     .stmt-badge { font-size: 0.68rem; padding: 3px 6px; border-radius: 5px; white-space: nowrap; }
     .btn-pay-now { cursor: pointer; transition: all 0.2s ease; border: none; }
@@ -115,4 +118,8 @@ body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont
 .sync-status[data-state="loading"] { color: #996100; }
 @media (prefers-reduced-motion: reduce) {
   .mic-pulse-icon, .ai-wave-bar, .ai-sparkle-icon { animation: none; }
+}
+@media (max-width: 420px) {
+  .cash-business-chart { min-height: 260px; }
+  .cash-business-chart canvas { height: 225px !important; }
 }
