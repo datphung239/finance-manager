@@ -1,5 +1,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwvVhOuRtGTNi9fR5IIEOtRPMkmtLZHW9n2r0YzkcnU5MGFpyEGYgJ6HxjmkoHdaR8L/exec";
 const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
+
 // The two public endpoint identifiers are prepended by the build script.
 let googleToken = null;
 let currentStatementsData = [];
@@ -11,6 +12,8 @@ let chartTrendsInstance = null;
 let chartPaymentInstance = null;
 let chartTargetInstance = null;
 let chartDailyInstance = null;
+let chartBusinessResultInstance = null;
+let chartBusinessRevenueExpenseInstance = null;
 let activeEmail = '';
 let authEpoch = 0;
 let dataEpoch = 0;
@@ -147,9 +150,13 @@ async function handleCredentialResponse(response) {
 async function verifyAndProceed(email) {
   activeEmail = String(email || '').toLowerCase();
   authEpoch++;
+  const epoch = authEpoch;
   updateUI(email, true);
   // Bootstrap performs authorization and returns the first screen in ONE request.
   const result = await fetchInitialAppDataServer();
+  // Cash flow is the fastest useful landing screen; the Card flow remains
+  // available from the mode switch above it.
+  if (googleToken && epoch === authEpoch) switchMainMode('cash');
   // A response can be lost after Apps Script commits the write. Reconcile a
   // durable request id after a reload so pressing F5 cannot create a duplicate.
   recoverPendingMutation();
@@ -330,8 +337,18 @@ function isCardViewShape(view) {
     Array.isArray(view.categoryReport);
 }
 
+function isCashDashboardShape(data) {
+  return !!data && typeof data === 'object' && !!data.period &&
+    !!data.paymentData && Array.isArray(data.monthTrends) &&
+    !!data.ratioTableData && !!data.frequencyData && !!data.dailyData &&
+    !!data.targetData && !!data.businessData &&
+    Array.isArray(data.businessData.result) &&
+    Array.isArray(data.businessData.revenueExpense);
+}
+
 function isBootstrapShape(data) {
-  return !!data && isInitialDataShape(data.initialData) && isCardViewShape(data.cardView);
+  return !!data && isInitialDataShape(data.initialData) && isCardViewShape(data.cardView) &&
+    (data.cashDashboard === undefined || isCashDashboardShape(data.cashDashboard));
 }
 
 function isTransactionListShape(list) {
@@ -379,6 +396,12 @@ function fetchInitialAppDataServer() {
   if (cached && renderCardView(cached.data)) setSyncStatus(cachedStatus(cached.savedAt));
   else setSyncStatus('Đang tải dữ liệu…');
   document.getElementById('loadingDash').style.display = cached ? 'none' : 'block';
+  const cachedCash = cacheRead('cashDashboard', isCashDashboardShape);
+  if (cachedCash) {
+    document.getElementById('cashDashContent').style.display = 'block';
+    document.getElementById('loadingCashDash').style.display = 'none';
+    renderCashDashboard(cachedCash.data);
+  }
   const epoch = authEpoch, revision = dataEpoch, filterSeq = cardFilterSeq;
   const task = (async () => {
     let data = await sendRequest('getBootstrap', {force:true}, {retries: 2});
@@ -389,12 +412,18 @@ function fetchInitialAppDataServer() {
       const initialData = await fetchInitialDataOnly(true);
       const cachedView = cacheRead('cardView', isCardViewShape);
       const cardView = cachedView?.data || await sendRequest('getCardView', {force:true}, {retries: 2});
+      const cachedCash = cacheRead('cashDashboard', isCashDashboardShape);
+      const cashDashboard = cachedCash?.data || await sendRequest('getCashDashboardData', {force:true}, {retries: 2});
       if (isInitialDataShape(initialData)) {
         cacheWrite('initial', initialData);
         applyInitialData(initialData);
       }
       if (isCardViewShape(cardView)) {
-        data = {initialData: initialData || (isInitialDataShape(data?.initialData) ? data.initialData : null), cardView};
+        data = {
+          initialData: initialData || (isInitialDataShape(data?.initialData) ? data.initialData : null),
+          cardView,
+          cashDashboard: isCashDashboardShape(cashDashboard) ? cashDashboard : undefined
+        };
       } else {
         setSyncStatus('Không tải được dữ liệu thẻ. Hãy bấm lại tab hoặc Làm mới.', 'error');
         return;
@@ -403,6 +432,9 @@ function fetchInitialAppDataServer() {
     if (isInitialDataShape(data.initialData)) {
       cacheWrite('initial', data.initialData);
       applyInitialData(data.initialData);
+    }
+    if (isCashDashboardShape(data.cashDashboard)) {
+      cacheWrite('cashDashboard', data.cashDashboard, data.cashDashboard.updatedAt);
     }
     if (revision !== dataEpoch) {
       setTimeout(() => { if (googleToken && !currentCashMode() && document.getElementById('dashboardBlock').style.display !== 'none') loadDashboard(true); }, 0);
@@ -764,7 +796,7 @@ function showAlertCash(msg, type) {
 }
 
 async function loadCashDashboard(fetchServer = false) {
-  const cached = cacheRead('cashDashboard');
+  const cached = cacheRead('cashDashboard', isCashDashboardShape);
   if (cached) {
     document.getElementById('cashDashContent').style.display = 'block';
     renderCashDashboard(cached.data);
@@ -782,7 +814,11 @@ async function loadCashDashboard(fetchServer = false) {
   const data = await sendRequest('getCashDashboardData', {force:fetchServer}, {errorTarget:'cash'});
   if (epoch !== authEpoch || revision !== dataEpoch || seq !== cashFilterSeq) return;
   document.getElementById('loadingCashDash').style.display = 'none';
-  if (!data) return;
+  if (!isCashDashboardShape(data)) {
+    cacheRemove('cashDashboard');
+    setSyncStatus('Phản hồi dashboard dòng tiền không hợp lệ. Hãy bấm Làm mới.', 'error');
+    return;
+  }
   cacheWrite('cashDashboard', data, data.updatedAt);
   document.getElementById('cashDashContent').style.display = 'block';
   renderCashDashboard(data);
@@ -803,6 +839,9 @@ function renderCashDashboard(d) {
 
   const ratioMonthInput = document.getElementById('cashRatioMonth');
   if (ratioMonthInput && d.ratioTableData.filterMonth) ratioMonthInput.value = convertDisplayToInputDate(d.ratioTableData.filterMonth);
+
+  const businessMonthInput = document.getElementById('cashBusinessMonth');
+  if (businessMonthInput && d.businessData?.filterMonth) businessMonthInput.value = convertDisplayToInputDate(d.businessData.filterMonth);
 
   document.getElementById('thRatioM1').innerText = d.ratioTableData.months[0] || '-';
   document.getElementById('thRatioM2').innerText = d.ratioTableData.months[1] || '-';
@@ -849,6 +888,87 @@ function renderCashDashboard(d) {
 }
 
 function renderCashCharts(d) {
+  const businessData = d.businessData || {result: [], revenueExpense: [], filterMonth: ''};
+  const businessResult = Array.isArray(businessData.result) ? businessData.result : [];
+  const businessRevenueExpense = Array.isArray(businessData.revenueExpense) ? businessData.revenueExpense : [];
+
+  chartBusinessResultInstance = upsertChart('chartBusinessResult', chartBusinessResultInstance, {
+    type: 'bar',
+    plugins: [ChartDataLabels],
+    data: {
+      labels: businessResult.map(row => row.category),
+      datasets: [
+        {
+          label: 'Tháng này',
+          data: businessResult.map(row => Number(row.thisMonth) || 0),
+          backgroundColor: '#198754', borderColor: '#198754', borderRadius: 5, barPercentage: 0.78
+        },
+        {
+          label: 'Tháng trước',
+          data: businessResult.map(row => Number(row.lastMonth) || 0),
+          backgroundColor: '#6c757d', borderColor: '#6c757d', borderRadius: 5, barPercentage: 0.78
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      layout: {padding: {top: 8, right: 12, left: 4, bottom: 4}},
+      scales: {
+        x: {beginAtZero: true, grid: {color: 'rgba(0,0,0,.08)'}, ticks: {callback: value => formatCompactVND(value)}},
+        y: {grid: {display: false}, ticks: {autoSkip: false, font: {size: 10}}}
+      },
+      plugins: {
+        legend: {position: 'top', labels: {boxWidth: 12, font: {size: 10}}},
+        tooltip: {callbacks: {label: context => `${context.dataset.label}: ${formatVND(context.parsed.x)}`}},
+        datalabels: {
+          display: context => Math.abs(Number(context.dataset.data[context.dataIndex]) || 0) > 0,
+          color: context => Number(context.dataset.data[context.dataIndex]) < 0 ? '#b02a37' : '#146c43',
+          anchor: context => Number(context.dataset.data[context.dataIndex]) < 0 ? 'start' : 'end',
+          align: context => Number(context.dataset.data[context.dataIndex]) < 0 ? 'left' : 'right',
+          clamp: true, font: {size: 9, weight: 'bold'}, formatter: value => formatCompactVND(value)
+        }
+      }
+    }
+  });
+
+  chartBusinessRevenueExpenseInstance = upsertChart('chartBusinessRevenueExpense', chartBusinessRevenueExpenseInstance, {
+    type: 'bar',
+    plugins: [ChartDataLabels],
+    data: {
+      labels: businessRevenueExpense.map(row => row.category),
+      datasets: [
+        {
+          label: 'Doanh thu',
+          data: businessRevenueExpense.map(row => Number(row.revenue) || 0),
+          backgroundColor: '#20c997', borderColor: '#20c997', borderRadius: 5, barPercentage: 0.78
+        },
+        {
+          label: 'Chi phí',
+          data: businessRevenueExpense.map(row => Number(row.expense) || 0),
+          backgroundColor: '#dc3545', borderColor: '#dc3545', borderRadius: 5, barPercentage: 0.78
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      layout: {padding: {top: 8, right: 12, left: 4, bottom: 4}},
+      scales: {
+        x: {beginAtZero: true, grid: {color: 'rgba(0,0,0,.08)'}, ticks: {callback: value => formatCompactVND(value)}},
+        y: {grid: {display: false}, ticks: {autoSkip: false, font: {size: 10}}}
+      },
+      plugins: {
+        legend: {position: 'top', labels: {boxWidth: 12, font: {size: 10}}},
+        tooltip: {callbacks: {label: context => `${context.dataset.label}: ${formatVND(context.parsed.x)}`}},
+        datalabels: {
+          display: context => Number(context.dataset.data[context.dataIndex]) > 0,
+          color: context => context.datasetIndex === 1 ? '#b02a37' : '#146c43',
+          anchor: 'end', align: 'right', clamp: true,
+          font: {size: 9, weight: 'bold'}, formatter: value => formatCompactVND(value)
+        }
+      }
+    }
+  });
+
   const ctxTrends = document.getElementById('chartMonthTrends').getContext('2d');
   const maxAmount = Math.max(...d.monthTrends.map(m => m.amount), 0);
   const customYMax = maxAmount + 4000000; 
@@ -964,7 +1084,27 @@ function applyCashFilters() {
     startDate:document.getElementById('cashFilterStart').value,
     endDate:document.getElementById('cashFilterEnd').value,
     paymentMonth:document.getElementById('cashPaymentMonth').value,
-    ratioMonth:document.getElementById('cashRatioMonth').value
+    ratioMonth:document.getElementById('cashRatioMonth').value,
+    ...currentBusinessFilter()
+  });
+}
+
+function currentBusinessFilter() {
+  const value = document.getElementById('cashBusinessMonth')?.value;
+  return value ? {businessMonth: value} : {};
+}
+
+function applyBusinessMonthFilter() {
+  cashFilterSeq++;
+  cacheRemove('cashDashboard');
+  document.getElementById('loadingCashDash').style.display = 'block';
+  setSyncStatus('Đang cập nhật báo cáo kinh doanh…');
+  queueCashFilters({
+    startDate:document.getElementById('cashFilterStart').value,
+    endDate:document.getElementById('cashFilterEnd').value,
+    paymentMonth:document.getElementById('cashPaymentMonth').value,
+    ratioMonth:document.getElementById('cashRatioMonth').value,
+    ...currentBusinessFilter()
   });
 }
 
@@ -1092,6 +1232,9 @@ async function loadDashboard(fetchServer = false) {
     cacheWrite('initial', result.initialData);
     applyInitialData(result.initialData);
   }
+  if (result.cashDashboard && isCashDashboardShape(result.cashDashboard)) {
+    cacheWrite('cashDashboard', result.cashDashboard, result.cashDashboard.updatedAt);
+  }
   if (!isCardViewShape(view)) {
     cacheRemove('cardView');
     setSyncStatus('Phản hồi dashboard không hợp lệ. Hãy bấm Làm mới.', 'error');
@@ -1177,6 +1320,14 @@ function cleanAmountInput(input) {
   }
 }
 const formatVND = (val) => typeof val === 'number' ? val.toLocaleString('vi-VN') + ' đ' : val;
+function formatCompactVND(value) {
+  const number = Number(value) || 0;
+  const abs = Math.abs(number);
+  if (abs >= 1e9) return `${(number / 1e9).toFixed(abs >= 1e10 ? 0 : 1)} tỷ`;
+  if (abs >= 1e6) return `${(number / 1e6).toFixed(abs >= 1e7 ? 0 : 1)} tr`;
+  if (abs >= 1e3) return `${(number / 1e3).toFixed(abs >= 1e5 ? 0 : 1)}k`;
+  return number.toLocaleString('vi-VN');
+}
 
 async function handleFormSubmit(event, form) {
   event.preventDefault();
