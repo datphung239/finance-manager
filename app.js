@@ -68,6 +68,10 @@ async function verifyAndProceed(email) {
   updateUI(email, true);
   clearAppCache();
 
+  // Bật màn hình chờ tải hệ thống
+  const initOverlay = document.getElementById('appInitOverlay');
+  if (initOverlay) initOverlay.style.display = 'flex';
+
   document.getElementById('loadingDash').style.display = 'block';
   document.getElementById('dashContent').style.display = 'none';
 
@@ -79,7 +83,8 @@ async function verifyAndProceed(email) {
     const data = await res.json();
     if (!data.success) {
       alert(`Lỗi truy cập: ${data.message || 'Tài khoản không có quyền!'}`);
-      logout(); return;
+      logout();
+      return;
     }
     await fetchInitialAppDataServer();
   } catch (err) {
@@ -126,14 +131,21 @@ async function sendRequest(action, payload = {}) {
     showAlert("Lỗi kết nối Server: " + err.toString(), "danger"); return null;
   }
 }
+
 async function fetchInitialAppDataServer() {
-  // Xóa Cache dữ liệu cũ để luôn cập nhật danh mục mới nhất từ Sheet
   localStorage.removeItem("app_init_data");
 
   const data = await sendRequest("getInitialData");
   if (data) {
     localStorage.setItem("app_init_data", JSON.stringify(data));
-    applyInitialData(data);
+    applyInitialData(data); // Đã render xong danh mục, thẻ, merchant
+
+    // TẮT OVERLAY LOADING SAU KHI DATA ĐÃ ĐƯỢC RENDER XONG VÀO UI
+    const initOverlay = document.getElementById('appInitOverlay');
+    if (initOverlay) initOverlay.style.display = 'none';
+  } else {
+    alert("Không thể tải danh mục dữ liệu ban đầu! Vui lòng làm mới lại trang.");
+    return;
   }
 
   await loadDashboard(true);
@@ -142,6 +154,7 @@ async function fetchInitialAppDataServer() {
   sendRequest("getRecentTransactions", { type: 'spending' }).then(list => list && localStorage.setItem("app_tx_spending", JSON.stringify(list)));
   sendRequest("getRecentTransactions", { type: 'cash_spending' }).then(list => list && localStorage.setItem("app_tx_cash", JSON.stringify(list)));
 }
+
 function applyInitialData(data) {
   // Populate dropdowns cho Thẻ
   populateDropdown('card', data.cards || [], '-- Chọn thẻ --');
