@@ -320,8 +320,8 @@ function validateDTAmount() {
     if (val && !val.startsWith("-")) {
       amtInput.value = "-" + val; // Tự động đổi thành số ÂM (-)
     }
-    targetSelect.value = "Kinh Doanh"; // Gán Đối Tượng là Kinh Doanh
-    targetSelect.disabled = true;       // Khóa không cho sửa
+    targetSelect.value = "Kinh doanh"; // Gán Đối Tượng là Kinh Doanh
+    targetSelect.disabled = false;       // Khóa không cho sửa
     help.className = "form-text small text-success fw-bold";
     help.innerText = "✓ Doanh Thu Kinh Doanh -> Tự động ghi ÂM (-) & Đối tượng: Kinh Doanh";
   } 
@@ -330,8 +330,8 @@ function validateDTAmount() {
     if (val.startsWith("-")) {
       amtInput.value = val.replace("-", ""); // CP giữ số DƯƠNG (+)
     }
-    targetSelect.value = "Kinh Doanh"; // Gán Đối Tượng là Kinh Doanh
-    targetSelect.disabled = true;       // Khóa không cho sửa
+    targetSelect.value = "Kinh doanh"; // Gán Đối Tượng là Kinh Doanh
+    targetSelect.disabled = false;       // Khóa không cho sửa
     help.className = "form-text small text-primary fw-bold";
     help.innerText = "✓ Chi Phí Kinh Doanh -> Số DƯƠNG (+) & Đối tượng: Kinh Doanh";
   } 
@@ -342,7 +342,7 @@ function validateDTAmount() {
     }
     // Mở khóa lựa chọn đối tượng & nếu đang là Kinh Doanh thì reset về mặc định
     targetSelect.disabled = false;
-    if (targetSelect.value === "Kinh Doanh") {
+    if (targetSelect.value === "Kinh doanh") {
       targetSelect.value = "";
     }
     help.className = "form-text small text-danger";
