@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Chi Tiêu & Dòng Tiền</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://accounts.google.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="style.css?v=fm2">
+</head>
+<body>
+  <div class="container px-2 px-sm-3" style="max-width: 550px;">
+    <div class="card p-3 p-md-4">
+      <h4 class="text-center mb-3 text-primary fw-bold"><i class="bi bi-wallet2"></i> Quản Lý Chi Tiêu</h4>
+
+      <!-- AUTH SECTION -->
+      <div id="auth-section" class="mb-3 p-2 border rounded bg-light">
+        <div id="google-btn-container" class="d-flex justify-content-center"></div>
+        <div id="user-info" class="d-flex justify-content-between align-items-center hidden">
+          <span class="small">Xin chào: <strong id="user-email" class="text-primary"></strong></span>
+          <button onclick="logout()" class="btn btn-sm btn-outline-danger py-0 px-2">Đăng xuất</button>
+        </div>
+      </div>
+
+      <!-- MAIN APP CONTAINER -->
+      <div id="app-container" class="hidden">
+        <div id="syncStatus" class="sync-status mb-2" role="status" aria-live="polite"></div>
+        <!-- CỤM NÚT CHUYỂN LUỒNG QUẢN LÝ CHÍNH -->
+        <div class="btn-group w-100 mb-3" role="group">
+          <button type="button" class="btn btn-primary fw-bold btn-main-mode active" id="btnModeCard" onclick="switchMainMode('card')">
+            <i class="bi bi-credit-card-2-front"></i> THẺ TÍN DỤNG
+          </button>
+          <button type="button" class="btn btn-outline-success fw-bold btn-main-mode" id="btnModeCash" onclick="switchMainMode('cash')">
+            <i class="bi bi-cash-coin"></i> DÒNG TIỀN MẶT / BANK
+          </button>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- 1. LUỒNG THẺ TÍN DỤNG (BLUE THEME) -->
+        <!-- ========================================================= -->
+        <div id="cardAppContainer">
+          <div class="nav-grid-container nav-pills mb-3" id="mainTab">
+            <div class="nav-row-1">
+              <div class="nav-item"><button class="nav-link active" id="tab-dashboard" onclick="switchForm('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</button></div>
+              <div class="nav-item"><button class="nav-link" id="tab-spending" onclick="switchForm('spending')"><i class="bi bi-credit-card"></i> Thu Chi & Thanh Toán Thẻ</button></div>
+            </div>
+          </div>
+
+          <!-- TAB DASHBOARD CARD -->
+          <div id="dashboardBlock">
+            <div class="card p-2 mb-3 border bg-light shadow-sm">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-primary text-white fw-bold py-0 px-2" style="font-size: 0.72rem;">
+                  <i class="bi bi-lightbulb-fill me-1 text-warning"></i> Gợi Ý Thẻ
+                </span>
+                <input type="text" class="form-control" id="recommendInput" list="merchantOptions" placeholder="Nhập nơi mua (Agoda, Shopee...)" onkeyup="if(event.key==='Enter') fetchRecommendation()">
+                <button class="btn btn-outline-primary py-0 px-2" type="button" id="btnVoiceRec" onclick="startVoiceRecognition('recommend')" title="Nói tên nơi mua sắm">
+                  <i class="bi bi-mic-fill" id="micIconRec"></i>
+                </button>
+                <button class="btn btn-primary py-0 px-2 fw-bold" type="button" onclick="fetchRecommendation()">Tìm</button>
+              </div>
+              <div id="liveSpeechBoxRec" class="mt-1 p-1 bg-white rounded border text-primary fw-semibold small text-center hidden" style="font-size: 0.72rem;">
+                <span id="liveSpeechTextRec" class="fst-italic text-dark">Đang nghe...</span>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-speedometer2"></i> TỔNG QUAN NỢ THẺ TÍN DỤNG</span>
+              <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="loadDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+            </div>
+            <div id="loadingDash" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải dữ liệu...
+            </div>
+
+            <div id="dashContent" style="display: none;">
+              <!-- KPI CARDS -->
+              <div class="row g-1 g-sm-2 mb-2">
+                <div class="col-4"><div class="kpi-card kpi-blue"><div class="kpi-title">CHƯA ĐẾN HẠN</div><div class="kpi-value" id="kpiNotDue">0 đ</div></div></div>
+                <div class="col-4"><div class="kpi-card kpi-orange"><div class="kpi-title">SẮP ĐẾN HẠN</div><div class="kpi-value" id="kpiComingDue">0 đ</div></div></div>
+                <div class="col-4"><div class="kpi-card kpi-purple"><div class="kpi-title">CHƯA SAO KÊ</div><div class="kpi-value" id="kpiUnstatement">0 đ</div></div></div>
+              </div>
+
+              <!-- KỲ SAO KÊ THẺ HẠN THỜI -->
+              <div class="card bg-light p-2 mb-3 border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="fw-bold small text-dark nowrap-text"><i class="bi bi-credit-card-2-front"></i> Kỳ Sao Kê Thẻ Hiện Tại</div>
+                  <select class="form-select form-select-sm py-0 px-2" id="stmtFilterStatus" onchange="filterStatementList()" style="width: auto; font-size: 0.75rem;">
+                    <option value="">Tất cả</option>
+                    <option value="Chưa TT">Chưa TT</option>
+                    <option value="Đã TT">Đã TT</option>
+                    <option value="Chưa sao kê">Chưa sao kê</option>
+                  </select>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pb-1 border-bottom text-muted px-1" style="font-size: 0.75rem;">
+                  <span>Kỳ sao kê | Hạn TT</span>
+                  <span class="fw-bold text-danger">Còn phải trả</span>
+                </div>
+                <div id="stmtList" class="list-group list-group-flush small" style="max-height: 220px; overflow-y: auto;"></div>
+              </div>
+
+              <!-- BẢNG TRA CỨU DANH MỤC -->
+              <div class="card p-2 border">
+                <div class="fw-bold small text-dark mb-2"><i class="bi bi-funnel"></i> Tra Cứu Chi Tiêu Theo Danh Mục</div>
+                <div class="row g-2 mb-2">
+                  <div class="col-12"><select class="form-select form-select-sm" id="dashFilterCard" onchange="applyCategoryFilter()"></select></div>
+                  <div class="col-6"><select class="form-select form-select-sm" id="dashFilterCategory" onchange="applyCategoryFilter()"></select></div>
+                  <div class="col-6">
+                    <select class="form-select form-select-sm" id="dashFilterStatus" onchange="applyCategoryFilter()">
+                      <option value="">-- Tất cả Trạng Thái --</option>
+                      <option value="Chưa TT">Chưa TT</option>
+                      <option value="Chưa sao kê">Chưa sao kê</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="loadingReport" class="text-center py-2 text-muted" style="display:none;">
+                  <div class="spinner-border spinner-border-sm text-primary"></div> Đang lọc dữ liệu...
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover mb-0 mt-1" style="font-size: 0.8rem;">
+                    <tbody id="categoryReportTable"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FORM CHI TIÊU & THANH TOÁN THẺ TÍCH HỢP -->
+          <form id="dataForm" onsubmit="handleFormSubmit(event, this)">
+            <input type="hidden" id="entryType" name="entryType" value="spending">
+
+            <div id="inputFormFields" style="display: none;">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold text-primary small nowrap-text"><i class="bi bi-credit-card"></i> Giao Dịch & Thanh Toán Thẻ</span>
+                <div class="d-flex align-items-center bg-white border rounded px-2 py-1 shadow-sm">
+                  <i class="bi bi-calendar-event text-primary me-1" style="font-size: 0.85rem;"></i>
+                  <input type="date" class="form-control form-control-sm p-0 border-0 fw-bold text-dark" id="date" name="date" required style="width: 105px; font-size: 0.78rem; background: transparent;">
+                </div>
+              </div>
+
+              <!-- VOICE AI THẺ (TONE XANH DƯƠNG) -->
+              <div id="voiceInputSection" class="card mb-3 border-primary bg-light">
+                <div class="card-body p-2 text-center">
+                  <div class="d-flex justify-content-center w-100 mb-2">
+                    <button type="button" class="btn btn-primary rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoice" onclick="startVoiceRecognition('spending')" style="width: 55px; height: 55px;">
+                      <i class="bi bi-mic-fill fs-4" id="micIcon"></i>
+                    </button>
+                  </div>
+                  <div class="fw-bold text-dark small" id="voiceStatusText">Bấm nút để nói thông tin giao dịch / thanh toán</div>
+
+                  <div class="text-muted small mt-1 text-start px-2" id="voiceExampleText" style="font-size: 0.72rem; line-height: 1.4;">
+                    <div><i class="bi bi-lightbulb text-warning"></i> <strong>Chi:</strong> "Tôi mua ở Shopee 400k dùng thẻ JCB Ultimate MB"</div>
+                    <div><i class="bi bi-lightbulb text-warning"></i> <strong>TT thẻ:</strong> "Chuyển khoản trả dư nợ thẻ JCB MB 1 triệu"</div>
+                  </div>
+
+                  <div id="liveSpeechBox" class="mt-2 p-2 bg-white rounded border text-primary fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
+                    <span id="liveSpeechText" class="fst-italic text-dark">Đang lắng nghe...</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="alertMsg" class="alert alert-danger mt-2 py-2 px-3 small fw-bold shadow-sm" style="display: none;" role="alert"></div>
+
+              <!-- Ô NỔI BẬT: MERCHANT / CỬA HÀNG (THẺ) -->
+              <div class="mb-3 merchant-highlight-box">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label fw-bold text-primary mb-0 small">
+                    <i class="bi bi-shop me-1 fs-6"></i> Merchant / Cửa Hàng
+                  </label>
+                  <span class="badge bg-primary" style="font-size: 0.65rem;">AI Tự Động Gợi Ý</span>
+                </div>
+                <input type="text" class="form-control form-control-sm fw-bold border-primary shadow-sm" id="merchantInput" name="merchant" list="merchantOptions" placeholder="Gõ tên cửa hàng (VD: Shopee, Agoda, Petrolimex...)" oninput="autoMatchCategoryFromMerchant(this.value, 'card')">
+                <datalist id="merchantOptions"></datalist>
+                <div class="form-text text-primary small" style="font-size:0.72rem;">
+                  <i class="bi bi-magic"></i> Chỉ cần nhập tên cửa hàng, hệ thống sẽ tự động điền <strong>Danh Mục Con</strong> tương ứng!
+                </div>
+              </div>
+
+              <!-- 1. CHỌN THẺ -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Chọn Thẻ <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" id="card" name="card" required></select>
+              </div>
+
+              <!-- 2. DANH MỤC CON -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Danh Mục Con <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm" id="categoryInput" name="category" list="categoryOptions" placeholder="Chọn hoặc nhập danh mục (TTT_ cho thanh toán)" required onchange="handleCategoryChange()">
+                <datalist id="categoryOptions"></datalist>
+                <div id="cardCategoryHelp" class="form-text small"></div>
+              </div>
+
+              <!-- 3. SỐ TIỀN -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Số Tiền (VNĐ) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm" id="amount" name="amount" placeholder="Ví dụ: 400000 hoặc -1000000" required oninput="cleanAmountInput(this)">
+              </div>
+
+              <!-- ĐỐI TƯỢNG CHI TIÊU THẺ -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Đối Tượng Chi Tiêu</label>
+                <select class="form-select form-select-sm" id="cardTarget" name="target">
+                  <option value="">Bản thân (Mặc định)</option>
+                  <option value="Bạn Bè">Bạn Bè</option>
+                  <option value="Gia Đình">Gia Đình</option>
+                  <option value="Người Yêu">Người Yêu</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 mb-4 fw-bold" id="btnSubmit">Lưu Giao Dịch SPENDING_PAYMENTS</button>
+
+              <div class="card p-2 bg-light border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH GẦN ĐÂY </span>
+                  <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" onclick="loadRecentTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+                </div>
+                <div id="loadingTx" class="text-center py-2 text-muted" style="display:none;">
+                  <div class="spinner-border spinner-border-sm text-primary"></div> Đang tải...
+                </div>
+                <div id="txList"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- 2. LUỒNG DÒNG TIỀN MẶT / BANK (GREEN THEME) -->
+        <!-- ========================================================= -->
+        <div id="cashAppContainer" class="hidden">
+          <div class="nav-grid-container nav-pills mb-3">
+            <div class="nav-row-1">
+              <div class="nav-item">
+                <button class="nav-link active" id="tab-cash-dash" onclick="switchCashTab('dash')">
+                  <i class="bi bi-speedometer2"></i> Dashboard Dòng Tiền
+                </button>
+              </div>
+              <div class="nav-item">
+                <button class="nav-link" id="tab-cash-input" onclick="switchCashTab('input')">
+                  <i class="bi bi-plus-circle"></i> Thu / Chi Mới
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- DASHBOARD CASH VIRTUALIZATION -->
+          <div id="cashDashboardBlock">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="fw-bold text-success fit-title"><i class="bi bi-graph-up-arrow"></i> DASHBOARD TÀI CHÍNH DÒNG TIỀN</span>
+              <button class="btn btn-sm btn-outline-success py-0 px-2 nowrap-text" onclick="loadCashDashboard(true)"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+
+            <div id="loadingCashDash" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm text-success"></div> Đang trực quan hóa dữ liệu Cash...
+            </div>
+
+            <div id="cashDashContent" style="display: none;">
+              <!-- TỔNG CHI TIÊU & DOANH THU KÈM FILTER NGÀY -->
+              <div class="card p-3 mb-3 border bg-white shadow-sm">
+                <div class="row g-2 mb-2 align-items-center">
+                  <div class="col-6"><label class="small text-muted fw-bold nowrap-text">Từ ngày:</label><input type="date" id="cashFilterStart" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
+                  <div class="col-6"><label class="small text-muted fw-bold nowrap-text">Đến ngày:</label><input type="date" id="cashFilterEnd" class="form-control form-control-sm" onchange="applyCashFilters()"></div>
+                </div>
+                <div class="row g-2 text-center">
+                  <div class="col-6">
+                    <div class="p-2 rounded bg-success-subtle border border-success">
+                      <div class="small text-success fw-bold nowrap-text">TỔNG DOANH THU</div>
+                      <div class="fw-bold text-success fit-val" id="cashTotalRev">0 đ</div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="p-2 rounded bg-danger-subtle border border-danger">
+                      <div class="small text-danger fw-bold nowrap-text">TỔNG CHI TIÊU</div>
+                      <div class="fw-bold text-danger fit-val" id="cashTotalExp">0 đ</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BẢNG TỶ LỆ CHI SINH HOẠT / DOANH THU KINH DOANH -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold text-dark fit-title"><i class="bi bi-calculator text-success"></i> Tỷ Lệ Chi Sinh Hoạt / Doanh Thu</span>
+                  <div class="d-flex align-items-center gap-1">
+                    <span class="small text-muted nowrap-text" style="font-size:0.72rem;">Tháng:</span>
+                    <input type="date" id="cashRatioMonth" class="form-control form-control-sm p-0 px-1" onchange="applyCashFilters()" style="width: 105px; font-size: 0.72rem;">
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered text-center align-middle mb-0" style="font-size: 0.76rem;">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="nowrap-text">Chỉ Số</th>
+                        <th id="thRatioM1" class="nowrap-text">-</th>
+                        <th id="thRatioM2" class="nowrap-text">-</th>
+                        <th id="thRatioM3" class="nowrap-text">-</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="fw-semibold text-start nowrap-text">Doanh Thu KD</td>
+                        <td class="text-success fw-bold nowrap-text" id="tdRevM1">0</td>
+                        <td class="text-success nowrap-text" id="tdRevM2">0</td>
+                        <td class="text-success nowrap-text" id="tdRevM3">0</td>
+                      </tr>
+                      <tr>
+                        <td class="fw-semibold text-start nowrap-text">Chi Sinh Hoạt</td>
+                        <td class="text-danger fw-bold nowrap-text" id="tdExpM1">0</td>
+                        <td class="text-danger nowrap-text" id="tdExpM2">0</td>
+                        <td class="text-danger nowrap-text" id="tdExpM3">0</td>
+                      </tr>
+                      <tr class="table-warning">
+                        <td class="fw-bold text-start nowrap-text">% Chi / Doanh Thu</td>
+                        <td class="fw-bold text-dark nowrap-text" id="tdPctM1">0%</td>
+                        <td class="fw-bold text-dark nowrap-text" id="tdPctM2">0%</td>
+                        <td class="fw-bold text-dark nowrap-text" id="tdPctM3">0%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- CÁC CHỈ SỐ KPI VÀ TẦN SUẤT GIAO DỊCH -->
+              <div class="row g-1 g-sm-2 mb-3">
+                <div class="col-4">
+                  <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
+                    <div class="text-muted fw-semibold" style="font-size: 0.6rem;">SỐ LẦN CHI</div>
+                    <div class="fw-bold text-dark fit-val" id="cashTxCount">0</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
+                    <div class="text-muted fw-semibold" style="font-size: 0.6rem;">CHI TB / LẦN</div>
+                    <div class="fw-bold text-success fit-val" id="cashAvgAmt">0 đ</div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="card p-1 p-sm-2 text-center bg-light border h-100 justify-content-center">
+                    <div class="text-muted fw-semibold" style="font-size: 0.6rem;">CHI LỚN NHẤT</div>
+                    <div class="fw-bold text-danger fit-val" id="cashMaxAmt">0 đ</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BIẾN ĐỘNG CHI TIÊU 4 THÁNG -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-bar-chart-line-fill text-success"></i> Biến Động Chi Tiêu 4 Tháng (% Tăng/Giảm)</div>
+                <canvas id="chartMonthTrends" height="190"></canvas>
+              </div>
+
+              <!-- TỶ LỆ HÌNH THỨC THANH TOÁN -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                  <span class="fw-bold text-dark fit-title"><i class="bi bi-pie-chart-fill text-success"></i> Tỷ Lệ Hình Thức TT</span>
+                  
+                  <!-- 🟢 Đã fix: Tăng max-width lên 150px và điều chỉnh width ô input -->
+                  <div class="d-flex align-items-center bg-white border rounded px-2 py-1 shadow-sm ms-auto" style="max-width: 150px;">
+                    <span class="small text-muted me-1 nowrap-text" style="font-size:0.7rem;">Tháng:</span>
+                    <input type="date" id="cashPaymentMonth" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" onchange="applyCashFilters()" style="width: 100px; font-size: 0.72rem; background: transparent;">
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-center">
+                  <div style="width: 230px; height: 230px;">
+                    <canvas id="chartPaymentMethods"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CHI TIÊU 3 THÁNG THEO ĐỐI TƯỢNG -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold text-dark mb-2 small nowrap-text"><i class="bi bi-people-fill text-success"></i> Biến Động Chi Tiêu 3 Tháng Theo Đối Tượng</div>
+                <canvas id="chartTargetData" height="200"></canvas>
+              </div>
+
+              <!-- BIẾN ĐỘNG CHI TIÊU THEO DANH MỤC -->
+              <div class="card p-3 mb-3 border shadow-sm">
+                <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-list-stars text-success"></i> Biến Động Chi Tiêu Theo Danh Mục</div>
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                  <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.78rem;">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="nowrap-text">Danh Mục</th>
+                        <th class="text-end nowrap-text">Tháng Này</th>
+                        <th class="text-end nowrap-text">Tháng Trước</th>
+                        <th class="text-end nowrap-text">Tăng/Giảm</th>
+                        <th class="text-end nowrap-text">% Tăng/Giảm</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableCatChanges"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TỔNG CHI TIÊU HẰNG NGÀY -->
+              <div class="card p-3 border shadow-sm">
+                <div class="fw-bold small text-dark mb-2 nowrap-text"><i class="bi bi-calendar3 text-success"></i> Chi Tiêu Hằng Ngày</div>
+                <canvas id="chartDailyList" height="150"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- FORM THU / CHI CASH -->
+          <div id="cashInputBlock" style="display: none;">
+            <form id="cashForm" onsubmit="handleCashFormSubmit(event, this)">
+              <input type="hidden" name="entryType" value="cash_spending">
+
+              <div class="card p-3 border shadow-sm mb-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                  <h6 class="fw-bold text-success m-0 fit-title"><i class="bi bi-pencil-square"></i> Nhập Liệu Thu / Chi Cash</h6>
+                  <div class="d-flex align-items-center bg-white border border-success-subtle rounded px-2 py-1 shadow-sm ms-auto" style="max-width: 130px;">
+                    <i class="bi bi-calendar-check text-success me-1" style="font-size: 0.8rem;"></i>
+                    <input type="date" class="form-control form-control-sm p-0 border-0 fw-bold text-dark shadow-none" id="cashDate" name="date" required style="width: 95px; font-size: 0.75rem; background: transparent;">
+                  </div>
+                </div>
+
+                <!-- Voice AI Cash (TONE XANH LÁ) -->
+                <div class="card mb-3 border-success bg-light">
+                  <div class="card-body p-2 text-center">
+                    <div class="d-flex justify-content-center w-100 mb-2">
+                      <button type="button" class="btn btn-success rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center" id="btnVoiceCash" onclick="startVoiceRecognition('cash_spending')" style="width: 55px; height: 55px;">
+                        <i class="bi bi-mic-fill fs-4" id="micIconCash"></i>
+                      </button>
+                    </div>
+                    <div class="fw-bold text-dark small" id="voiceStatusTextCash">Bấm nút để nói thông tin Thu / Chi</div>
+
+                    <div class="text-muted small mt-1 text-start px-2" style="font-size: 0.72rem; line-height: 1.4;">
+                      <div><i class="bi bi-lightbulb text-warning"></i> <strong>Chi sinh hoạt:</strong> "Ăn tối với người yêu 420k chuyển khoản"</div>
+                      <div><i class="bi bi-lightbulb text-warning"></i> <strong>Thu KD:</strong> "Thu tiền cà phê kinh doanh 5 triệu tiền mặt"</div>
+                    </div>
+
+                    <div id="liveSpeechBoxCash" class="mt-2 p-2 bg-white rounded border text-success fw-semibold small text-start hidden" style="min-height: 38px; word-break: break-word;">
+                      <span id="liveSpeechTextCash" class="fst-italic text-dark">Đang lắng nghe...</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="alertMsgCash" class="alert alert-danger py-2 px-3 small fw-bold shadow-sm" style="display: none;" role="alert"></div>
+
+                <!-- Ô NỔI BẬT: MERCHANT / CỬA HÀNG (CASH) -->
+                <div class="mb-3 merchant-cash-highlight-box">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-bold text-success mb-0 small">
+                      <i class="bi bi-shop me-1 fs-6"></i> Merchant / Cửa Hàng
+                    </label>
+                    <span class="badge bg-success" style="font-size: 0.65rem;">AI Tự Động Gợi Ý</span>
+                  </div>
+                  <input type="text" class="form-control form-control-sm fw-bold border-success shadow-sm" id="cashMerchantInput" name="merchant" list="cashMerchantOptions" placeholder="Gõ tên nơi ăn uống/dịch vụ (VD: Haidilao, Starbucks, Ăn xôi...)" oninput="autoMatchCategoryFromMerchant(this.value, 'cash')">
+                  <datalist id="cashMerchantOptions"></datalist>
+                  <div class="form-text text-success small" style="font-size:0.72rem;">
+                    <i class="bi bi-magic"></i> Nhập tên cửa hàng/dịch vụ, hệ thống sẽ tự động chọn <strong>Danh Mục Thu Chi</strong>!
+                  </div>
+                </div>
+
+                <!-- Hình Thức Thanh Toán -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold small">Hình Thức / Tài Khoản <span class="text-danger">*</span></label>
+                  <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="method" id="mCash" value="Tiền Mặt" checked>
+                    <label class="btn btn-outline-secondary method-btn" for="mCash">💵 Tiền Mặt</label>
+
+                    <input type="radio" class="btn-check" name="method" id="mBank" value="Chuyển Khoản">
+                    <label class="btn btn-outline-success method-btn" for="mBank">🏦 Chuyển Khoản</label>
+                  </div>
+                </div>
+
+                <!-- Danh Mục Thu Chi -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold small">Danh Mục Thu Chi <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control form-control-sm" id="cashCategory" name="category" list="cashCategoryOptions" placeholder="Nhập hoặc chọn danh mục (DT- cho thu nhập)" required onchange="validateDTAmount()">
+                  <datalist id="cashCategoryOptions"></datalist>
+                </div>
+
+                <!-- Số Tiền -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold small">Số Tiền (VNĐ) <span class="text-muted font-monospace">(Dương: Chi | Âm: Thu)</span></label>
+                  <input type="text" class="form-control form-control-sm" id="cashAmount" name="amount" placeholder="Ví dụ: 500000 hoặc -500000" required oninput="validateDTAmount()">
+                  <div id="amountHelp" class="form-text small"></div>
+                </div>
+
+                <!-- Đối Tượng -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold small">Đối Tượng Chi Tiêu</label>
+                  <select class="form-select form-select-sm" id="cashTarget" name="target">
+                    <option value="">Bản thân (Mặc định)</option>
+                    <option value="Kinh doanh">Kinh doanh</option>
+                    <option value="Người yêu">Người yêu</option>
+                    <option value="Gia đình">Gia đình</option>
+                    <option value="Bạn bè">Bạn bè</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 fw-bold" id="btnSubmitCash">Lưu Giao Dịch Cash</button>
+              </div>
+            </form>
+
+            <!-- Giao Dịch Cash Gần Đây -->
+            <div class="card p-2 bg-light border">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold small text-secondary"><i class="bi bi-clock-history"></i> GIAO DỊCH CASH GẦN ĐÂY</span>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none text-success" type="button" onclick="loadRecentCashTransactions(true)"><i class="bi bi-arrow-clockwise"></i> Làm mới</button>
+              </div>
+              <div id="loadingTxCash" class="text-center py-2 text-muted" style="display:none;">
+                <div class="spinner-border spinner-border-sm text-success"></div> Đang tải...
+              </div>
+              <div id="txListCash"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP MODAL HIỂN THỊ KẾT QUẢ GỢI Ý THẺ -->
+  <div class="modal fade" id="recommendModal" tabindex="-1" aria-labelledby="recommendModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2 bg-primary text-white">
+          <h6 class="modal-title fw-bold" id="recommendModalLabel"><i class="bi bi-trophy-fill text-warning me-1"></i> Gợi Ý Thẻ NÊN DÙNG</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-3">
+          <div class="alert alert-info py-2 px-3 mb-2 small">
+            <div><strong>Danh mục chính:</strong> <span id="resMainCat">-</span></div>
+            <div><strong>Danh mục con:</strong> <span id="resSubCat" class="fw-bold text-primary">-</span></div>
+          </div>
+          <div id="loadingRecModal" class="text-center py-3 text-muted" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-primary"></div> Đang tra cứu ưu đãi...
+          </div>
+          <div id="cardRecommendList"></div>
+        </div>
+        <div class="modal-footer py-1">
+          <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Đóng (X)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=fm2" defer></script>
+</body>
+</html>
