@@ -401,7 +401,7 @@ function renderRecentCashListUI(list) {
     const isInc = amt < 0;
     const dateFormatted = formatDate(item.date);
     const amtFormatted = Math.abs(amt).toLocaleString('vi-VN');
-    const methodBadge = `<span class="badge ${item.method === 'Chuyển Khoản' ? 'bg-success' : (item.method === 'Ví Điện Tử' ? 'bg-purple' : 'bg-secondary')}">${item.method || 'Tiền Mặt'}</span>`;
+    const methodBadge = `<span class="badge ${item.method === 'Chuyển Khoản' ? 'bg-success' : 'bg-secondary'}">${item.method || 'Tiền Mặt'}</span>`;
     const merchBadge = item.merchant ? `<span class="badge bg-light text-dark border ms-1">${item.merchant}</span>` : '';
     const targetBadge = (item.target && item.target !== 'Bản thân' && item.target.trim()) ? `<span class="badge bg-light text-dark border ms-1">${item.target}</span>` : '';
 
@@ -1128,8 +1128,7 @@ async function processParsedVoiceText(transcript, mode) {
         }
 
         if (res.method === "Chuyển Khoản") document.getElementById('mBank').checked = true;
-        else if (res.method === "Ví Điện Tử") document.getElementById('mWallet').checked = true;
-        else document.getElementById('mCash').checked = true;
+else document.getElementById('mCash').checked = true; // Mặc định về Tiền Mặt nếu không phải Chuyển Khoản
 
         showAlertCash(`AI đã điền: "${res.merchant ? res.merchant + ' - ' : ''}${res.category}" (${res.amount.toLocaleString('vi-VN')} đ)`, "success");
       } else {
