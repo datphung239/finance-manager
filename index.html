@@ -280,21 +280,21 @@
               </div>
             </div>
             
-              <!-- 🟢 2.1 DANH MỤC ĐẦU TƯ & BIẾN ĐỘNG GIÁ TRỊ (VIRTUALIZE ĐẸP MẮT) -->
-              <div class="card p-3 mb-3 border-0 shadow-sm bg-white" style="border-radius: 12px;">
+              <!-- 🟢 DANH MỤC ĐẦU TƯ & BIẾN ĐỘNG GIÁ TRỊ (ĐÃ FIX: KHÔNG TRÀN/RỚT DÒNG SỐ TIỀN TRÊN ĐIỆN THOẠI) -->
+              <div class="card p-2 p-sm-3 mb-3 border-0 shadow-sm bg-white" style="border-radius: 12px;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold text-dark fit-title"><i class="bi bi-graph-up-arrow text-success"></i> Danh Mục Đầu Tư & Biến Động Giá Trị</span>
-                  <span class="badge bg-success-subtle text-success border border-success-subtle" id="kpiInvestTotalGain">+0.00%</span>
+                  <span class="fw-bold text-dark fit-title me-1"><i class="bi bi-graph-up-arrow text-success"></i> Danh Mục Đầu Tư & Biến Động Giá Trị</span>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle flex-shrink-0" id="kpiInvestTotalGain" style="font-size: 0.7rem;">+0.80%</span>
                 </div>
                 
-                <div class="table-responsive">
-                  <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.76rem;">
+                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                  <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.7rem;">
                     <thead class="table-light">
                       <tr>
-                        <th class="nowrap-text">Danh Mục</th>
-                        <th class="text-end nowrap-text">Vốn Ban Đầu</th>
-                        <th class="text-end nowrap-text">Giá Trị Hiện Tại</th>
-                        <th class="text-end nowrap-text">Tỷ Lệ Tăng/Giảm</th>
+                        <th class="nowrap-text px-1">Danh Mục</th>
+                        <th class="text-end nowrap-text px-1">Vốn Ban Đầu</th>
+                        <th class="text-end nowrap-text px-1">Giá Trị Hiện Tại</th>
+                        <th class="text-end nowrap-text px-1">Tỷ Lệ Tăng/Giảm</th>
                       </tr>
                     </thead>
                     <tbody id="investmentTableBody">
