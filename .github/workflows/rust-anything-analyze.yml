@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   analyze:
@@ -34,7 +34,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rust-anything bridge . src/formatting.js
+          if [[ ! -f rust/formatting-rs/rust-anything.json ]]; then
+            rust-anything bridge . src/formatting.js
+          fi
           echo "=== generated Rust crates ==="
           find rust -maxdepth 4 -type f | sort
           echo "=== generated Rust port stub ==="
@@ -45,7 +47,9 @@ jobs:
             echo "No crate manifest found"; exit 1
           fi
           echo "crate=$crate"
-          rust-anything record "$crate"
+          if [[ ! -f "$crate/cases.jsonl" ]]; then
+            rust-anything record "$crate"
+          fi
           find "$crate" -maxdepth 3 -type f | sort
       - name: Upload analysis and bridge evidence
         if: always()
@@ -56,3 +60,16 @@ jobs:
             rust/evidence/
             rust/formatting-rs/
           if-no-files-found: warn
+
+      - name: Commit the generated Rust bridge and original cases
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rust/formatting-rs
+          if ! git diff --cached --quiet; then
+            git commit -m "migration: capture generated formatting bridge and baseline cases"
+            git push origin HEAD:migration/rust-anything-whole-app
+          fi
