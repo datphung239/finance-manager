@@ -10,7 +10,7 @@ let called=0;
 const context={
   window:{fmPerformance:{},addEventListener(){}},localStorage:{getItem(){called++;return null;},setItem(){called++;},removeItem(){called++;}},
   document:{addEventListener(){},currentScript:{src:'https://demo.invalid/app.js'}},
-  location:{href:'https://demo.invalid/'},URL,
+  location:{href:'https://demo.invalid/'},URL,TextDecoder,TextEncoder,
   Date,Math,Number,String,Map,Set,Promise,Array,JSON,console,setTimeout,clearTimeout,
 };
 vm.createContext(context);
