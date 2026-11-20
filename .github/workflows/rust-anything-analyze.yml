@@ -83,7 +83,7 @@ jobs:
           if [[ ! -f rust/validators-rs/cases.jsonl ]]; then
             rust-anything record rust/validators-rs
           fi
-          rust-anything record rust/validators-rs --from-tests
+          rust-anything record rust/validators-rs --from-tests -- node --test test/validators.test.mjs
       - name: Build, diff and gate validator unit
         shell: bash
         run: |
