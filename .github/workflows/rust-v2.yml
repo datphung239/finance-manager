@@ -5,7 +5,7 @@ on:
       - rebuild/rust-d1-access
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   domain-and-schema:
     runs-on: ubuntu-latest
@@ -13,7 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Format
+      - name: Format canonical Rust source
+        run: cargo fmt --manifest-path next/core/Cargo.toml
+      - name: Commit Rust formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add next/core/src next/core/tests
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(rust): canonical cargo fmt of finance core'
+            git push origin HEAD:rebuild/rust-d1-access
+          fi
+      - name: Verify format
         run: cargo fmt --manifest-path next/core/Cargo.toml -- --check
       - name: Domain test
         run: cargo test --manifest-path next/core/Cargo.toml --all-targets
