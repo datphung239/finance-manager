@@ -110,13 +110,28 @@ fn cash_tab(model: &Value) -> String {
         write!(&mut balance_list,"<div class=\"fm-row\"><div><strong>{}</strong><br><small>{}</small></div><strong>{}</strong></div>",
             esc(str_field(a,"name")),esc(str_field(a,"kind")),vnd(int_field(a,"balance_vnd"))).ok();
     }
+    let mut monthly_rows=String::new();
+    for month in arr(model,"monthly") {
+        write!(&mut monthly_rows,
+          "<div class=\"fm-row\"><div><strong>{}</strong><br><small>Tiền vào: {} · Tiền ra: {}</small></div><small>Chi thẻ: {}</small></div>",
+          esc(str_field(month,"month")),
+          vnd(int_field(month,"cash_in_vnd")),
+          vnd(int_field(month,"cash_out_vnd")),
+          vnd(int_field(month,"card_spend_vnd"))).ok();
+    }
+    if monthly_rows.is_empty() {
+        monthly_rows.push_str("<p class=\"fm-muted mb-0\">Chưa có giao dịch trong D1.</p>");
+    }
     format!(
         r#"
         <div class="fm-kpis">
-          <div class="fm-kpi green"><div class="label">TỔNG THU</div><div class="number">{}</div></div>
-          <div class="fm-kpi orange"><div class="label">TỔNG CHI</div><div class="number">{}</div></div>
+          <div class="fm-kpi green"><div class="label">THU NHẬP GHI NHẬN</div><div class="number">{}</div></div>
+          <div class="fm-kpi orange"><div class="label">CHI BẰNG TIỀN</div><div class="number">{}</div></div>
+          <div class="fm-kpi purple"><div class="label">CHI TIÊU THẺ</div><div class="number">{}</div></div>
+          <div class="fm-kpi"><div class="label">CÔNG NỢ PHẢI THU</div><div class="number">{}</div></div>
         </div>
         <section class="fm-panel"><h6>Tiền mặt & ngân hàng</h6>{}</section>
+        <section class="fm-panel"><h6>Thu / chi / thẻ theo tháng</h6><p class="fm-muted">Chuyển khoản nội bộ không tính là thu nhập. Thanh toán thẻ không tính chi phí lần hai.</p>{}</section>
         <section class="fm-panel"><h6>Nhập giao dịch thu / chi</h6>
           <div class="fm-inputs">
             <div class="fm-2"><div><label>Loại</label><select class="form-select" id="tx-kind"><option value="expense">Chi</option><option value="income">Thu</option><option value="transfer">Chuyển khoản</option></select></div>
@@ -141,7 +156,10 @@ fn cash_tab(model: &Value) -> String {
         "#,
         vnd(int_field(&model["totals"], "income_vnd")),
         vnd(int_field(&model["totals"], "expense_vnd")),
+        vnd(int_field(&model["totals"], "card_charge_vnd")),
+        vnd(int_field(&model["debt_summary"], "receivable_vnd")),
         balance_list,
+        monthly_rows,
         option_list(accounts, "", "name"),
         option_list(accounts, "", "name"),
         option_list(categories, "", "name"),
