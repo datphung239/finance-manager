@@ -1,0 +1,21 @@
+name: Rust D1 rebuild checks
+on:
+  push:
+    branches:
+      - rebuild/rust-d1-access
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  domain-and-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Format
+        run: cargo fmt --manifest-path next/core/Cargo.toml -- --check
+      - name: Domain test
+        run: cargo test --manifest-path next/core/Cargo.toml --all-targets
+      - name: D1 SQLite schema/invariants
+        run: python3 next/tests/test_schema.py
