@@ -133,6 +133,7 @@ fn cash_tab(model: &Value) -> String {
         <section class="fm-panel"><h6>Tạo tài khoản / danh mục</h6>
           <div class="fm-inputs">
             <div class="fm-2"><input class="form-control" id="new-account-name" placeholder="Tên tài khoản"><select class="form-select" id="new-account-kind"><option value="bank">Ngân hàng</option><option value="cash">Tiền mặt</option><option value="credit_card">Thẻ tín dụng</option></select></div>
+            <div><label>Số dư đầu kỳ (VND, không tính vào doanh thu)</label><input class="form-control" id="new-account-opening" type="number" step="1" value="0" inputmode="numeric"></div>
             <button class="btn btn-outline-primary btn-sm" data-action="new-account">Thêm tài khoản</button>
             <div class="fm-2"><input class="form-control" id="new-category-name" placeholder="Tên danh mục"><select class="form-select" id="new-category-kind"><option value="expense">Chi</option><option value="income">Thu</option><option value="both">Cả hai</option></select></div>
             <button class="btn btn-outline-primary btn-sm" data-action="new-category">Thêm danh mục</button>
@@ -460,7 +461,9 @@ async fn execute(action: String, id: String) {
         "new-account" => Ok((
             "/api/accounts",
             Some(json!({"name":value("new-account-name"),
-                "kind":value("new-account-kind"),"opening_balance_vnd":0})),
+                "kind":value("new-account-kind"),
+                "opening_balance_vnd":value("new-account-opening").parse::<i64>()
+                    .map_err(|_|"Số dư đầu kỳ phải là số nguyên VND".to_string())?})),
             "POST".into(),
         )),
         "new-category" => Ok((
