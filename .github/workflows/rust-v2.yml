@@ -58,3 +58,29 @@ jobs:
           targets: wasm32-unknown-unknown
       - name: Check Rust browser UI
         run: cargo check --target wasm32-unknown-unknown --manifest-path next/client/Cargo.toml
+  client-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install matching wasm-bindgen CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          v=0.2.130
+          tmp="$(mktemp -d)"
+          curl -fsSL --retry 3 "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${v}/wasm-bindgen-${v}-x86_64-unknown-linux-musl.tar.gz" -o "$tmp/wb.tar.gz"
+          tar xzf "$tmp/wb.tar.gz" -C "$tmp"
+          exe="$(find "$tmp" -type f -name wasm-bindgen -print -quit)"
+          test -n "$exe"
+          echo "$(dirname "$exe")" >> "$GITHUB_PATH"
+          "$exe" --version
+      - name: Compile Rust UI + static assets
+        run: bash next/scripts/build-client.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finance-v2-rust-client-static
+          path: next/dist/
