@@ -83,6 +83,15 @@ jobs:
           if [[ ! -f rust/validators-rs/cases.jsonl ]]; then
             rust-anything record rust/validators-rs
           fi
+          rust-anything record rust/validators-rs --from-tests
+      - name: Build, diff and gate validator unit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --manifest-path rust/validators-rs/Cargo.toml
+          rust-anything build rust/validators-rs 2>&1 | tee rust/evidence/validators-build.txt
+          rust-anything diff rust/validators-rs 2>&1 | tee rust/evidence/validators-diff.txt
+          rust-anything gate rust/validators-rs 2>&1 | tee rust/evidence/validators-gate.txt
       - name: Upload analysis and bridge evidence
         if: always()
         uses: actions/upload-artifact@v4
