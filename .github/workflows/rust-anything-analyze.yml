@@ -73,6 +73,16 @@ jobs:
           rust-anything build rust/formatting-rs 2>&1 | tee rust/evidence/formatting-build.txt
           rust-anything diff rust/formatting-rs 2>&1 | tee rust/evidence/formatting-diff.txt
           rust-anything gate rust/formatting-rs 2>&1 | tee rust/evidence/formatting-gate.txt
+      - name: Record original data-schema validators
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f rust/validators-rs/rust-anything.json ]]; then
+            rust-anything bridge . src/validators.js
+          fi
+          if [[ ! -f rust/validators-rs/cases.jsonl ]]; then
+            rust-anything record rust/validators-rs
+          fi
       - name: Upload analysis and bridge evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,6 +92,8 @@ jobs:
             rust/evidence/
             rust/formatting-rs/cases.jsonl
             rust/formatting-rs/src/port.rs
+            rust/validators-rs/cases.jsonl
+            rust/validators-rs/src/port.rs
           if-no-files-found: warn
 
       - name: Commit the generated Rust bridge and original cases
@@ -91,7 +103,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add rust/formatting-rs
+          git add rust/formatting-rs rust/validators-rs
           if ! git diff --cached --quiet; then
             git commit -m "migration: capture generated formatting bridge and baseline cases"
             git push origin HEAD:migration/rust-anything-whole-app

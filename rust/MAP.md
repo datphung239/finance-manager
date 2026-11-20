@@ -6,8 +6,8 @@ Tool: rust-anything 2.0.0. Workflow: .github/workflows/rust-anything-analyze.yml
 | Unit | Source | Stage | Evidence |
 | --- | --- | --- | --- |
 | 00 | app.js whole-app | analyzed | GitHub Actions run 44668906712, analyze artifact |
-| 01 | src/formatting.js (date formatters) | characterization / bridge pending | Node original-equivalence tests; no Rust gate yet |
-| 02 | data schema validators | queued | to be extracted |
+| 01 | src/formatting.js (date formatters) | ported / 24 of 24 diff / strict gate PASS (CI 44670281093) | Node original-equivalence tests; no Rust gate yet |
+| 02 | src/validators.js (data schema validators) | extracted; bridge & record in CI | Node original-equivalence tests |
 | 03 | amount and category validation | queued | include sign, Vietnamese categories |
 | 04 | cache and pending mutations | queued | localStorage; simulated time and failures |
 | 05 | request / retry / mutation reconciliation | queued | mock network only; never production endpoint |
