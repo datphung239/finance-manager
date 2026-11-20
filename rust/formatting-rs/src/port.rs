@@ -1,22 +1,79 @@
-//! The Rust port of `src/formatting.js`.
-//!
-//! Replace each `unimplemented!` with the port of the source function. Return `Err` where
-//! the source throws or raises: the caller gets an error there too. After changing a
-//! signature, run `rust-anything refresh` to regenerate the bindings. `rust-anything diff` checks
-//! behavior against what the source recorded.
-
+//! Exact-behavior Rust port of browser date formatting functions.
 #![forbid(unsafe_code)]
+use serde_json::Value;
 
-/// Port of `convertDisplayToInputDate` (`src/formatting.js:3`).
-pub fn convert_display_to_input_date(
-    d_str: serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    let _ = &d_str;
-    unimplemented!("port `convertDisplayToInputDate` from src/formatting.js")
+fn js_truthy(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(v) => *v,
+        Value::Number(n) => n.as_f64().is_some_and(|v| v != 0.0 && !v.is_nan()),
+        Value::String(v) => !v.is_empty(),
+        Value::Array(_) => true,
+        Value::Object(_) if crate::js::is_undefined(value) => false,
+        Value::Object(_) => crate::js::as_number(value)
+            .is_none_or(|v| v != 0.0 && !v.is_nan()),
+    }
 }
 
-/// Port of `formatDate` (`src/formatting.js:9`).
-pub fn format_date(str: serde_json::Value) -> Result<serde_json::Value, String> {
-    let _ = &str;
-    unimplemented!("port `formatDate` from src/formatting.js")
+fn js_string(value: &Value) -> String {
+    match value {
+        Value::Null => "null".into(),
+        Value::Bool(v) => v.to_string(),
+        Value::String(v) => v.clone(),
+        Value::Number(n) => n.as_f64().map_or_else(String::new, crate::js::number_to_string),
+        Value::Array(values) => values.iter()
+            .map(|v| if v.is_null() || crate::js::is_undefined(v) {
+                String::new()
+            } else { js_string(v) })
+            .collect::<Vec<_>>().join(","),
+        Value::Object(_) if crate::js::is_undefined(value) => "undefined".into(),
+        Value::Object(_) => crate::js::as_number(value)
+            .map_or_else(|| "[object Object]".into(), crate::js::number_to_string),
+    }
+}
+
+fn js_pad2(value: &str) -> String {
+    format!("{}{}", "0".repeat(2usize.saturating_sub(value.encode_utf16().count())), value)
+}
+
+/// Port of convertDisplayToInputDate from the original app.
+pub fn convert_display_to_input_date(d_str: Value) -> Result<Value, String> {
+    if !js_truthy(&d_str) { return Ok(Value::String(String::new())); }
+    let Value::String(input) = d_str else {
+        return Err("dStr.split is not a function".into());
+    };
+    let parts: Vec<_> = input.split('/').collect();
+    Ok(Value::String(if parts.len() == 3 {
+        format!("{}-{}-{}", parts[2], js_pad2(parts[1]), js_pad2(parts[0]))
+    } else { input }))
+}
+
+/// Port of formatDate from the original app.
+pub fn format_date(value: Value) -> Result<Value, String> {
+    if !js_truthy(&value) { return Ok(Value::String(String::new())); }
+    let clean = js_string(&value).replacen('\'', "", 1).trim().to_owned();
+    let parts: Vec<_> = if clean.contains('/') {
+        clean.split('/').collect()
+    } else { clean.split('-').collect() };
+    if parts.len() != 3 { return Ok(Value::String(clean)); }
+    Ok(Value::String(if clean.contains('-') {
+        format!("{}/{}/{}", js_pad2(parts[2]), js_pad2(parts[1]), parts[0])
+    } else {
+        format!("{}/{}/{}", js_pad2(parts[0]), js_pad2(parts[1]), js_pad2(parts[2]))
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn keeps_finance_date_semantics() {
+        assert_eq!(format_date(Value::from("2026-01-05")), Ok(Value::from("05/01/2026")));
+        assert_eq!(format_date(Value::from("5/1/2026")), Ok(Value::from("05/01/2026")));
+        assert_eq!(format_date(Value::from(0)), Ok(Value::from("")));
+        assert_eq!(convert_display_to_input_date(Value::from("5/1/2026")),
+                   Ok(Value::from("2026-01-05")));
+        assert_eq!(convert_display_to_input_date(Value::from(true)),
+                   Err("dStr.split is not a function".to_string()));
+    }
 }
