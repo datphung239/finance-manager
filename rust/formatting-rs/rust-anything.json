@@ -1,0 +1,48 @@
+{
+  "schema": "rust-anything/bridge@1",
+  "root": "/home/runner/work/finance-manager/finance-manager",
+  "unit": "src/formatting.js",
+  "language": "ts",
+  "kind": "wasm",
+  "crate_name": "formatting-rs",
+  "exports": [
+    {
+      "name": "convertDisplayToInputDate",
+      "file": "src/formatting.js",
+      "line": 3,
+      "params": [
+        {
+          "name": "dStr",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    },
+    {
+      "name": "formatDate",
+      "file": "src/formatting.js",
+      "line": 9,
+      "params": [
+        {
+          "name": "str",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    }
+  ],
+  "classes": [],
+  "js_only": []
+}

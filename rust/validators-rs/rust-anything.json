@@ -1,0 +1,102 @@
+{
+  "schema": "rust-anything/bridge@1",
+  "root": "/home/runner/work/finance-manager/finance-manager",
+  "unit": "src/validators.js",
+  "language": "ts",
+  "kind": "wasm",
+  "crate_name": "validators-rs",
+  "exports": [
+    {
+      "name": "isInitialDataShape",
+      "file": "src/validators.js",
+      "line": 2,
+      "params": [
+        {
+          "name": "data",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    },
+    {
+      "name": "isCardViewShape",
+      "file": "src/validators.js",
+      "line": 9,
+      "params": [
+        {
+          "name": "view",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    },
+    {
+      "name": "isCashDashboardShape",
+      "file": "src/validators.js",
+      "line": 18,
+      "params": [
+        {
+          "name": "data",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    },
+    {
+      "name": "isBootstrapShape",
+      "file": "src/validators.js",
+      "line": 27,
+      "params": [
+        {
+          "name": "data",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    },
+    {
+      "name": "isTransactionListShape",
+      "file": "src/validators.js",
+      "line": 32,
+      "params": [
+        {
+          "name": "list",
+          "ts_type": "unknown",
+          "optional": false,
+          "rest": false
+        }
+      ],
+      "returns": "unknown",
+      "is_async": false,
+      "is_generator": false,
+      "type_params": [],
+      "uses_instanceof": false
+    }
+  ],
+  "classes": [],
+  "js_only": []
+}

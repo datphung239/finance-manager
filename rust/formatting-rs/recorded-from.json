@@ -1,0 +1,17 @@
+{
+  "unit": "src/formatting.js",
+  "files": 1,
+  "fingerprint": "6998f6af8dbede36",
+  "coverage": {
+    "lines": 15,
+    "reached": 13,
+    "files": [
+      {
+        "file": "src/formatting.js",
+        "lines": 15,
+        "reached": 13,
+        "missed": "14-15"
+      }
+    ]
+  }
+}
