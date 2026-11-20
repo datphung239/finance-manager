@@ -51,6 +51,13 @@ jobs:
             rust-anything record "$crate"
           fi
           find "$crate" -maxdepth 3 -type f | sort
+      - name: Build, diff and gate Rust formatting unit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rust-anything build rust/formatting-rs 2>&1 | tee rust/evidence/formatting-build.txt
+          rust-anything diff rust/formatting-rs 2>&1 | tee rust/evidence/formatting-diff.txt
+          rust-anything gate rust/formatting-rs 2>&1 | tee rust/evidence/formatting-gate.txt
       - name: Upload analysis and bridge evidence
         if: always()
         uses: actions/upload-artifact@v4
