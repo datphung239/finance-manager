@@ -1,0 +1,37 @@
+name: Browser Rust benchmark smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/browser-rust-smoke.yml'
+      - 'tools/browser-rust-smoke.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser runner dependency
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Run local static demo and real WASM browser benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          python3 -m http.server 8788 >/tmp/fm-http.log 2>&1 &
+          sleep 2
+          node tools/browser-rust-smoke.mjs
+      - name: Upload screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-demo-browser-smoke
+          path: demo-smoke.png
+          if-no-files-found: ignore
