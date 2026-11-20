@@ -94,3 +94,22 @@ db.execute("INSERT INTO counterparties(id,owner_id,name) VALUES('owner2','u2','�
 must_reject("""INSERT INTO debts(id,owner_id,counterparty_id,direction,principal_vnd,title)
  VALUES('xdebt','u1','owner2','receivable',1000,'Nợ sai chủ')""", "cross-owner debt")
 print("PASS: D1 owner/category/account guards and bank-post reversal")
+
+# D1 monthly dashboard numbers must not double count transfers or credit-card payments.
+db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id)
+ VALUES('card-spend','u1','cardspend01','2026-11-20','card_charge',50000,'card1')""")
+db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,category_id)
+ VALUES('expense1','u1','expense01','2026-11-20','expense',2000,'a','ce')""")
+db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,other_account_id)
+ VALUES('transfer1','u1','transfer01','2026-11-20','transfer',25000,'a','b')""")
+month=db.execute("""SELECT
+  SUM(CASE WHEN kind IN ('income','debt_collection') THEN amount_vnd ELSE 0 END),
+  SUM(CASE WHEN kind IN ('expense','debt_payment','card_payment') THEN amount_vnd ELSE 0 END),
+  SUM(CASE WHEN kind='card_charge' THEN amount_vnd ELSE 0 END)
+ FROM transactions WHERE owner_id='u1' AND deleted_at IS NULL AND substr(occurred_at,1,7)='2026-11'""").fetchone()
+assert month==(200000,3000,50000), f"monthly D1 cash/card totals wrong: {month}"
+db.execute("INSERT INTO accounts(id,owner_id,name,kind,opening_balance_vnd) VALUES('opening','u1','Số dư mở đầu','bank',750000)")
+income=db.execute("""SELECT SUM(amount_vnd) FROM transactions
+  WHERE owner_id='u1' AND kind='income' AND deleted_at IS NULL""").fetchone()[0]
+assert income==200000, "opening account balance was counted as revenue"
+print("PASS: monthly D1 cashflow, card charges, transfers and opening balance separation")
