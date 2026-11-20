@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d6efd">
+<title>Quản Lý Chi Tiêu & Dòng Tiền — Rust</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/v2.css">
+</head>
+<body>
+<div id="app" class="container px-2 px-sm-3 py-3" style="max-width:550px">
+  <div class="card p-4 text-center"><h4>Finance Manager Rust</h4>
+   <div class="spinner-border text-primary mx-auto my-3"></div>
+   <p>Đang tải ứng dụng Rust/WebAssembly…</p></div>
+</div>
+<script type="module">
+import init from '/pkg/finance_client.js';
+init().catch(() => {
+  document.getElementById('app').textContent = 'Không thể tải Rust/WASM. Hãy kiểm tra kết nối và tải lại.';
+});
+</script>
+</body>
+</html>
