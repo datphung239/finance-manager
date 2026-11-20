@@ -84,3 +84,36 @@ jobs:
         with:
           name: finance-v2-rust-client-static
           path: next/dist/
+  browser-smoke:
+    needs: client-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: finance-v2-rust-client-static
+          path: next/dist/
+      - name: Install isolated browser smoke runner
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Run Rust/WASM browser smoke with mocked D1 API
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          cd next/dist
+          python3 -m http.server 8788 >/tmp/finance-v2-static.log 2>&1 &
+          cd ../..
+          sleep 2
+          node next/tests/browser-smoke.mjs
+      - name: Screenshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-v2-mobile-smoke
+          path: next/v2-browser-smoke.png
+          if-no-files-found: ignore
