@@ -55,3 +55,42 @@ db.execute("UPDATE transactions SET deleted_at=datetime('now') WHERE id='s1'")
 assert db.execute("SELECT settled_vnd FROM debts WHERE id='d1'").fetchone()[0]==0
 print("PASS: atomic debt settlement, overpayment rejection and soft-delete reversal")
 
+
+# Fresh D1 migrations: tenant ownership, account kinds and reversal.
+db.executescript(Path("next/migrations/0003_tenant_guards.sql").read_text())
+db.execute("INSERT INTO accounts(id,owner_id,name,kind) VALUES('card1','u1','Thẻ Demo','credit_card')")
+db.execute("INSERT INTO accounts(id,owner_id,name,kind) VALUES('other','u2','Tiền khách khác','bank')")
+db.execute("INSERT INTO categories(id,owner_id,name,kind) VALUES('ci','u1','Thu','income')")
+db.execute("INSERT INTO categories(id,owner_id,name,kind) VALUES('ce','u1','Chi','expense')")
+db.execute("INSERT INTO categories(id,owner_id,name,kind) VALUES('c-other','u2','Chi khác','expense')")
+
+def must_reject(sql, label):
+    try:
+        db.execute(sql)
+    except sqlite3.IntegrityError:
+        return
+    raise AssertionError("D1 incorrectly permitted: " + label)
+
+must_reject("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id)
+ VALUES('x1','u1','cross01','2026-11-20','income',1000,'other')""", "other user's account")
+must_reject("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,other_account_id)
+ VALUES('x2','u1','cross02','2026-11-20','transfer',1000,'a','other')""", "other user's transfer destination")
+must_reject("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,category_id)
+ VALUES('x3','u1','cross03','2026-11-20','expense',1000,'a','c-other')""", "other user's category")
+must_reject("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,category_id)
+ VALUES('x4','u1','cross04','2026-11-20','expense',1000,'a','ci')""", "income category used as expense")
+must_reject("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id)
+ VALUES('x5','u1','cross05','2026-11-20','card_charge',1000,'a')""", "card charge to cash account")
+must_reject("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,other_account_id)
+ VALUES('x6','u1','cross06','2026-11-20','card_payment',1000,'a','b')""", "card payment to another bank")
+db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,other_account_id)
+ VALUES('ok-card','u1','cardpay1','2026-11-20','card_payment',1000,'a','card1')""")
+db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,source)
+ VALUES('bank-post-1','u1','bankpost1','2026-11-20','income',25000,'a','bank_notification')""")
+db.execute("UPDATE bank_inbox SET status='posted',posted_transaction_id='bank-post-1' WHERE id='b1'")
+db.execute("UPDATE transactions SET deleted_at=datetime('now') WHERE id='bank-post-1'")
+assert db.execute("SELECT status,posted_transaction_id FROM bank_inbox WHERE id='b1'").fetchone() == ('pending', None)
+db.execute("INSERT INTO counterparties(id,owner_id,name) VALUES('owner2','u2','Đối tác riêng')")
+must_reject("""INSERT INTO debts(id,owner_id,counterparty_id,direction,principal_vnd,title)
+ VALUES('xdebt','u1','owner2','receivable',1000,'Nợ sai chủ')""", "cross-owner debt")
+print("PASS: D1 owner/category/account guards and bank-post reversal")
