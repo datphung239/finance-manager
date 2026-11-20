@@ -51,7 +51,7 @@ try{
   await page.locator('#new-account-name').fill('Ngân hàng Smoke Test');
   await page.locator('#new-account-kind').selectOption('bank');
   await page.locator('[data-action="new-account"]').click();
-  await page.getByText('Ngân hàng Smoke Test',{exact:true}).waitFor({timeout:12000});
+  await page.locator('.fm-panel strong').getByText('Ngân hàng Smoke Test',{exact:true}).waitFor({timeout:12000});
   await page.locator('#new-category-name').fill('Chi thử nghiệm');
   await page.locator('#new-category-kind').selectOption('expense');
   await page.locator('[data-action="new-category"]').click();
