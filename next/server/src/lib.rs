@@ -266,7 +266,10 @@ async fn create_debt(req: &mut Request, db: &D1Database, owner: &str) -> Result<
         || input.title.len() > 200
         || input.principal_vnd <= 0
         || input.principal_vnd > finance_core::MAX_AMOUNT_VND
-        || input.due_date.as_deref().is_some_and(|d| !finance_core::valid_iso_date(d))
+        || input
+            .due_date
+            .as_deref()
+            .is_some_and(|d| !finance_core::valid_iso_date(d))
         || !matches!(input.direction.as_str(), "receivable" | "payable")
         || !exists(db, "counterparties", owner, &input.counterparty_id).await?
     {
@@ -464,7 +467,11 @@ async fn create_bank_inbox(req: &mut Request, db: &D1Database, owner: &str) -> R
     {
         return invalid("Invalid notification source or fingerprint");
     }
-    if input.occurred_at.as_deref().is_some_and(|d| !finance_core::valid_iso_date(d)) {
+    if input
+        .occurred_at
+        .as_deref()
+        .is_some_and(|d| !finance_core::valid_iso_date(d))
+    {
         return invalid("Bank notification date must be YYYY-MM-DD");
     }
     let candidate = match parse_bank_notification(&input.text) {
