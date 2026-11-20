@@ -51,6 +51,19 @@ jobs:
             rust-anything record "$crate"
           fi
           find "$crate" -maxdepth 3 -type f | sort
+      - name: Install wasm-bindgen CLI matching locked crate
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=0.2.130
+          tmpdir="$(mktemp -d)"
+          curl -fsSL --retry 3 "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${version}/wasm-bindgen-${version}-x86_64-unknown-linux-musl.tar.gz" -o "$tmpdir/wasm-bindgen.tar.gz"
+          tar xzf "$tmpdir/wasm-bindgen.tar.gz" -C "$tmpdir"
+          binary="$(find "$tmpdir" -type f -name wasm-bindgen -print -quit)"
+          test -n "$binary"
+          chmod +x "$binary"
+          echo "$(dirname "$binary")" >> "$GITHUB_PATH"
+          "$binary" --version
       - name: Build, diff and gate Rust formatting unit
         shell: bash
         run: |
