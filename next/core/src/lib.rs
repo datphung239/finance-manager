@@ -4,6 +4,23 @@ use serde::{Deserialize, Serialize};
 
 pub const MAX_AMOUNT_VND: i64 = 9_000_000_000_000;
 
+pub fn valid_iso_date(date: &str) -> bool {
+    let bytes = date.as_bytes();
+    if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' ||
+       !bytes.iter().enumerate().all(|(i, b)| i == 4 || i == 7 || b.is_ascii_digit()) {
+        return false;
+    }
+    let year = date[0..4].parse::<u16>().unwrap_or(0);
+    let month = date[5..7].parse::<usize>().unwrap_or(0);
+    let day = date[8..10].parse::<u8>().unwrap_or(0);
+    if year == 0 || !(1..=12).contains(&month) {
+        return false;
+    }
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    let days = [31, if leap {29} else {28}, 31,30,31,30,31,31,30,31,30,31];
+    day > 0 && day <= days[month-1]
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TxKind {
@@ -69,20 +86,8 @@ impl NewTransaction {
         if self.account_id.is_empty() || self.account_id.len() > 100 {
             return Err("account_id is required");
         }
-        if self.occurred_at.len() < 10
-            || self.occurred_at.len() > 40
-            || !self
-                .occurred_at
-                .as_bytes()
-                .get(4)
-                .is_some_and(|b| *b == b'-')
-            || !self
-                .occurred_at
-                .as_bytes()
-                .get(7)
-                .is_some_and(|b| *b == b'-')
-        {
-            return Err("occurred_at must start with YYYY-MM-DD");
+        if !valid_iso_date(&self.occurred_at) {
+            return Err("occurred_at must be a valid YYYY-MM-DD date");
         }
         if self.kind == TxKind::Transfer
             && (self.other_account_id.as_deref().unwrap_or("").is_empty()
