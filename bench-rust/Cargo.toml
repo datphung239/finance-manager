@@ -1,0 +1,13 @@
+[package]
+name = "finance-format-bench"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "=0.2.130"
+serde_json = "1"
+formatting-rs = { path = "../../port-source/rust/formatting-rs" }

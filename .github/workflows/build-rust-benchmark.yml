@@ -1,0 +1,58 @@
+name: Build Rust benchmark WASM
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bench-rust/**'
+      - 'tools/attach-wasm.py'
+      - '.github/workflows/build-rust-benchmark.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/checkout@v4
+        with:
+          ref: migration/rust-anything-whole-app
+          path: port-source
+      - name: Install Rust WASM target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Install matching wasm-bindgen CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=0.2.130
+          tmp="$(mktemp -d)"
+          curl -fsSL --retry 3 "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${version}/wasm-bindgen-${version}-x86_64-unknown-linux-musl.tar.gz" -o "$tmp/wasm-bindgen.tar.gz"
+          tar xzf "$tmp/wasm-bindgen.tar.gz" -C "$tmp"
+          binary="$(find "$tmp" -type f -name wasm-bindgen -print -quit)"
+          test -n "$binary"
+          echo "$(dirname "$binary")" >> "$GITHUB_PATH"
+          "$binary" --version
+      - name: Compile actual migrated Rust formatting unit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --manifest-path bench-rust/Cargo.toml --release --target wasm32-unknown-unknown
+          mkdir -p bench-output
+          wasm-bindgen --target no-modules --out-name bench_port --out-dir bench-output bench-rust/target/wasm32-unknown-unknown/release/finance_format_bench.wasm
+          python3 tools/attach-wasm.py
+          node --check app.js
+          node tests/demo-safety.cjs
+      - name: Commit self-contained WASM benchmark bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js
+          if ! git diff --cached --quiet; then
+            git commit -m "build: embed verified Rust/WASM performance harness in public demo"
+            git push origin HEAD:main
+          fi
