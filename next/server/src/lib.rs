@@ -54,7 +54,7 @@ fn json_ok(data: &Value) -> Result<Response> {
 }
 fn invalid(message: &str) -> Result<Response> {
     Response::from_json(&json!({"ok":false,"error":message}))
-        .map(|mut r| { r.headers_mut().ok().and_then(|h| h.set("Cache-Control","no-store").ok()); r.with_status(400) })
+        .map(|mut r| { r.headers_mut().set("Cache-Control","no-store").ok(); r.with_status(400) })
 }
 fn not_found() -> Result<Response> { Response::error("Not found",404) }
 fn map_db_error() -> Result<Response> { Response::error("Database operation failed",500) }
@@ -113,7 +113,7 @@ async fn create_account(req: &mut Request, db: &D1Database, owner: &str) -> Resu
     let name=input.name.trim();
     if name.is_empty()||name.len()>100||
        !matches!(input.kind.as_str(),"cash"|"bank"|"credit_card") ||
-       input.opening_balance_vnd.abs()>9_000_000_000_000 {
+       input.opening_balance_vnd < -9_000_000_000_000 || input.opening_balance_vnd > 9_000_000_000_000 {
         return invalid("Invalid account properties");
     }
     let id=uid()?;
