@@ -4,13 +4,13 @@
   "fingerprint": "bb0432c26f780692",
   "coverage": {
     "lines": 30,
-    "reached": 22,
+    "reached": 30,
     "files": [
       {
         "file": "src/validators.js",
         "lines": 30,
-        "reached": 22,
-        "missed": "5, 12-14, 20-23"
+        "reached": 30,
+        "missed": ""
       }
     ]
   }
