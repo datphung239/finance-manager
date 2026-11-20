@@ -60,7 +60,7 @@ try{
   await page.locator('#tx-account').selectOption('account-1');
   await page.locator('#tx-category').selectOption('category-1');
   await page.locator('[data-action="save-tx"]').click();
-  await page.getByText('150.000 đ',{exact:false}).waitFor({timeout:12000});
+  await page.locator('.fm-kpi .number').getByText('150.000 đ',{exact:true}).waitFor({timeout:12000});
   await page.locator('[data-tab="cards"]').click();
   await page.getByText('CHI TIÊU THẺ').waitFor();
   await page.locator('[data-tab="debts"]').click();
