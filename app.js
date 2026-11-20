@@ -2025,3 +2025,74 @@ function demoSendRequest(action,payload={}) {
       return null;
   }
 }
+
+
+
+// Benchmark the already-ported finance-manager date formatter in WebAssembly.
+// The bundled wasm-bindgen runtime and base64 bytes are injected by CI below.
+async function runRustBenchmark() {
+  const button = document.getElementById('runRustBench');
+  const output = document.getElementById('rustBenchResult');
+  const n = Number(document.getElementById('rustBenchCount').value);
+  if (!button || !output || !Number.isInteger(n) || n < 1 || n > 50000) return;
+  button.disabled = true;
+  output.textContent = 'Đang khởi tạo Rust/WASM và chạy đo…';
+  try {
+    if (typeof wasm_bindgen !== 'function' || typeof BENCH_WASM_BASE64 !== 'string') {
+      throw new Error('Chưa có bản WASM được biên dịch. Kiểm tra GitHub Actions: Build Rust benchmark WASM.');
+    }
+    if (!runRustBenchmark.wasmReady) {
+      const raw = atob(BENCH_WASM_BASE64);
+      const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+      const initStart = performance.now();
+      await wasm_bindgen(bytes);
+      runRustBenchmark.initMs = performance.now() - initStart;
+      runRustBenchmark.wasmReady = true;
+    }
+    const dates = Array.from({length:n}, (_, i) => {
+      const m = String((i % 12) + 1).padStart(2,'0');
+      const d = String((i % 28) + 1).padStart(2,'0');
+      return '2026-' + m + '-' + d;
+    });
+    const serialized = JSON.stringify(dates);
+    // Equivalence first, then measure. JSON bridge is part of this WASM test.
+    const expected = dates.map(formatDate);
+    const actual = JSON.parse(wasm_bindgen.format_date_batch(serialized));
+    if (!Array.isArray(actual) || actual.length !== expected.length ||
+        actual.some((value,i)=>value!==expected[i])) {
+      throw new Error('Kết quả Rust và JavaScript không khớp; benchmark đã hủy.');
+    }
+    // Warm up the execution paths and measure medians across seven rounds.
+    for (let i=0;i<3;i++) {
+      dates.map(formatDate);
+      JSON.parse(wasm_bindgen.format_date_batch(serialized));
+    }
+    const jsMs=[], rustMs=[];
+    for (let i=0;i<7;i++) {
+      let t=performance.now();
+      const j=dates.map(formatDate);
+      jsMs.push(performance.now()-t);
+      if(j.length!==n) throw new Error('JS output length mismatch');
+      t=performance.now();
+      const w=JSON.parse(wasm_bindgen.format_date_batch(serialized));
+      rustMs.push(performance.now()-t);
+      if(w.length!==n) throw new Error('WASM output length mismatch');
+    }
+    const med = a => a.slice().sort((x,y)=>x-y)[Math.floor(a.length/2)];
+    const a=med(jsMs),b=med(rustMs);
+    const ratio = a/b;
+    output.innerHTML =
+      '<div class="text-success fw-semibold mb-1">✓ Đối chiếu: '+n.toLocaleString('vi-VN')+'/'+n.toLocaleString('vi-VN')+' bản ghi khớp</div>' +
+      '<div>JavaScript: <strong>'+a.toFixed(2)+' ms</strong> (median 7 lần)</div>' +
+      '<div>Rust/WASM: <strong>'+b.toFixed(2)+' ms</strong> (median 7 lần, gồm JSON bridge)</div>' +
+      '<div>Rust/WASM '+ (ratio >= 1 ? 'nhanh hơn ' : 'chậm hơn ') +
+         '<strong>'+(ratio>=1?ratio:1/ratio).toFixed(2)+'×</strong> trong phép thử này.</div>' +
+      '<div class="text-muted mt-1">Khởi tạo WASM lần đầu: '+runRustBenchmark.initMs.toFixed(2)+
+        ' ms · Chỉ đo unit formatDate, không đại diện hiệu năng toàn app.</div>';
+    window.fmPerformance.rustBenchmark = {records:n,jsMedianMs:a,wasmMedianMs:b,speedRatio:ratio,wasmInitMs:runRustBenchmark.initMs,parity:true};
+  } catch(error) {
+    output.textContent='Không thể đo Rust/WASM: '+(error?.message||String(error));
+  } finally {
+    button.disabled=false;
+  }
+}
