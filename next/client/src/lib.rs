@@ -3,7 +3,6 @@
 #![forbid(unsafe_code)]
 use js_sys::Date;
 use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
 use std::{cell::RefCell, fmt::Write as _};
 use wasm_bindgen::{closure::Closure, prelude::*, JsCast};
 use wasm_bindgen_futures::{spawn_local, JsFuture};
