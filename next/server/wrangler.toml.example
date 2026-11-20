@@ -1,0 +1,20 @@
+name = "finance-manager-v2"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-11-20"
+workers_dev = true
+
+[build]
+command = "worker-build --release"
+
+[assets]
+directory = "../dist"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "finance-manager-v2"
+database_id = "SET_REAL_DATABASE_ID_HERE"
+migrations_dir = "../migrations"
+
+# Do not place Access credentials or allowed user emails in this file.
+# Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD, ACCESS_ALLOWED_EMAILS via secrets.
