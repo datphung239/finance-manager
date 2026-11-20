@@ -5,6 +5,7 @@ on:
     paths:
       - 'bench-rust/**'
       - 'tools/attach-wasm.py'
+      - 'tests/demo-safety.cjs'
       - '.github/workflows/build-rust-benchmark.yml'
   workflow_dispatch:
 permissions:
