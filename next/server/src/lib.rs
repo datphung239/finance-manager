@@ -98,8 +98,10 @@ fn invalid(message: &str) -> Result<Response> {
     })
 }
 fn conflict(message: &str) -> Result<Response> {
-    Response::from_json(&json!({"ok":false,"error":message}))
-        .map(|mut r| { r.headers_mut().set("Cache-Control","no-store").ok(); r.with_status(409) })
+    Response::from_json(&json!({"ok":false,"error":message})).map(|mut r| {
+        r.headers_mut().set("Cache-Control", "no-store").ok();
+        r.with_status(409)
+    })
 }
 fn not_found() -> Result<Response> {
     Response::error("Not found", 404)
@@ -267,26 +269,30 @@ async fn create_tx(req: &mut Request, db: &D1Database, owner: &str) -> Result<Re
     if let Err(e) = tx.validate() {
         return invalid(e);
     }
-    if let Some(previous) = query!(db,
+    if let Some(previous) =
+        query!(db,
        "SELECT id,kind,amount_vnd,account_id,other_account_id,category_id,counterparty_id,debt_id,
                occurred_at,merchant,note
           FROM transactions WHERE owner_id=?1 AND request_id=?2 LIMIT 1",
-        owner,&tx.request_id)?.first::<Value>(None).await? {
-        let text_eq=|key:&str,expected:&str|previous.get(key).and_then(Value::as_str)==Some(expected);
-        let optional_eq=|key:&str,expected:&Option<String>| {
-            previous.get(key).and_then(Value::as_str)==expected.as_deref()
+        owner,&tx.request_id)?
+        .first::<Value>(None)
+        .await?
+    {
+        let text_eq =
+            |key: &str, expected: &str| previous.get(key).and_then(Value::as_str) == Some(expected);
+        let optional_eq = |key: &str, expected: &Option<String>| {
+            previous.get(key).and_then(Value::as_str) == expected.as_deref()
         };
-        let unchanged =
-            text_eq("kind",tx.kind.as_str()) &&
-            text_eq("account_id",&tx.account_id) &&
-            text_eq("occurred_at",&tx.occurred_at) &&
-            text_eq("merchant",&tx.merchant) &&
-            text_eq("note",&tx.note) &&
-            previous["amount_vnd"].as_i64()==Some(tx.amount_vnd) &&
-            optional_eq("other_account_id",&tx.other_account_id) &&
-            optional_eq("category_id",&tx.category_id) &&
-            optional_eq("counterparty_id",&tx.counterparty_id) &&
-            optional_eq("debt_id",&tx.debt_id);
+        let unchanged = text_eq("kind", tx.kind.as_str())
+            && text_eq("account_id", &tx.account_id)
+            && text_eq("occurred_at", &tx.occurred_at)
+            && text_eq("merchant", &tx.merchant)
+            && text_eq("note", &tx.note)
+            && previous["amount_vnd"].as_i64() == Some(tx.amount_vnd)
+            && optional_eq("other_account_id", &tx.other_account_id)
+            && optional_eq("category_id", &tx.category_id)
+            && optional_eq("counterparty_id", &tx.counterparty_id)
+            && optional_eq("debt_id", &tx.debt_id);
         if !unchanged {
             return conflict("request_id already used for a different financial transaction");
         }
@@ -584,16 +590,24 @@ async fn settle_debt(
     }
     let principal = debt["principal_vnd"].as_i64().unwrap_or(0);
     let settled = debt["settled_vnd"].as_i64().unwrap_or(0);
-    if let Some(previous) = query!(db,
+    if let Some(previous) = query!(
+        db,
         "SELECT id,kind,amount_vnd,account_id,debt_id,occurred_at
            FROM transactions WHERE owner_id=?1 AND request_id=?2 LIMIT 1",
-        owner,&tx.request_id)?.first::<Value>(None).await? {
-        let same=previous["kind"].as_str()==Some(kind.as_str()) &&
-            previous["amount_vnd"].as_i64()==Some(tx.amount_vnd) &&
-            previous["account_id"].as_str()==Some(tx.account_id.as_str()) &&
-            previous["debt_id"].as_str()==Some(id) &&
-            previous["occurred_at"].as_str()==Some(tx.occurred_at.as_str());
-        if !same {return conflict("request_id already used for another debt settlement");}
+        owner,
+        &tx.request_id
+    )?
+    .first::<Value>(None)
+    .await?
+    {
+        let same = previous["kind"].as_str() == Some(kind.as_str())
+            && previous["amount_vnd"].as_i64() == Some(tx.amount_vnd)
+            && previous["account_id"].as_str() == Some(tx.account_id.as_str())
+            && previous["debt_id"].as_str() == Some(id)
+            && previous["occurred_at"].as_str() == Some(tx.occurred_at.as_str());
+        if !same {
+            return conflict("request_id already used for another debt settlement");
+        }
         return json_ok(&json!({"ok":true,"transaction_id":previous["id"],"idempotent":true}));
     }
     if tx.amount_vnd > principal - settled {
