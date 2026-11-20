@@ -4,7 +4,7 @@ compatibility_date = "2026-11-20"
 workers_dev = true
 
 [build]
-command = "worker-build --path next/server --release"
+command = "if [ -f next/server/Cargo.toml ]; then cd next/server; fi; worker-build --release"
 
 [assets]
 directory = "../dist"
