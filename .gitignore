@@ -1,0 +1,7 @@
+next/server/wrangler.toml
+next/server/.dev.vars
+next/server/.env
+next/dist/
+next/**/target/
+next/**/*.wasm
+next/**/*.lock

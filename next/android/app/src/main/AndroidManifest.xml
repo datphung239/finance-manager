@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:label="Finance Manager" android:allowBackup="false">
+    <service
+      android:name=".BankNotificationListener"
+      android:exported="false"
+      android:label="Finance Manager - Nhận diện thông báo ngân hàng"
+      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService"/>
+      </intent-filter>
+    </service>
+  </application>
+</manifest>

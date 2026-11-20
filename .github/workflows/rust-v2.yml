@@ -1,0 +1,145 @@
+name: Rust D1 rebuild checks
+on:
+  push:
+    branches:
+      - rebuild/rust-d1-access
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  domain-and-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Format canonical Rust source
+        run: |
+          cargo fmt --manifest-path next/core/Cargo.toml
+          cargo fmt --manifest-path next/server/Cargo.toml
+          cargo fmt --manifest-path next/client/Cargo.toml
+      - name: Commit Rust formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add next/core/src next/core/tests next/server/src next/client/src
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(rust): canonical cargo fmt of finance core'
+            git push origin HEAD:rebuild/rust-d1-access
+          fi
+      - name: Verify format
+        run: |
+          cargo fmt --manifest-path next/core/Cargo.toml -- --check
+          cargo fmt --manifest-path next/server/Cargo.toml -- --check
+          cargo fmt --manifest-path next/client/Cargo.toml -- --check
+      - name: Domain test
+        run: cargo test --manifest-path next/core/Cargo.toml --all-targets
+      - name: D1 SQLite schema/invariants
+        run: python3 next/tests/test_schema.py
+  worker-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build Rust Worker targeting Cloudflare WASM
+        run: cargo check --target wasm32-unknown-unknown --manifest-path next/server/Cargo.toml
+  client-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Check Rust browser UI
+        run: cargo check --target wasm32-unknown-unknown --manifest-path next/client/Cargo.toml
+  client-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install matching wasm-bindgen CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          v=0.2.130
+          tmp="$(mktemp -d)"
+          curl -fsSL --retry 3 "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${v}/wasm-bindgen-${v}-x86_64-unknown-linux-musl.tar.gz" -o "$tmp/wb.tar.gz"
+          tar xzf "$tmp/wb.tar.gz" -C "$tmp"
+          exe="$(find "$tmp" -type f -name wasm-bindgen -print -quit)"
+          test -n "$exe"
+          echo "$(dirname "$exe")" >> "$GITHUB_PATH"
+          "$exe" --version
+      - name: Compile Rust UI + static assets
+        run: bash next/scripts/build-client.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finance-v2-rust-client-static
+          path: next/dist/
+  browser-smoke:
+    needs: client-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: finance-v2-rust-client-static
+          path: next/dist/
+      - name: Install isolated browser smoke runner
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Run Rust/WASM browser smoke with mocked D1 API
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          cd next/dist
+          python3 -m http.server 8788 >/tmp/finance-v2-static.log 2>&1 &
+          cd ../..
+          sleep 2
+          node next/tests/browser-smoke.mjs
+      - name: Screenshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-v2-mobile-smoke
+          path: next/v2-browser-smoke.png
+          if-no-files-found: ignore
+  worker-release-dry-run:
+    needs: client-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: finance-v2-rust-client-static
+          path: next/dist/
+      - name: Install worker-build
+        run: cargo install worker-build --locked
+      - name: Prepare fake local D1 binding (NO REAL DATABASE)
+        run: |
+          cp next/server/wrangler.toml.example next/server/wrangler.toml
+          sed -i 's/SET_REAL_DATABASE_ID_HERE/00000000-0000-4000-8000-000000000001/g' next/server/wrangler.toml
+      - name: Wrangler release build and dry-run (NO UPLOAD)
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npx --yes wrangler@4 deploy --dry-run --config next/server/wrangler.toml
