@@ -1,5 +1,8 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwvVhOuRtGTNi9fR5IIEOtRPMkmtLZHW9n2r0YzkcnU5MGFpyEGYgJ6HxjmkoHdaR8L/exec";
 const CLIENT_ID = "457034906414-kk5rglsgac2krun66bprec56v0i3c2n2.apps.googleusercontent.com";
+// Temporary public performance demo. No Google sign-in and absolutely no backend calls.
+// For real-user mode restore main from the prior commit and re-enable OAuth origins.
+const DEMO_MODE = true;
 
 // The two public endpoint identifiers are prepended by the build script.
 let googleToken = null;
@@ -37,9 +40,9 @@ const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 const endpointHash = Array.from(API_URL).reduce((n, c) => ((n << 5) - n + c.charCodeAt(0)) | 0, 0);
 window.fmPerformance = {requests: []};
 
-function storageGet(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
-function storageSet(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
-function storageRemove(key) { try { localStorage.removeItem(key); } catch (_) {} }
+function storageGet(key) { if (DEMO_MODE) return null; try { return localStorage.getItem(key); } catch (_) { return null; } }
+function storageSet(key, value) { if (DEMO_MODE) return; try { localStorage.setItem(key, value); } catch (_) {} }
+function storageRemove(key) { if (DEMO_MODE) return; try { localStorage.removeItem(key); } catch (_) {} }
 function cachePrefix() { return `fm:v2:${endpointHash}:${activeEmail}:`; }
 function pendingMutationKey() { return cachePrefix() + 'pendingMutation'; }
 function savePendingMutation(item) {
@@ -202,6 +205,8 @@ function isTransientRequestError(error) {
 function retryDelay(attempt) { return 250 * Math.pow(2, Math.max(0, attempt - 1)); }
 
 function sendRequest(action, payload = {}, options = {}) {
+  // Offline-only demo: never contact Google Apps Script or any financial API.
+  if (DEMO_MODE) return Promise.resolve(demoSendRequest(action, payload));
   if (!googleToken) return Promise.resolve(null);
   const epoch = authEpoch;
   const token = googleToken;
@@ -452,6 +457,17 @@ function fetchInitialAppDataServer() {
 
 document.addEventListener('DOMContentLoaded', () => {
   setTodayDefaultDates();
+  if (DEMO_MODE) {
+    activeEmail = 'offline-demo@invalid.example';
+    googleToken = 'DEMO_LOCAL_ONLY_NOT_A_GOOGLE_TOKEN';
+    authEpoch++;
+    updateUI('Chế độ DEMO (giả lập)', true);
+    document.getElementById('auth-section').style.display = 'none';
+    applyInitialData(demoInitialData());
+    switchMainMode('cash');
+    setSyncStatus('DEMO OFFLINE · Không đăng nhập · Không kết nối dữ liệu thật', 'ready');
+    return;
+  }
   const token = storageGet('google_id_token');
   if (token) {
     try {
@@ -1882,4 +1898,130 @@ function upsertChart(id, existing, config) {
   const chart = new Chart(document.getElementById(id).getContext('2d'), config);
   chart.fmSignature = signature;
   return chart;
+}
+
+
+// === ISOLATED OFFLINE DEMO ===================================================
+// This test fixture is intentionally synthetic. No Google credentials, Sheets
+// reads, production API calls or persistent browser storage are used.
+const demoState = {
+  nextRow: 100,
+  cardTransactions: [
+    {rowIndex: 1,date:'2026-11-18',card:'Thẻ Demo Visa',category:'Mua sắm',amount:720000,merchant:'Cửa hàng mẫu',target:''},
+    {rowIndex: 2,date:'2026-11-16',card:'Thẻ Demo Master',category:'TTT_Trực Tuyến',amount:-450000,merchant:'',target:''}
+  ],
+  cashTransactions: [
+    {rowIndex: 3,date:'2026-11-19',category:'CP-Đi lại',amount:180000,method:'Chuyển Khoản',merchant:'Trạm nhiên liệu mẫu',target:'Kinh doanh'},
+    {rowIndex: 4,date:'2026-11-18',category:'DT-Bán hàng',amount:-2400000,method:'Chuyển Khoản',merchant:'Khách hàng DEMO',target:'Kinh doanh'},
+    {rowIndex: 5,date:'2026-11-17',category:'Ăn uống',amount:95000,method:'Tiền Mặt',merchant:'Quán ăn mẫu',target:''}
+  ]
+};
+function demoInitialData() {
+  return {
+    cards: ['Thẻ Demo Visa','Thẻ Demo Master'],
+    categories: ['Mua sắm','Ăn uống','TTT_Trực Tuyến'],
+    merchants: ['Cửa hàng mẫu','Quán ăn mẫu'],
+    cashCategories: ['CP-Đi lại','DT-Bán hàng','Ăn uống'],
+    cashCPCategories: ['Kinh doanh','Gia Đình','Bạn Bè'],
+    cashMerchants: ['Trạm nhiên liệu mẫu','Khách hàng DEMO','Quán ăn mẫu'],
+    merchantCategoryMap: {},
+    cashMerchantCategoryMap: {}
+  };
+}
+function demoCardView() {
+  return {
+    dashboard: {
+      kpi: {notDue: 1250000, comingDue: 385000, unstatement: 980000},
+      statements: [],
+      filters: {card:'',category:'',status:''}
+    },
+    categoryReport: [],
+    updatedAt: Date.now()
+  };
+}
+function demoCashDashboard() {
+  const tx = demoState.cashTransactions;
+  const expenses = tx.filter(row => row.amount > 0);
+  const income = tx.filter(row => row.amount < 0);
+  const totalExpense = expenses.reduce((sum, row) => sum + row.amount, 0);
+  const totalRevenue = income.reduce((sum, row) => sum - row.amount, 0);
+  return {
+    updatedAt: Date.now(),
+    period: {totalRevenue,totalExpense,startDate:'01/11/2026',endDate:'30/11/2026'},
+    cashBalances: {cash:3450000,bank:12850000,total:16300000},
+    investmentData: [],
+    paymentData: {filterMonth:'01/11/2026',list:[{method:'Chuyển Khoản',amount:300000},{method:'Tiền Mặt',amount:95000}]},
+    ratioTableData: {
+      filterMonth:'01/11/2026',
+      months:['11/2026','10/2026','09/2026'],
+      revenue:[totalRevenue,1800000,1700000],
+      expense:[totalExpense,760000,620000],
+      ratio:['22%','42%','36%']
+    },
+    frequencyData: {
+      txCount:tx.length,
+      avgAmt: tx.length ? Math.round(totalExpense / tx.length) : 0,
+      maxAmt:expenses.length ? Math.max(...expenses.map(row=>row.amount)) : 0
+    },
+    catChanges: [],
+    monthTrends: [
+      {month:'09/2026',amount:620000,changePct:0,changeStr:'0%'},
+      {month:'10/2026',amount:760000,changePct:22.6,changeStr:'+22.6%'},
+      {month:'11/2026',amount:totalExpense,changePct:-10,changeStr:'-10%'}
+    ],
+    dailyData: {list:[{date:'17/11/2026',amount:95000},{date:'19/11/2026',amount:180000}]},
+    targetData: {months:['11/2026','10/2026','09/2026'],list:[{target:'Kinh doanh',m1Amt:180000,m2Amt:100000,m3Amt:75000}]},
+    businessData: {
+      filterMonth:'01/11/2026',
+      result:[{category:'Kinh doanh',thisMonth:totalRevenue-totalExpense,lastMonth:980000}],
+      revenueExpense:[{category:'Kinh doanh',revenue:totalRevenue,expense:totalExpense}]
+    }
+  };
+}
+function demoSendRequest(action,payload={}) {
+  const list = payload.type === 'cash_spending' ? demoState.cashTransactions : demoState.cardTransactions;
+  switch (action) {
+    case 'getInitialData': return demoInitialData();
+    case 'getBootstrap': return {initialData:demoInitialData(),cardView:demoCardView(),cashDashboard:demoCashDashboard()};
+    case 'getCardView':
+    case 'updateCardFilters': return demoCardView();
+    case 'getCashDashboardData':
+    case 'updateCashDashboardFilters': return demoCashDashboard();
+    case 'getRecentTransactions': return list.map(row => ({...row}));
+    case 'getCardRecommendation':
+      return {category:{main:'Demo',sub:'Mua sắm'}, cards:[{cardName:'Thẻ Demo Visa',rate:'2%',applyType:'Giả lập',maxCat:'100.000 đ',maxCycle:'100.000 đ'}]};
+    case 'getMutationStatus': return {found:false};
+    case 'parseVoiceInput': return {success:false,message:'Giọng nói AI cần backend, đã tắt trong DEMO offline.'};
+    case 'mutateTransaction':
+    case 'submitData':
+    case 'deleteTransaction': {
+      const kind = payload.type === 'cash_spending' || payload.formObject?.entryType === 'cash_spending' ? 'cash_spending' : 'spending';
+      const target = kind === 'cash_spending' ? demoState.cashTransactions : demoState.cardTransactions;
+      if (payload.operation === 'delete' || action === 'deleteTransaction') {
+        const idx = target.findIndex(x => x.rowIndex === Number(payload.rowIndex));
+        if (idx >= 0) target.splice(idx,1);
+      } else {
+        const form = payload.formObject || {};
+        target.unshift({
+          rowIndex: ++demoState.nextRow,
+          date: String(form.date || new Date().toISOString().slice(0,10)),
+          card: String(form.card || 'Thẻ Demo Visa'),
+          category: String(form.category || 'Chưa phân loại'),
+          amount: Number(String(form.amount || 0).replace(/[^0-9-]/g,'')) || 0,
+          method: String(form.method || 'Tiền Mặt'),
+          merchant: String(form.merchant || ''),
+          target: String(form.target || '')
+        });
+      }
+      return {
+        type:kind,
+        message:'Đã ghi vào DEMO (bộ nhớ tạm, không ghi vào Google Sheets)',
+        transactions:target.map(row=>({...row})),
+        updatedAt:Date.now()
+      };
+    }
+    default:
+      console.warn('[Finance Manager DEMO] Mock action:',action);
+      return null;
+  }
 }
