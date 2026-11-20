@@ -58,8 +58,16 @@ fn notification_parsing_is_review_only() {
 fn rejects_invalid_calendar_dates_and_accepts_leap_day() {
     use finance_core::valid_iso_date;
     assert!(valid_iso_date("2024-02-29"));
-    for value in ["2026-02-29","2026-02-30","2026-13-01","2026-00-10",
-                  "2026-11-31","0000-01-01","2026-01-01extra","2026-01-1"] {
+    for value in [
+        "2026-02-29",
+        "2026-02-30",
+        "2026-13-01",
+        "2026-00-10",
+        "2026-11-31",
+        "0000-01-01",
+        "2026-01-01extra",
+        "2026-01-1",
+    ] {
         assert!(!valid_iso_date(value), "bad date accepted: {value}");
     }
 }

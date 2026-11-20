@@ -6,8 +6,14 @@ pub const MAX_AMOUNT_VND: i64 = 9_000_000_000_000;
 
 pub fn valid_iso_date(date: &str) -> bool {
     let bytes = date.as_bytes();
-    if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' ||
-       !bytes.iter().enumerate().all(|(i, b)| i == 4 || i == 7 || b.is_ascii_digit()) {
+    if bytes.len() != 10
+        || bytes[4] != b'-'
+        || bytes[7] != b'-'
+        || !bytes
+            .iter()
+            .enumerate()
+            .all(|(i, b)| i == 4 || i == 7 || b.is_ascii_digit())
+    {
         return false;
     }
     let year = date[0..4].parse::<u16>().unwrap_or(0);
@@ -17,8 +23,21 @@ pub fn valid_iso_date(date: &str) -> bool {
         return false;
     }
     let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
-    let days = [31, if leap {29} else {28}, 31,30,31,30,31,31,30,31,30,31];
-    day > 0 && day <= days[month-1]
+    let days = [
+        31,
+        if leap { 29 } else { 28 },
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ];
+    day > 0 && day <= days[month - 1]
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
