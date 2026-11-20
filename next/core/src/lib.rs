@@ -95,7 +95,7 @@ pub fn parse_bank_notification(content: &str) -> Result<BankCandidate, &'static 
         .iter().any(|marker| normalized.contains(marker));
     if credit == debit { return Err("ambiguous bank notification direction"); }
 
-    let re = Regex::new(r"(?i)(?:vnd|vnđ|số tiền|amount|giao dịch|gd|\+|\-)\s*[:=]?\s*([0-9]{1,3}(?:[.,][0-9]{3})+|[0-9]{4,13})(?:\s*(?:vnd|vnđ|đ))?")
+    let re = Regex::new(r"(?i)(?:vnd|vnđ|số tiền|ghi nợ|ghi có|amount|giao dịch|gd|\+|\-)\s*[:=]?\s*([0-9]{1,3}(?:[.,][0-9]{3})+|[0-9]{4,13})(?:\s*(?:vnd|vnđ|đ))?")
         .map_err(|_| "parser initialization failure")?;
     let cap = re.captures(content).ok_or("no explicit VND amount found")?;
     let raw = cap.get(1).ok_or("amount missing")?.as_str();
