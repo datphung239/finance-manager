@@ -27,11 +27,7 @@ Copy the **newly returned database UUID** into
 That config is ignored by Git. Do not copy the ID of any existing project.
 The database name and Worker name intentionally differ from V1.
 
-Check the values:
-
-```bash
-python3 next/scripts/preflight.py next/server/wrangler.toml
-```
+The final preflight also verifies built WASM assets, so run it after step 3.
 
 ## 2. Apply EMPTY database schema
 
@@ -61,6 +57,7 @@ and is not financial data.
 
 ```bash
 bash next/scripts/build-client.sh
+python3 next/scripts/preflight.py next/server/wrangler.toml
 npx wrangler deploy --dry-run --config next/server/wrangler.toml
 ```
 
