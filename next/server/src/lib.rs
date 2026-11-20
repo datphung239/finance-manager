@@ -40,6 +40,14 @@ struct NewDebt {
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct NewSettlement {
+    request_id: String,
+    account_id: String,
+    amount_vnd: i64,
+    occurred_at: String,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct NotificationPreview {
     text: String,
 }
@@ -466,6 +474,59 @@ async fn post_bank_inbox(
     db.batch(vec![insert, mark, audit]).await?;
     json_ok(&json!({"ok":true,"transaction_id":txid}))
 }
+
+async fn settle_debt(req:&mut Request, db:&D1Database, owner:&str, id:&str)->Result<Response>{
+    let input:NewSettlement=match req.json().await {
+        Ok(v)=>v,Err(_)=>return invalid("Invalid settlement request")
+    };
+    let debt=match query!(db,
+       "SELECT direction,principal_vnd,settled_vnd FROM debts
+        WHERE owner_id=?1 AND id=?2 AND archived_at IS NULL",owner,id)?
+        .first::<Value>(None).await? {
+        Some(d)=>d,None=>return not_found()
+    };
+    let kind=if debt["direction"]=="receivable"{
+        TxKind::DebtCollection
+    }else{TxKind::DebtPayment};
+    let tx=NewTransaction{
+        request_id:input.request_id,
+        occurred_at:input.occurred_at,
+        kind,amount_vnd:input.amount_vnd,
+        account_id:input.account_id,
+        other_account_id:None,category_id:None,counterparty_id:None,
+        debt_id:Some(id.into()),merchant:String::new(),note:String::new()
+    };
+    if let Err(e)=tx.validate(){return invalid(e);}
+    let principal=debt["principal_vnd"].as_i64().unwrap_or(0);
+    let settled=debt["settled_vnd"].as_i64().unwrap_or(0);
+    if tx.amount_vnd>principal-settled {
+        return invalid("Settlement amount exceeds remaining debt");
+    }
+    let account=match query!(db,
+        "SELECT kind FROM accounts WHERE owner_id=?1 AND id=?2 AND archived_at IS NULL",
+        owner,&tx.account_id)?.first::<Value>(None).await? {
+        Some(v)=>v,None=>return invalid("Settlement account not found")
+    };
+    if !matches!(account["kind"].as_str(),Some("cash"|"bank")){
+        return invalid("Debt payments require a cash or bank account");
+    }
+    if let Some(previous)=query!(db,
+        "SELECT id FROM transactions WHERE owner_id=?1 AND request_id=?2 LIMIT 1",
+        owner,&tx.request_id)?.first::<Value>(None).await? {
+        return json_ok(&json!({"ok":true,"id":previous["id"],"idempotent":true}));
+    }
+    let txid=uid()?;
+    let auditid=uid()?;
+    db.batch(vec![
+        query!(db,"INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,debt_id)
+                  VALUES(?1,?2,?3,?4,?5,?6,?7,?8)",
+             &txid,owner,&tx.request_id,&tx.occurred_at,kind.as_str(),tx.amount_vnd,&tx.account_id,id)?,
+        query!(db,"INSERT INTO audit_log(id,owner_id,entity_kind,entity_id,action)
+                  VALUES(?1,?2,'debt',?3,'settle')",&auditid,owner,id)?
+    ]).await?;
+    json_ok(&json!({"ok":true,"transaction_id":txid,"idempotent":false}))
+}
+
 #[event(fetch)]
 pub async fn main(mut req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let path = req.path();
@@ -503,6 +564,7 @@ pub async fn main(mut req: Request, env: Env, _ctx: Context) -> Result<Response>
             create_counterparty(&mut req, &db, owner).await
         }
         (Method::Post, ["api", "debts"]) => create_debt(&mut req, &db, owner).await,
+        (Method::Post, ["api", "debts", id, "settle"]) => settle_debt(&mut req,&db,owner,id).await,
         (Method::Post, ["api", "transactions"]) => create_tx(&mut req, &db, owner).await,
         (Method::Delete, ["api", "transactions", id]) => delete_tx(&db, owner, id).await,
         (Method::Post, ["api", "bank-inbox", "preview"]) => preview_notification(&mut req).await,
