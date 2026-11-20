@@ -55,6 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          rustup target add wasm32-unknown-unknown
           rust-anything build rust/formatting-rs 2>&1 | tee rust/evidence/formatting-build.txt
           rust-anything diff rust/formatting-rs 2>&1 | tee rust/evidence/formatting-diff.txt
           rust-anything gate rust/formatting-rs 2>&1 | tee rust/evidence/formatting-gate.txt
@@ -65,7 +66,8 @@ jobs:
           name: rust-anything-analyze-and-first-bridge
           path: |
             rust/evidence/
-            rust/formatting-rs/
+            rust/formatting-rs/cases.jsonl
+            rust/formatting-rs/src/port.rs
           if-no-files-found: warn
 
       - name: Commit the generated Rust bridge and original cases
