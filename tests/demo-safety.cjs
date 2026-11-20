@@ -9,7 +9,8 @@ assert.match(html,/DEMO KHÔNG ĐĂNG NHẬP/);
 let called=0;
 const context={
   window:{fmPerformance:{},addEventListener(){}},localStorage:{getItem(){called++;return null;},setItem(){called++;},removeItem(){called++;}},
-  document:{addEventListener(){}},
+  document:{addEventListener(){},currentScript:{src:'https://demo.invalid/app.js'}},
+  location:{href:'https://demo.invalid/'},URL,
   Date,Math,Number,String,Map,Set,Promise,Array,JSON,console,setTimeout,clearTimeout,
 };
 vm.createContext(context);
