@@ -5,13 +5,13 @@ import vm from 'node:vm';
 import { formatDate, convertDisplayToInputDate } from '../src/formatting.js';
 
 const original = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
-function extract(start, end) {
+function extract(start, end, includeEnd = 0) {
   const a = original.indexOf(start);
   const b = original.indexOf(end, a);
   assert.ok(a >= 0 && b > a, 'original implementation must be found');
-  return original.slice(a, b).trim();
+  return original.slice(a, b + includeEnd).trim();
 }
-const originalFormat = vm.runInNewContext(extract('const formatDate = (str) => {', '\n};').replace(/};$/, '}').replace(/^const formatDate = \(str\) => /, '(') + ')');
+const originalFormat = vm.runInNewContext('(' + extract('const formatDate = (str) => {', '\n};', 3).replace(/^const formatDate = /, '').replace(/;\s*$/, '') + ')');
 // Evaluating the original function declaration as an expression avoids any globals from app.js.
 const originalConvert = vm.runInNewContext('(' + extract('function convertDisplayToInputDate(dStr) {', '\nfunction loadRecentTransactions') + ')');
 
