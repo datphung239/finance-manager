@@ -1,0 +1,37 @@
+name: Rust-anything whole-app analysis
+on:
+  push:
+    branches:
+      - migration/rust-anything-whole-app
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install rust-anything
+        run: npm install --global rust-anything@2.0.0
+      - name: Analyze entire repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p rust/evidence
+          rust-anything --version | tee rust/evidence/tool-version.txt
+          rust-anything analyze . --whole-app --json > rust/evidence/analyze-whole-app.json
+          rust-anything analyze . --whole-app -o rust/evidence/PLAN.generated.md
+          cat rust/evidence/PLAN.generated.md
+      - name: Upload analysis evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-anything-analyze
+          path: rust/evidence/
+          if-no-files-found: warn
