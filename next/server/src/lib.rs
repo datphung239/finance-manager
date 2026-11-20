@@ -162,10 +162,26 @@ async fn bootstrap(db: &D1Database, user: &auth::AccessUser) -> Result<Response>
            FROM transactions t WHERE t.owner_id=a.owner_id AND t.deleted_at IS NULL
            AND (t.account_id=a.id OR t.other_account_id=a.id)),0) AS balance_vnd
          FROM accounts a WHERE a.owner_id=?1 AND a.archived_at IS NULL ORDER BY a.kind,a.name").await?;
+
+    // Read models for dashboard from D1, never from historical Sheets or JS fixtures.
+    // Card payment/transfer must not be counted as a second expense.
+    let monthly = rows(db,owner,
+        "SELECT substr(occurred_at,1,7) AS month,
+         COALESCE(SUM(CASE WHEN kind IN ('income','debt_collection') THEN amount_vnd ELSE 0 END),0) AS cash_in_vnd,
+         COALESCE(SUM(CASE WHEN kind IN ('expense','debt_payment','card_payment') THEN amount_vnd ELSE 0 END),0) AS cash_out_vnd,
+         COALESCE(SUM(CASE WHEN kind='card_charge' THEN amount_vnd ELSE 0 END),0) AS card_spend_vnd
+         FROM transactions WHERE owner_id=?1 AND deleted_at IS NULL
+         GROUP BY substr(occurred_at,1,7) ORDER BY month DESC LIMIT 12").await?;
+    let debt_summary=query!(db,
+        "SELECT COALESCE(SUM(CASE WHEN direction='receivable' THEN principal_vnd-settled_vnd ELSE 0 END),0) AS receivable_vnd,
+          COALESCE(SUM(CASE WHEN direction='payable' THEN principal_vnd-settled_vnd ELSE 0 END),0) AS payable_vnd
+         FROM debts WHERE owner_id=?1 AND archived_at IS NULL",owner)?
+         .first::<Value>(None).await?.unwrap_or_else(||json!({}));
+
     json_ok(&json!({"ok":true,"user":{"email":user.email},
         "accounts":accounts,"categories":categories,"counterparties":counterparties,
         "transactions":transactions,"debts":debts,"bank_inbox":bank_inbox,
-        "totals":totals,"balances":balances}))
+        "totals":totals,"balances":balances,"monthly":monthly,"debt_summary":debt_summary}))
 }
 async fn create_account(req: &mut Request, db: &D1Database, owner: &str) -> Result<Response> {
     let input: NewAccount = match req.json().await {
