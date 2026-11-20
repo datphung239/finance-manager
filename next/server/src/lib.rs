@@ -307,22 +307,44 @@ async fn create_tx(req: &mut Request, db: &D1Database, owner: &str) -> Result<Re
     }
     // Enforce account semantics in the API, not only the browser form.
     // A card charge creates liability; a card payment transfers cash to a card.
-    let account = query!(db,
+    let account = query!(
+        db,
         "SELECT kind FROM accounts WHERE owner_id=?1 AND id=?2 AND archived_at IS NULL",
-        owner,&tx.account_id)?.first::<Value>(None).await?;
-    let src_kind = account.as_ref().and_then(|v|v["kind"].as_str()).unwrap_or("");
-    let other_kind = if let Some(ref destination)=tx.other_account_id {
-        query!(db,
+        owner,
+        &tx.account_id
+    )?
+    .first::<Value>(None)
+    .await?;
+    let src_kind = account
+        .as_ref()
+        .and_then(|v| v["kind"].as_str())
+        .unwrap_or("");
+    let other_kind = if let Some(ref destination) = tx.other_account_id {
+        query!(
+            db,
             "SELECT kind FROM accounts WHERE owner_id=?1 AND id=?2 AND archived_at IS NULL",
-            owner,destination)?.first::<Value>(None).await?
-    }else{None};
-    let dst_kind = other_kind.as_ref().and_then(|v|v["kind"].as_str()).unwrap_or("");
+            owner,
+            destination
+        )?
+        .first::<Value>(None)
+        .await?
+    } else {
+        None
+    };
+    let dst_kind = other_kind
+        .as_ref()
+        .and_then(|v| v["kind"].as_str())
+        .unwrap_or("");
     let permitted = match tx.kind {
-        TxKind::Income|TxKind::Expense => matches!(src_kind,"cash"|"bank") && tx.other_account_id.is_none(),
-        TxKind::Transfer => matches!(src_kind,"cash"|"bank") && matches!(dst_kind,"cash"|"bank"),
-        TxKind::CardCharge => src_kind=="credit_card" && tx.other_account_id.is_none(),
-        TxKind::CardPayment => matches!(src_kind,"cash"|"bank") && dst_kind=="credit_card",
-        TxKind::DebtCollection|TxKind::DebtPayment => false,
+        TxKind::Income | TxKind::Expense => {
+            matches!(src_kind, "cash" | "bank") && tx.other_account_id.is_none()
+        }
+        TxKind::Transfer => {
+            matches!(src_kind, "cash" | "bank") && matches!(dst_kind, "cash" | "bank")
+        }
+        TxKind::CardCharge => src_kind == "credit_card" && tx.other_account_id.is_none(),
+        TxKind::CardPayment => matches!(src_kind, "cash" | "bank") && dst_kind == "credit_card",
+        TxKind::DebtCollection | TxKind::DebtPayment => false,
     };
     if !permitted {
         return invalid("Account kinds do not match transaction type");
