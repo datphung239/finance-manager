@@ -110,8 +110,8 @@ fn cash_tab(model: &Value) -> String {
         write!(&mut balance_list,"<div class=\"fm-row\"><div><strong>{}</strong><br><small>{}</small></div><strong>{}</strong></div>",
             esc(str_field(a,"name")),esc(str_field(a,"kind")),vnd(int_field(a,"balance_vnd"))).ok();
     }
-    let mut monthly_rows=String::new();
-    for month in arr(model,"monthly") {
+    let mut monthly_rows = String::new();
+    for month in arr(model, "monthly") {
         write!(&mut monthly_rows,
           "<div class=\"fm-row\"><div><strong>{}</strong><br><small>Tiền vào: {} · Tiền ra: {}</small></div><small>Chi thẻ: {}</small></div>",
           esc(str_field(month,"month")),
