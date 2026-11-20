@@ -55,7 +55,7 @@ try{
   await page.locator('#new-category-name').fill('Chi thử nghiệm');
   await page.locator('#new-category-kind').selectOption('expense');
   await page.locator('[data-action="new-category"]').click();
-  await page.locator('#tx-category').locator('option',{hasText:'Chi thử nghiệm'}).waitFor({timeout:12000});
+  await page.locator('#tx-category').locator('option',{hasText:'Chi thử nghiệm'}).waitFor({state:'attached',timeout:12000});
   await page.locator('#tx-amount').fill('150000');
   await page.locator('#tx-account').selectOption('account-1');
   await page.locator('#tx-category').selectOption('category-1');
