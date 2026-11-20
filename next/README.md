@@ -22,7 +22,7 @@ Finance Manager deployment, Google Sheets or Apps Script.
 4. Repeated request IDs cannot duplicate transactions; all mutations audited.
 5. Bank push events enter a confirmation inbox, never auto-create 'debt'.
 6. No production deploy until Access, D1 ID, accounts and E2E are verified.
-7. Old Google Sheets remain untouched until user approves export/cutover.
+7. New D1 starts empty; no Google Sheets data import or sync. See ADR-006.
 
 ## How to test the shared domain
 ```
@@ -33,4 +33,4 @@ cargo test --manifest-path next/core/Cargo.toml
 - Exact definition of 'nợ' from bank notifications: receivable/payable or account balance.
 - Which bank Android packages and redacted notification examples; never send tokens/OTP.
 - Who can sign in (Access allowlisted email addresses or groups).
-- D1 database account and deployment domain (no account access has been supplied).
+- Provision the NEW Cloudflare D1/Access/secrets in the user's account before deployment.

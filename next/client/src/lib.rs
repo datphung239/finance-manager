@@ -498,6 +498,7 @@ async fn execute(action: String, id: String) {
         "new-debt" => Ok((
             "/api/debts",
             Some(json!({
+                "request_id":uuid(),
                 "counterparty_id":value("debt-person"),"direction":value("debt-direction"),
                 "title":value("debt-title"),"principal_vnd":amount("debt-amount")?,
                 "due_date":if value("debt-due").is_empty(){None}else{Some(value("debt-due"))}

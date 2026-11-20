@@ -31,6 +31,7 @@ struct NewCounterparty {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct NewDebt {
+    request_id: String,
     counterparty_id: String,
     direction: String,
     title: String,
@@ -275,10 +276,34 @@ async fn create_debt(req: &mut Request, db: &D1Database, owner: &str) -> Result<
     {
         return invalid("Invalid debt or counterparty");
     }
+    if input.request_id.len() < 8 || input.request_id.len() > 100 ||
+       !input.request_id.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'-'||b==b'_') {
+        return invalid("Invalid debt request_id");
+    }
+    if let Some(previous)=query!(db,
+       "SELECT id,direction,counterparty_id,principal_vnd,title,due_date
+          FROM debts WHERE owner_id=?1 AND request_id=?2",
+       owner,&input.request_id)?.first::<Value>(None).await? {
+        let same=previous["direction"].as_str()==Some(input.direction.as_str()) &&
+          previous["counterparty_id"].as_str()==Some(input.counterparty_id.as_str()) &&
+          previous["principal_vnd"].as_i64()==Some(input.principal_vnd) &&
+          previous["title"].as_str()==Some(input.title.trim()) &&
+          previous.get("due_date").and_then(Value::as_str)==input.due_date.as_deref();
+        if !same {return conflict("Debt request_id already used for a different debt");}
+        return json_ok(&json!({"ok":true,"id":previous["id"],"idempotent":true}));
+    }
     let id = uid()?;
-    query!(db,"INSERT INTO debts(id,owner_id,counterparty_id,direction,principal_vnd,title,due_date) VALUES(?1,?2,?3,?4,?5,?6,?7)",
-        &id,owner,&input.counterparty_id,&input.direction,input.principal_vnd,
-        input.title.trim(),&input.due_date)?.run().await?;
+    let audit_id=uid()?;
+    db.batch(vec![
+        query!(db,
+          "INSERT INTO debts(id,owner_id,request_id,counterparty_id,direction,principal_vnd,title,due_date)
+           VALUES(?1,?2,?3,?4,?5,?6,?7,?8)",
+           &id,owner,&input.request_id,&input.counterparty_id,&input.direction,
+           input.principal_vnd,input.title.trim(),&input.due_date)?,
+        query!(db,
+          "INSERT INTO audit_log(id,owner_id,entity_kind,entity_id,action)
+           VALUES(?1,?2,'debt',?3,'create')",&audit_id,owner,&id)?
+    ]).await?;
     json_ok(&json!({"ok":true,"id":id}))
 }
 async fn create_tx(req: &mut Request, db: &D1Database, owner: &str) -> Result<Response> {

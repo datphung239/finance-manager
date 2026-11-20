@@ -27,7 +27,7 @@ try:
 except (ValueError, AttributeError):
     raise SystemExit("ERROR: replace SET_REAL_DATABASE_ID_HERE with the NEW D1 UUID")
 assert str(database)==raw.lower(), "Database UUID is invalid"
-assert (path.parent/"../migrations/0003_tenant_guards.sql").resolve().is_file(), "Missing D1 migrations"
+assert (path.parent/"../migrations/0004_debt_request_id.sql").resolve().is_file(), "Missing D1 migrations"
 assert (path.parent/"../dist/index.html").resolve().is_file(), "Run the Rust client build first"
 assert (path.parent/"../dist/pkg/finance_client_bg.wasm").resolve().is_file(), "Missing Rust WASM client"
 print("PASS: separate V2 Worker, new D1 binding and Rust static assets found")

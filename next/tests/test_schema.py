@@ -113,3 +113,13 @@ income=db.execute("""SELECT SUM(amount_vnd) FROM transactions
   WHERE owner_id='u1' AND kind='income' AND deleted_at IS NULL""").fetchone()[0]
 assert income==200000, "opening account balance was counted as revenue"
 print("PASS: monthly D1 cashflow, card charges, transfers and opening balance separation")
+
+db.executescript(Path("next/migrations/0004_debt_request_id.sql").read_text())
+db.execute("""INSERT INTO debts(id,owner_id,request_id,counterparty_id,direction,principal_vnd,title)
+ VALUES('once','u1','debt-create-001','p1','receivable',70000,'Nợ mới')""")
+must_reject("""INSERT INTO debts(id,owner_id,request_id,counterparty_id,direction,principal_vnd,title)
+ VALUES('twice','u1','debt-create-001','p1','receivable',70000,'Nợ mới')""","duplicate debt request")
+db.execute("""INSERT INTO debts(id,owner_id,request_id,counterparty_id,direction,principal_vnd,title)
+ VALUES('other-debt','u2','debt-create-001','owner2','payable',70000,'Nợ riêng')""")
+assert db.execute("SELECT COUNT(*) FROM debts WHERE request_id='debt-create-001'").fetchone()[0]==2
+print("PASS: per-owner idempotent D1 debt creation")
