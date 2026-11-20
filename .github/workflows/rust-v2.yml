@@ -117,3 +117,29 @@ jobs:
           name: finance-v2-mobile-smoke
           path: next/v2-browser-smoke.png
           if-no-files-found: ignore
+  worker-release-dry-run:
+    needs: client-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: finance-v2-rust-client-static
+          path: next/dist/
+      - name: Install worker-build
+        run: cargo install worker-build --locked
+      - name: Prepare fake local D1 binding (NO REAL DATABASE)
+        run: |
+          cp next/server/wrangler.toml.example next/server/wrangler.toml
+          sed -i 's/SET_REAL_DATABASE_ID_HERE/00000000-0000-4000-8000-000000000001/g' next/server/wrangler.toml
+      - name: Wrangler release build and dry-run (NO UPLOAD)
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: npx --yes wrangler@4 deploy --dry-run --config next/server/wrangler.toml
