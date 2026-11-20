@@ -1,8 +1,9 @@
 -- Finance Manager v2: NEW and EMPTY Cloudflare D1 database.
--- Never apply to the legacy Google Sheets backend.
+-- Fail closed if someone points at a database with pre-existing business tables.
+-- Never apply to an existing finance D1 or the legacy Sheets backend.
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS accounts (
+CREATE TABLE accounts (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 100),
@@ -14,7 +15,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 );
 CREATE INDEX IF NOT EXISTS ix_accounts_owner ON accounts(owner_id, archived_at);
 
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 100),
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS categories (
   UNIQUE(owner_id, kind, name)
 );
 
-CREATE TABLE IF NOT EXISTS counterparties (
+CREATE TABLE counterparties (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 160),
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS counterparties (
   UNIQUE(owner_id, name)
 );
 
-CREATE TABLE IF NOT EXISTS debts (
+CREATE TABLE debts (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   counterparty_id TEXT NOT NULL REFERENCES counterparties(id),
@@ -49,7 +50,7 @@ CREATE INDEX IF NOT EXISTS ix_debts_owner ON debts(owner_id, direction, due_date
 -- Canonical signs: amount_vnd always positive; kind determines direction.
 -- 'transfer' moves money between two user accounts, no income/expense.
 -- 'card_charge' increases credit-card liability. 'card_payment' settles it.
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE transactions (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   request_id TEXT NOT NULL,
@@ -77,7 +78,7 @@ CREATE INDEX IF NOT EXISTS ix_tx_owner_debt ON transactions(owner_id, debt_id);
 
 -- Notification content is NOT stored by default. Only a redacted summary,
 -- fingerprint, amounts and the source's package identifier are retained.
-CREATE TABLE IF NOT EXISTS bank_inbox (
+CREATE TABLE bank_inbox (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   source_package TEXT NOT NULL,
@@ -93,7 +94,7 @@ CREATE TABLE IF NOT EXISTS bank_inbox (
 );
 CREATE INDEX IF NOT EXISTS ix_bank_inbox_owner ON bank_inbox(owner_id, status, received_at DESC);
 
-CREATE TABLE IF NOT EXISTS audit_log (
+CREATE TABLE audit_log (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   entity_kind TEXT NOT NULL,
