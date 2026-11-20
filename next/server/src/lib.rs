@@ -491,25 +491,32 @@ async fn post_bank_inbox(
         Ok(v) => v,
         Err(_) => return invalid("Invalid post request"),
     };
-    if input.request_id.len() < 8
-        || input.request_id.len() > 100
-        || !exists(db, "accounts", owner, &input.account_id).await?
-        || (input.category_id.is_some()
-            && !exists(
-                db,
-                "categories",
-                owner,
-                input.category_id.as_deref().unwrap_or(""),
-            )
-            .await?)
-    {
-        return invalid("Invalid posting account/category");
+    if input.request_id.len() < 8 || input.request_id.len() > 100 ||
+        !input.request_id.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'-'||b==b'_') {
+        return invalid("Invalid posting request ID");
+    }
+    // Notifications are money in/out of a cash/bank account, never a card charge.
+    let account = query!(db,
+        "SELECT kind FROM accounts WHERE id=?1 AND owner_id=?2 AND archived_at IS NULL",
+        &input.account_id,owner)?.first::<Value>(None).await?;
+    if !matches!(account.as_ref().and_then(|v|v["kind"].as_str()),Some("cash"|"bank")) {
+        return invalid("Bank posting requires an active bank/cash account");
     }
     let inbox=match query!(db,
-        "SELECT amount_vnd,flow,status,redacted_summary FROM bank_inbox WHERE owner_id=?1 AND id=?2",
+        "SELECT amount_vnd,flow,status,redacted_summary,posted_transaction_id FROM bank_inbox WHERE owner_id=?1 AND id=?2",
         owner,id)?.first::<Value>(None).await?{
         Some(v)=>v,None=>return not_found()
     };
+    if inbox["status"] == "posted" {
+        if let Some(posted_id)=inbox["posted_transaction_id"].as_str() {
+            let old=query!(db,"SELECT request_id FROM transactions WHERE owner_id=?1 AND id=?2 AND deleted_at IS NULL",owner,posted_id)?
+               .first::<Value>(None).await?;
+            if old.as_ref().and_then(|row|row["request_id"].as_str())==Some(input.request_id.as_str()){
+                return json_ok(&json!({"ok":true,"transaction_id":posted_id,"idempotent":true}));
+            }
+        }
+        return conflict("Bank notification was already posted");
+    }
     if inbox["status"] != "pending" {
         return invalid("Notification is no longer pending");
     }
@@ -521,6 +528,21 @@ async fn post_bank_inbox(
     } else {
         "expense"
     };
+    if let Some(ref category_id)=input.category_id {
+        let category=query!(db,
+            "SELECT kind FROM categories WHERE owner_id=?1 AND id=?2 AND archived_at IS NULL",
+            owner,category_id)?.first::<Value>(None).await?;
+        let category_kind=category.as_ref().and_then(|v|v["kind"].as_str()).unwrap_or("");
+        if !matches!(category_kind,"both"|"income"|"expense") ||
+           (category_kind!="both" && category_kind!=kind){
+            return invalid("Category does not match bank inflow/outflow");
+        }
+    }
+    if let Some(existing)=query!(db,
+        "SELECT id FROM transactions WHERE owner_id=?1 AND request_id=?2 LIMIT 1",
+        owner,&input.request_id)?.first::<Value>(None).await?{
+        return conflict("request_id already used for another transaction");
+    }
     let txid = uid()?;
     // Insert-from-pending with explicit owner scope, then mark posted. Atomic D1 batch.
     let insert=query!(db,
