@@ -28,10 +28,31 @@ jobs:
           rust-anything analyze . --whole-app --json > rust/evidence/analyze-whole-app.json
           rust-anything analyze . --whole-app -o rust/evidence/PLAN.generated.md
           cat rust/evidence/PLAN.generated.md
-      - name: Upload analysis evidence
+      - name: Characterization tests
+        run: npm test
+      - name: Scaffold and record pure formatting unit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rust-anything bridge . src/formatting.js
+          echo "=== generated Rust crates ==="
+          find rust -maxdepth 4 -type f | sort
+          echo "=== generated Rust port stub ==="
+          find rust -path '*/src/port.rs' -exec sh -c 'echo === $1 ===; sed -n "1,220p" "$1"' _ {} \;
+          echo "=== record original behavior ==="
+          crate=$(find rust -name rust-anything.json -printf '%h\n' | head -n1)
+          if [[ -z "$crate" ]]; then
+            echo "No crate manifest found"; exit 1
+          fi
+          echo "crate=$crate"
+          rust-anything record "$crate"
+          find "$crate" -maxdepth 3 -type f | sort
+      - name: Upload analysis and bridge evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rust-anything-analyze
-          path: rust/evidence/
+          name: rust-anything-analyze-and-first-bridge
+          path: |
+            rust/evidence/
+            rust/formatting-rs/
           if-no-files-found: warn
