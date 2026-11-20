@@ -8,7 +8,7 @@ assert.doesNotMatch(html,/src="https:\/\/accounts\.google\.com\/gsi\/client"/);
 assert.match(html,/DEMO KHÔNG ĐĂNG NHẬP/);
 let called=0;
 const context={
-  window:{fmPerformance:{}},localStorage:{getItem(){called++;return null;},setItem(){called++;},removeItem(){called++;}},
+  window:{fmPerformance:{},addEventListener(){}},localStorage:{getItem(){called++;return null;},setItem(){called++;},removeItem(){called++;}},
   document:{addEventListener(){}},
   Date,Math,Number,String,Map,Set,Promise,Array,JSON,console,setTimeout,clearTimeout,
 };
