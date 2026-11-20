@@ -202,9 +202,13 @@ fn debts_tab(model: &Value) -> String {
             if str_field(d,"direction")=="receivable"{"Phải thu"}else{"Phải trả"},
             esc(str_field(d,"due_date")),vnd(remaining),vnd(int_field(d,"principal_vnd"))).ok();
     }
-    let account_choices:Vec<_>=arr(model,"accounts").iter()
-        .filter(|a|matches!(str_field(a,"kind"),"cash"|"bank")).cloned().collect();
-    format!(r#"<section class="fm-panel"><h6>Công nợ phải thu / phải trả</h6>{}</section>
+    let account_choices: Vec<_> = arr(model, "accounts")
+        .iter()
+        .filter(|a| matches!(str_field(a, "kind"), "cash" | "bank"))
+        .cloned()
+        .collect();
+    format!(
+        r#"<section class="fm-panel"><h6>Công nợ phải thu / phải trả</h6>{}</section>
       <section class="fm-panel"><h6>Ghi nhận thu nợ / trả nợ</h6>
        <div class="fm-inputs">
         <div><label>Khoản nợ</label><select class="form-select" id="settle-debt">{}</select></div>
@@ -227,24 +231,33 @@ fn debts_tab(model: &Value) -> String {
          <div><label>Ngày đến hạn</label><input type="date" class="form-control" id="debt-due"></div>
          <button class="btn btn-primary" data-action="new-debt">Lưu khoản nợ</button>
         </div></section>"#,
-        if debts.is_empty(){"<p class=\"fm-muted\">Chưa có công nợ.</p>".into()}else{debts},
-        option_list(arr(model,"debts"),"","title"),
-        option_list(&account_choices,"","name"),
+        if debts.is_empty() {
+            "<p class=\"fm-muted\">Chưa có công nợ.</p>".into()
+        } else {
+            debts
+        },
+        option_list(arr(model, "debts"), "", "title"),
+        option_list(&account_choices, "", "name"),
         today(),
-        option_list(arr(model,"counterparties"),"","name"))
+        option_list(arr(model, "counterparties"), "", "name")
+    )
 }
 fn bank_tab(model: &Value) -> String {
     let mut list = String::new();
-    for item in arr(model,"bank_inbox") {
-        let id=esc(str_field(item,"id"));
+    for item in arr(model, "bank_inbox") {
+        let id = esc(str_field(item, "id"));
         write!(&mut list,
             "<div class=\"fm-row\"><div><strong>{}</strong><br><small>{}</small></div><div class=\"text-end\"><strong>{}</strong><br><button class=\"fm-action btn-outline-success\" data-action=\"post-bank\" data-id=\"{}\">Ghi giao dịch</button> <button class=\"fm-action bg-secondary-subtle\" data-action=\"ignore-bank\" data-id=\"{}\">Bỏ qua</button></div></div>",
             esc(str_field(item,"redacted_summary")),esc(str_field(item,"source_package")),
             vnd(int_field(item,"amount_vnd")),id,id).ok();
     }
-    let accounts:Vec<_>=arr(model,"accounts").iter()
-      .filter(|a|matches!(str_field(a,"kind"),"cash"|"bank")).cloned().collect();
-    format!(r#"<section class="fm-panel"><h6>Thông báo ngân hàng chờ đối soát</h6>
+    let accounts: Vec<_> = arr(model, "accounts")
+        .iter()
+        .filter(|a| matches!(str_field(a, "kind"), "cash" | "bank"))
+        .cloned()
+        .collect();
+    format!(
+        r#"<section class="fm-panel"><h6>Thông báo ngân hàng chờ đối soát</h6>
       <p class="fm-muted">Không tự ghi công nợ khi chưa biết bên phải thu, phải trả. Chỉ khi xác nhận thì ghi thu/chi vào D1.</p>
       <div class="fm-inputs mb-2">
         <div><label>Tài khoản ghi nhận</label><select class="form-select" id="bank-post-account">{}</select></div>
@@ -259,9 +272,14 @@ fn bank_tab(model: &Value) -> String {
           <div id="bank-preview" class="fm-muted"></div>
         </div>
       </section>"#,
-      option_list(&accounts,"","name"),
-      option_list(arr(model,"categories"),"","name"),
-      if list.is_empty(){"<p class=\"fm-muted\">Chưa có thông báo chờ duyệt.</p>".into()}else{list})
+        option_list(&accounts, "", "name"),
+        option_list(arr(model, "categories"), "", "name"),
+        if list.is_empty() {
+            "<p class=\"fm-muted\">Chưa có thông báo chờ duyệt.</p>".into()
+        } else {
+            list
+        }
+    )
 }
 
 fn today() -> String {
@@ -466,33 +484,53 @@ async fn execute(action: String, id: String) {
             "POST".into(),
         )),
         "settle-debt" => {
-            if value("settle-debt").is_empty(){return Err("Chọn khoản công nợ".into());}
-            if value("settle-account").is_empty(){return Err("Chọn tài khoản thanh toán".into());}
-            Ok(("",Some(json!({
-                "request_id":uuid(),"occurred_at":date_or_today("settle-date"),
-                "account_id":value("settle-account"),
-                "amount_vnd":amount("settle-amount")?
-            })),"POST".into()))
+            if value("settle-debt").is_empty() {
+                return Err("Chọn khoản công nợ".into());
+            }
+            if value("settle-account").is_empty() {
+                return Err("Chọn tài khoản thanh toán".into());
+            }
+            Ok((
+                "",
+                Some(json!({
+                    "request_id":uuid(),"occurred_at":date_or_today("settle-date"),
+                    "account_id":value("settle-account"),
+                    "amount_vnd":amount("settle-amount")?
+                })),
+                "POST".into(),
+            ))
         }
         "queue-bank" => {
-            let content=value("bank-text");
-            if content.trim().is_empty(){return Err("Nhập thông báo ngân hàng".into());}
-            let mut hasher=Sha256::new();
+            let content = value("bank-text");
+            if content.trim().is_empty() {
+                return Err("Nhập thông báo ngân hàng".into());
+            }
+            let mut hasher = Sha256::new();
             hasher.update(content.as_bytes());
-            let fingerprint=format!("{:x}",hasher.finalize());
-            Ok(("/api/bank-inbox",Some(json!({
-                "source_package":"manual-web",
-                "dedupe_key":fingerprint,
-                "text":content
-            })),"POST".into()))
+            let fingerprint = format!("{:x}", hasher.finalize());
+            Ok((
+                "/api/bank-inbox",
+                Some(json!({
+                    "source_package":"manual-web",
+                    "dedupe_key":fingerprint,
+                    "text":content
+                })),
+                "POST".into(),
+            ))
         }
         "post-bank" => {
-            if value("bank-post-account").is_empty(){return Err("Chọn tài khoản ghi nhận".into());}
-            Ok(("",Some(json!({
-                "request_id":uuid(),
-                "account_id":value("bank-post-account"),
-                "category_id":if value("bank-post-category").is_empty(){None}else{Some(value("bank-post-category"))}
-            })),"POST".into()))
+            if value("bank-post-account").is_empty() {
+                return Err("Chọn tài khoản ghi nhận".into());
+            }
+            Ok((
+                "",
+                Some(json!({
+                    "request_id":uuid(),
+                    "account_id":value("bank-post-account"),
+                    "category_id":if value("bank-post-category").is_empty(){None}else{Some(value("bank-post-category"))}
+                })),
+                "POST".into(),
+            ))
         }
         "preview-bank" => Ok((
             "/api/bank-inbox/preview",
@@ -512,7 +550,7 @@ async fn execute(action: String, id: String) {
         }
     };
     let path = if action == "settle-debt" {
-        format!("/api/debts/{}/settle",value("settle-debt"))
+        format!("/api/debts/{}/settle", value("settle-debt"))
     } else if action == "post-bank" {
         format!("/api/bank-inbox/{id}/post")
     } else if action == "delete-tx" {
