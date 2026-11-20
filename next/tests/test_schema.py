@@ -36,3 +36,22 @@ try:
     raise AssertionError("duplicate notification was accepted")
 except sqlite3.IntegrityError: pass
 print("PASS: D1 schema, positive integer VND, idempotency, transfer invariant, inbox dedupe")
+
+db.executescript(Path("next/migrations/0002_debt_settlement.sql").read_text())
+db.execute("INSERT INTO counterparties(id,owner_id,name) VALUES('p1','u1','Người mẫu')")
+db.execute("""INSERT INTO debts(id,owner_id,counterparty_id,direction,principal_vnd,title)
+             VALUES('d1','u1','p1','receivable',100000,'Nợ phải thu')""")
+db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,debt_id)
+             VALUES('s1','u1','req-s1','2026-11-20','debt_collection',40000,'a','d1')""")
+settled=db.execute("SELECT settled_vnd FROM debts WHERE id='d1'").fetchone()[0]
+assert settled==40000, settled
+try:
+    db.execute("""INSERT INTO transactions(id,owner_id,request_id,occurred_at,kind,amount_vnd,account_id,debt_id)
+                 VALUES('s2','u1','req-s2','2026-11-20','debt_collection',90000,'a','d1')""")
+    raise AssertionError("debt overpayment accepted")
+except sqlite3.IntegrityError: pass
+assert db.execute("SELECT settled_vnd FROM debts WHERE id='d1'").fetchone()[0]==40000
+db.execute("UPDATE transactions SET deleted_at=datetime('now') WHERE id='s1'")
+assert db.execute("SELECT settled_vnd FROM debts WHERE id='d1'").fetchone()[0]==0
+print("PASS: atomic debt settlement, overpayment rejection and soft-delete reversal")
+
